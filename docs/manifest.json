@@ -1,0 +1,19 @@
+{
+  "name": "AMIGABLE-123",
+  "short_name": "AMIGABLE",
+  "description": "Tu negocio, a color. Punto de venta y control de inventario sin servidor.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#152840",
+  "theme_color": "#152840",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "./favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

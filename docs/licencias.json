@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "descripcion": "Killswitch de instancias AMIGABLE-123. Gestionado por el panel maestro via Cloudflare Worker.",
+    "estados": {
+      "activa": "Acceso completo",
+      "observada": "Acceso completo, marcada para monitoreo",
+      "limitada": "Acceso reducido: sin exportar, sin multi-sucursal, sin reportes avanzados",
+      "bloqueada": "Sin acceso (muestra banner de contacto)"
+    },
+    "gracePeriodDias": 7,
+    "nota": "Este archivo es leido por la app al arrancar. El Worker lo actualiza. Sin internet: se respeta el estado cacheado por gracePeriodDias dias."
+  },
+  "instancias": []
+}
