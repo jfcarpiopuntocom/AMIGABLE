@@ -61,9 +61,9 @@
       <li>Un solo vistazo: cuánto entró, cuánto salió, qué pide acción.</li>
       <li>El color del encabezado refleja el estado general del día.</li>
     </ul>
-    <h3>Inventario y Vender</h3>
+    <h3>Inventario y Vendido</h3>
     <ul>
-      <li>En Vender: toca el producto en la cuadrícula y listo — una unidad vendida (puedes deshacer). También puedes escanear o buscar por código.</li>
+      <li>En Vendido: toca el producto que salió y listo — una unidad registrada (puedes deshacer). También puedes escanear o buscar por código.</li>
       <li>¿No registraste en vivo? Usa el Cierre del día: apunta cuánto salió de cada producto y aplica todo junto.</li>
       <li>Cada movimiento queda registrado con motivo y quién lo hizo.</li>
     </ul>
@@ -75,6 +75,12 @@
     </ul>
     <h3>Seguridad sin paranoia</h3>
     <p>Tus 3 claves se guardan cifradas en este dispositivo. El teclado mezcla los números con un emoji diferente cada vez — nadie puede memorizarlos mirando por encima de tu hombro.</p>
+    <div id="oc-help-licencia" style="display:none;margin-top:18px;padding:14px 16px;background:#EBF4F8;border-radius:8px;border:1px solid #5294AC;">
+      <h3 style="margin:0 0 6px;font-size:15px;color:#0F1923;">Tu código de licencia</h3>
+      <p id="oc-help-amg-code" style="font-family:monospace;font-size:18px;font-weight:700;letter-spacing:.12em;color:#E86040;margin:0 0 6px;word-break:break-all;"></p>
+      <p style="font-size:13px;color:#2C3E50;margin:0 0 8px;">Guárdalo. Con este código te identificamos si necesitas soporte.</p>
+      <p style="font-size:13px;color:#2C3E50;margin:0;">Soporte: <a href="https://wa.me/593999905080?text=Hola%2C%20soporte%20AMIGABLE" target="_blank" rel="noopener" style="color:#128C7E;font-weight:700;">WhatsApp</a> · <a href="mailto:staff@jfcarpio.com?subject=Soporte%20AMIGABLE-123" style="color:#2E6278;font-weight:700;">staff@jfcarpio.com</a></p>
+    </div>
   `;
 
   // Contenido del EMPLEADO: solo lo operativo del turno, lenguaje simple.
@@ -90,8 +96,8 @@
     <h3>Tu turno en 4 pasos</h3>
     <ul>
       <li><b>Hoy</b>: mira el resumen del día al entrar. Si hay rojo, avisa.</li>
-      <li><b>Vender</b>: toca el producto en la cuadrícula, o escanea/escribe su código si no lo encuentras rápido.</li>
-      <li><b>Vender</b>: toca "Vender 1" para descontar del stock al momento.</li>
+      <li><b>Vendido</b>: toca el producto que salió, o escanea/escribe su código si no lo encuentras rápido.</li>
+      <li><b>Vendido</b>: toca "Vender 1" para descontar del stock al momento.</li>
       <li><b>Ajustar</b>: si algo se rompió, se venció o el conteo estaba mal — usa Ajustar y escribe el motivo. Queda registrado.</li>
     </ul>
     <h3>Etiquetas</h3>
@@ -101,7 +107,11 @@
   const modal = document.createElement("div");
   modal.id = "oc-help-modal";
   modal.innerHTML = `<div id="oc-help-sheet">
-    <h2>¿Cómo funciona AMIGABLE-123?</h2>
+    <!-- Branding amigable-123 dentro de Ayuda: buen lugar para presentarse (JFC 2026-07-10).
+         onerror oculta la imagen si logo.png no está, sin romper el modal. -->
+    <img src="./logo.png" alt="amigable-123" style="height:38px;width:auto;object-fit:contain;display:block;margin:0 auto 12px;"
+         onerror="this.style.display='none';">
+    <h2>¿Cómo funciona amigable-123?</h2>
     <!-- Slogan informal de Amigable (JFC 2026-07-02): "tu negocio, a color".
          Va aquí y en la bienvenida (welcome-ui.js). El formal "Amigable: punto
          de venta y control de inventario" vive en el footer y la bienvenida. -->
@@ -115,9 +125,44 @@
   btn.id = "oc-help-btn";
   btn.textContent = "Ayuda (?)";
 
+  // Branding amigable-123 reubicado al header derecho, ENCIMA de "Ayuda (?)"
+  // (JFC 2026-07-10). Es apenas un sello discreto; el nombre del negocio del
+  // cliente vive esquinado a la izquierda. Columna vertical: [logo] arriba,
+  // [Ayuda (?)] abajo. Click en el logo = volver a Hoy (reemplaza al viejo
+  // #logoHeader que estaba a la izquierda). onerror oculta el logo si falta.
+  const brandWrap = document.createElement("div");
+  brandWrap.id = "oc-brand-help";
+  brandWrap.style.cssText = "display:none;flex-direction:column;align-items:flex-end;gap:2px;margin-left:10px;";
+  const brandLogo = document.createElement("img");
+  brandLogo.src = "./logo.png";
+  brandLogo.alt = "amigable-123";
+  brandLogo.title = "Ir a Hoy";
+  brandLogo.style.cssText = "height:22px;width:auto;object-fit:contain;display:block;cursor:pointer;";
+  brandLogo.onerror = function () { this.style.display = "none"; };
+  brandLogo.addEventListener("click", () => {
+    const hoy = document.querySelector('nav button[data-vista="hoy"]');
+    if (hoy) hoy.click();
+  });
+  brandWrap.appendChild(brandLogo);
+  // el botón Ayuda pierde su margin-top (ahora lo separa el gap de la columna)
+  btn.style.marginTop = "0";
+  brandWrap.appendChild(btn);
+
   function abrir() {
     const rol = window.OCAuth ? window.OCAuth.rolActual() : null;
     document.getElementById("oc-help-body").innerHTML = rol === "empleado" ? AYUDA_EMPLEADO : AYUDA_DUENO;
+    // Mostrar código de licencia si el dispositivo ya fue apropiado (789).
+    if (rol !== "empleado") {
+      try {
+        const owned = JSON.parse(localStorage.getItem("amigable_owned") || "null");
+        const bloqLic = document.getElementById("oc-help-licencia");
+        const codeEl  = document.getElementById("oc-help-amg-code");
+        if (bloqLic && codeEl && owned && owned.licenseCode) {
+          codeEl.textContent = owned.licenseCode;
+          bloqLic.style.display = "block";
+        }
+      } catch(_) {}
+    }
     modal.classList.add("abierto");
   }
   btn.addEventListener("click", abrir);
@@ -132,13 +177,14 @@
   // elemento flotante encima del contenido.
   window.addEventListener("oc-login", () => {
     const logout = document.getElementById("oc-logout");
-    if (logout && logout.parentNode && !document.body.contains(btn)) {
-      logout.insertAdjacentElement("afterend", btn);
+    if (logout && logout.parentNode && !document.body.contains(brandWrap)) {
+      logout.insertAdjacentElement("afterend", brandWrap);
     }
+    brandWrap.style.display = "flex";
     btn.style.display = "block";
   });
   window.addEventListener("oc-logout", () => {
-    btn.remove(); // vuelve a insertarse junto al próximo #oc-logout en el siguiente login
+    brandWrap.remove(); // se reinserta junto al próximo #oc-logout en el siguiente login
     modal.classList.remove("abierto");
   });
 })();
