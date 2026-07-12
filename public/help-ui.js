@@ -112,10 +112,10 @@
     <img src="./logo.png" alt="amigable-123" style="height:38px;width:auto;object-fit:contain;display:block;margin:0 auto 12px;"
          onerror="this.style.display='none';">
     <h2>¿Cómo funciona amigable-123?</h2>
-    <!-- Slogan informal de Amigable (JFC 2026-07-02): "tu negocio, a color".
+    <!-- Slogan de Amigable (JFC 2026-07-02): "administra tu negocio, a color".
          Va aquí y en la bienvenida (welcome-ui.js). El formal "Amigable: punto
          de venta y control de inventario" vive en el footer y la bienvenida. -->
-    <p style="font-family:var(--font-display,sans-serif);color:#E8A020;font-size:15px;font-weight:700;margin:0 0 14px;">Tu negocio, a color</p>
+    <p style="font-family:var(--font-display,sans-serif);color:#E8A020;font-size:15px;font-weight:700;margin:0 0 14px;">Administra tu negocio, a color</p>
     <div id="oc-help-body"></div>
     <button id="oc-help-cerrar">Entendido</button>
   </div>`;
