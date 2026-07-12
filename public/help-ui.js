@@ -73,8 +73,8 @@
       <li><b>Capa contable azul</b>: cuentas T, pérdidas y ganancias, balance. Tiene su propio código — distinto al de entrada.</li>
       <li><b>Claves y recuperación</b>: guarda tu correo antes de cambiar cualquier clave. Sin correo registrado no hay recuperación posible.</li>
     </ul>
-    <h3>Seguridad sin paranoia</h3>
-    <p>Tus 3 claves se guardan cifradas en este dispositivo. El teclado mezcla los números con un emoji diferente cada vez — nadie puede memorizarlos mirando por encima de tu hombro.</p>
+    <h3>Seguridad con todos los estándares del año 2026</h3>
+    <p>Tus 3 claves se guardan cifradas en este dispositivo. El teclado mezcla los números con un emoji diferente cada vez — nadie puede memorizarlos mirando por encima de tu hombro. Datos cifrados, bajo tu control, sin nube ajena.</p>
     <div id="oc-help-licencia" style="display:none;margin-top:18px;padding:14px 16px;background:#EBF4F8;border-radius:8px;border:1px solid #5294AC;">
       <h3 style="margin:0 0 6px;font-size:15px;color:#0F1923;">Tu código de licencia</h3>
       <p id="oc-help-amg-code" style="font-family:monospace;font-size:18px;font-weight:700;letter-spacing:.12em;color:#E86040;margin:0 0 6px;word-break:break-all;"></p>
