@@ -235,22 +235,19 @@
     transition:width 0.15s, border-radius 0.15s;
   }
   /* Cuando el logo horizontal carga, el sello se abre a pastilla ancha.
-     Logo invertido a blanco para ser visible sobre fondo azul oscuro — sin pastilla blanca (JFC 2026-07-15) */
+     Logo esquinado: sello pequeño arriba-izquierda, barely visible — el logo real está junto a Ayuda (JFC 2026-07-12) */
   header .sello.con-logo{
-    width:130px;
-    height:40px;
-    border-radius:8px;
+    width:104px;
+    height:26px;
+    border-radius:0;
     background:transparent;
     border-color:transparent;
+    border-width:0;
+    align-self:flex-start;
+    margin-top:-6px;
+    margin-left:-8px;
   }
-  header .sello.con-logo img{
-    filter:brightness(0) invert(1);
-    padding:2px;
-  }
-  /* AYUDA bar: ocultar logo duplicado, mantener solo el botón de texto */
-  #oc-brand-help img{ display:none !important; }
-  /* Evitar 3ra fila: AYUDA se alinea con SALIR en flex row */
-  #oc-brand-help{ flex-direction:row !important; align-items:center !important; gap:0 !important; margin-left:auto; }
+  header .sello.con-logo img{ padding:0 !important; }
   header h1{
     margin:0;
     font-family:var(--font-serif);
