@@ -234,8 +234,32 @@
     background:var(--azul-oscuro);
     transition:width 0.15s, border-radius 0.15s;
   }
-  /* Cuando el logo horizontal carga, el sello se abre a pastilla ancha.
-     Logo esquinado: sello pequeño arriba-izquierda, barely visible — el logo real está junto a Ayuda (JFC 2026-07-12) */
+  /* ═══════════════════════════════════════════════════════════════════════
+     SELLO CON LOGO — ESTADO APROBADO POR JFC (2026-07-12). NO TOCAR.
+     ═══════════════════════════════════════════════════════════════════════
+     DESCRIPCIÓN DEL DISEÑO INTENCIONAL:
+       El .sello del header muestra SOLO un watermark pequeño (104×26px)
+       esquinado arriba-izquierda. Es barely visible, a propósito.
+       El logo REAL (grande, legible) está en #oc-brand-help junto al
+       botón "Ayuda (?)" — ese es el único lugar donde el logo debe
+       destacarse visualmente.
+
+     LO QUE NO DEBES CAMBIAR NUNCA:
+       ❌ NO agregar background:#ffffff o cualquier color — crea la "pastilla
+          blanca" que JFC odia y que rompió el diseño dos veces (jul-15).
+       ❌ NO aumentar width/height a valores grandes (>130px / >40px) — lo
+          convierte en el logo principal del header, tapando el nombre del negocio.
+       ❌ NO cambiar border-radius a 8px+ — crea la pastilla pill que no va.
+       ❌ NO agregar filter:invert() ni brightness() — el logo en este tamaño
+          es un watermark, no necesita legibilidad perfecta.
+       ❌ NO quitar margin-top:-6px / margin-left:-8px — esos valores
+          compensan el padding del header para anclar en la esquina exacta.
+
+     REFERENCIA DE ESTADO CORRECTO (git show 5ec9aa1:docs/index.html):
+       width:104px; height:26px; border-radius:0; background:transparent;
+       border-color:transparent; border-width:0; align-self:flex-start;
+       margin-top:-6px; margin-left:-8px;
+     ═══════════════════════════════════════════════════════════════════════ */
   header .sello.con-logo{
     width:104px;
     height:26px;
@@ -244,6 +268,7 @@
     border-color:transparent;
     border-width:0;
     align-self:flex-start;
+    /* Compensa el padding del header (18px top, 20px left) para anclar en esquina */
     margin-top:-6px;
     margin-left:-8px;
   }
