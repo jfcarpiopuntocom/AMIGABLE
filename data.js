@@ -13,6 +13,32 @@ function registrarMovimiento(tipo, detalle) {
   db.get("movimientos").push({ id: randomUUID(), tipo, detalle, fecha: new Date().toISOString() }).write();
 }
 
+// --- Activación de licencia (plan gratuito vs. dispositivo activado, PIN 789) ---
+// Vive a nivel de módulo (no dentro de MODO_LOYVERSE/demo) porque los topes del
+// plan gratuito que consultan esto en server.js aplican sin importar el modo.
+function getActivacion() {
+  return db.get("activacion").value() || { instanceId: null, activatedAt: null, email: null };
+}
+function activarInstancia({ instanceId, email }) {
+  const datos = { instanceId: instanceId || null, activatedAt: new Date().toISOString(), email: email || null };
+  db.set("activacion", datos).write();
+  return datos;
+}
+// Cuenta TODAS las ventas del mes en curso, en TODAS las ubicaciones — a
+// diferencia de ventasMesAcumuladas() (más abajo, solo modo demo) que suma
+// montos de UNA sola ubicación para calcular comisiones. Este es un conteo
+// global simple, usado únicamente para el tope de 100 ventas/mes del plan
+// gratuito.
+const ZONA_ACTIVACION = "America/Guayaquil";
+function esDelMesActualGlobal(fechaISO) {
+  if (!fechaISO) return false;
+  const fmt = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: ZONA_ACTIVACION, year: "numeric", month: "2-digit" }).format(d);
+  return fmt(new Date(fechaISO)) === fmt(new Date());
+}
+function ventasCountMesGlobal() {
+  return db.get("ventas").value().filter((v) => esDelMesActualGlobal(v.fecha)).length;
+}
+
 function getActividad() {
   return db.get("movimientos").value().slice().reverse().slice(0, 100);
 }
@@ -158,6 +184,9 @@ if (MODO_LOYVERSE) {
     setGastosMensuales,
     exportarTodo,
     importarTodo,
+    getActivacion,
+    activarInstancia,
+    ventasCountMesGlobal,
   };
 } else {
   // ====================== MODO DEMO (local, sin token) ======================
@@ -738,5 +767,8 @@ function importarTodo(datos) {
     setActivoPromotor,
     getComisionesPromotores,
     marcarLiquidadoPromotor,
+    getActivacion,
+    activarInstancia,
+    ventasCountMesGlobal,
   };
 }
