@@ -235,14 +235,22 @@
     transition:width 0.15s, border-radius 0.15s;
   }
   /* Cuando el logo horizontal carga, el sello se abre a pastilla ancha.
-     Fondo blanco porque el logo tiene letras azul marino (transparente sobre oscuro = invisible) */
+     Logo invertido a blanco para ser visible sobre fondo azul oscuro — sin pastilla blanca (JFC 2026-07-15) */
   header .sello.con-logo{
     width:130px;
     height:40px;
     border-radius:8px;
-    background:#ffffff;
-    border-color:#ffffff;
+    background:transparent;
+    border-color:transparent;
   }
+  header .sello.con-logo img{
+    filter:brightness(0) invert(1);
+    padding:2px;
+  }
+  /* AYUDA bar: ocultar logo duplicado, mantener solo el botón de texto */
+  #oc-brand-help img{ display:none !important; }
+  /* Evitar 3ra fila: AYUDA se alinea con SALIR en flex row */
+  #oc-brand-help{ flex-direction:row !important; align-items:center !important; gap:0 !important; margin-left:auto; }
   header h1{
     margin:0;
     font-family:var(--font-serif);
