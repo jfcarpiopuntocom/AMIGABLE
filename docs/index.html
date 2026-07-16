@@ -3187,6 +3187,13 @@ async function cargarComisiones(){
         <tr><td><strong>Comisión de la promotor/a</strong></td><td style="text-align:right;"><strong>${fmtMoney(f.comisionSocio)}</strong></td></tr>
         <tr><td>Neto para el dueño</td><td style="text-align:right;">${fmtMoney(f.netoDueno)}</td></tr>
       </table>
+      ${(f.detallePendientes && f.detallePendientes.length) ? `
+      <details style="margin-top:8px;">
+        <summary style="font-size:14px;font-weight:700;cursor:pointer;color:var(--azul-medio,#2c4a68);user-select:none;">¿De qué ventas es este pago? →</summary>
+        <table style="width:100%;margin-top:6px;font-size:14px;">
+          ${f.detallePendientes.map(d => `<tr><td>${d.cantidad}× ${escHtml(d.producto)}</td><td style="text-align:right;">${fmtMoney(d.comisionSocio)}</td></tr>`).join("")}
+        </table>
+      </details>` : ""}
       ${termometroMeta(f.cumplimientoMeta, f.metaMensual)}
       ${simuladorHtml(f)}
       ${f.estado === "pendiente" ? `<button class="ir" style="margin-top:12px;background:var(--sim-verde,#00C87A);color:#fff;border-color:var(--sim-verde-dk,#009A5A);" onclick="marcarComisionPagada('${f.ubicacionId}','${escHtml(f.promotorNombre||'')}',${f.comisionSocio})">✓ Marcar como pagado (${f.ventasPendientes} ventas)</button>` : ""}
