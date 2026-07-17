@@ -14,3 +14,4 @@ _tools/
 # NO se publican — contienen el codigo fuente comentado (knowledge base) que se
 # oculta del repo publico. Los backups siguen accesibles en disco, sin subirse.
 docs/*_20[0-9][0-9]-[0-9][0-9]-*
+_backups/
