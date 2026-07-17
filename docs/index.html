@@ -62,7 +62,7 @@
     --font-body:"Source Sans 3", "Segoe UI", sans-serif;
     --font-mono:"JetBrains Mono", monospace;
     --font-serif:"Space Grotesk", "Avenir Next Condensed", sans-serif;
-    --nav-h:78px;
+    --nav-h:64px;
     --sidebar-w:248px;
     --header-h:104px;
     /* === SISTEMA SIMON — Sinclair Bloom × Kyoto Muted, aprobado JFC 2026-07-03 ===
@@ -352,16 +352,16 @@
   nav::-webkit-scrollbar{ display:none; }
   nav button{
     flex:0 0 auto;
-    width:74px;
+    width:62px;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:4px;
-    font-size:13px;
+    gap:3px;
+    font-size:11px;
     font-weight:600;
-    letter-spacing:0.02em;
-    padding:6px 2px;
+    letter-spacing:0.01em;
+    padding:4px 2px;
     min-height:44px;
     background:transparent;
     border:none;
@@ -370,11 +370,12 @@
     border-radius:8px;
     transition:background-color .15s ease, color .15s ease;
   }
-  nav button svg{ width:20px; height:20px; transition:transform .15s ease; }
+  nav button svg{ width:18px; height:18px; transition:transform .15s ease; }
+  nav button span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
   @media (hover:hover){
     nav button:not(.activo):hover{ background:rgba(15,25,35,0.06); color:var(--ink); }
   }
-  nav button svg{ width:20px; height:20px; }
+  nav button svg{ width:18px; height:18px; }
   nav button[data-vista="hoy"].activo{background:var(--sim-verde);color:#fff;}
   nav button[data-vista="inventario"].activo{background:var(--sim-verde);color:#fff;}
   nav button[data-vista="escanear"].activo{background:#374151;color:#fff;}
@@ -1007,7 +1008,7 @@
   </button>
   <button data-vista="escanear">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3"></path><path d="M16 4h3a1 1 0 0 1 1 1v3"></path><path d="M20 16v3a1 1 0 0 1-1 1h-3"></path><path d="M8 20H5a1 1 0 0 1-1-1v-3"></path><line x1="4" y1="12" x2="20" y2="12" stroke-dasharray="2.4 2.4"></line></svg>
-    <span>Vender</span>
+    <span>Vendido</span>
   </button>
   <button data-vista="etiquetas">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.2V5a1 1 0 0 1 1-1h6.2L21 14.8 13.8 22 3 11.2z"></path><circle cx="7.6" cy="7.6" r="1.3" fill="currentColor" stroke="none"></circle></svg>
@@ -2872,7 +2873,7 @@ function mostrarToastAnular(ventaId, productoId){
   const cont = document.getElementById("oc-toast-venta");
   if (!cont) return;
   clearInterval(toastVentaIntervalo); // cancela el interval anterior si existía
-  cont.innerHTML = `<div class="tag-card" style="position:fixed;left:16px;right:16px;bottom:calc(var(--nav-h,78px) + 16px);z-index:400;
+  cont.innerHTML = `<div class="tag-card" style="position:fixed;left:16px;right:16px;bottom:calc(var(--nav-h,64px) + 16px);z-index:400;
     background:var(--azul-oscuro,#1c3049);color:var(--blanco-calido,#F8F9FB);padding:14px 16px;border-radius:8px;
     display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;" id="oc-toast-anular">
     <span>✓ Vendido. Toca aquí si fue error (desaparece en 5s)</span>

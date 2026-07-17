@@ -58,7 +58,9 @@ Si eres desarrollador y alguna vez viste a un dueño de negocio pequeño luchand
 
 ## Precio
 
-**$399 USD — pago único, precio global.** Sin suscripción. Sin cobro por usuario. Pagas una vez, usas para siempre. Compradores en países en desarrollo califican para un descuento localizado.
+**$399 USD — pago único, precio global.** Sin suscripción. Sin cobro por usuario. Pagas una vez, usas para siempre.
+
+**Precio regional Latinoamérica: $199 USD**, verificado por identificación (cédula o documento nacional equivalente) de un país latinoamericano. Mismo producto, mismas actualizaciones, mismo soporte — el ajuste refleja el poder adquisitivo de la región, no una versión reducida.
 
 ---
 
@@ -113,6 +115,12 @@ Abre un issue antes de abrir un PR. El roadmap es opinado.
 2. **Conteo de caja al cierre de turno** — conciliación de efectivo físico vs. sistema con historial por empleado.
 3. **Lista de reposición por proveedor** — un toque genera el WhatsApp listo para enviar a cada proveedor.
 4. **Reportes exportables** — flujo de caja, comparativos por período, Excel/PDF para el contador.
+
+---
+
+## Datos y privacidad
+
+Ver [PRIVACY.md](./PRIVACY.md) — versión corta: tus datos de negocio nunca salen de tu dispositivo, lo único que rastreamos es tu licencia, y puedes verificarlo tú mismo/a leyendo el código.
 
 ---
 
