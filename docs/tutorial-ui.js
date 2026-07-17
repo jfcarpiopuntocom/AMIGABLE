@@ -79,7 +79,7 @@
     foco.style.height = Math.min(window.innerHeight - 8, r.height + pad * 2) + "px";
     tarjeta.querySelector(".paso").textContent = "Paso " + (idx + 1) + " de " + PASOS.length;
     tarjeta.querySelector("h3").textContent = paso.titulo;
-    tarjeta.querySelector("p").textContent = paso.texto;
+    tarjeta.querySelector(".cuerpo").textContent = paso.texto;
     document.getElementById("oc-tut-atras").style.display = idx === 0 ? "none" : "";
     document.getElementById("oc-tut-sig").textContent = idx === PASOS.length - 1 ? "Crear mi primer producto" : "Siguiente";
     // Tarjeta debajo del foco si cabe; si no, encima; siempre dentro de pantalla.
@@ -96,7 +96,9 @@
     if (idx >= PASOS.length) return terminar();
     irAVista(PASOS[idx].vista);
     // Espera corta a que la vista pinte antes de medir el objetivo.
-    setTimeout(pintar, 380);
+    setTimeout(pintar, 620);
+    // segundo ajuste tras asentar scroll/animacion: realinea el foco
+    setTimeout(() => { if (idx === n) pintar(); }, 900);
   }
 
   function terminar() {
@@ -127,7 +129,7 @@
     foco = document.createElement("div"); foco.id = "oc-tut-foco";
     tarjeta = document.createElement("div"); tarjeta.id = "oc-tut-card";
     tarjeta.innerHTML =
-      '<p class="paso"></p><h3></h3><p></p>' +
+      '<p class="paso"></p><h3></h3><p class="cuerpo"></p>' +
       '<div class="fila"><button id="oc-tut-atras">Atrás</button><button id="oc-tut-sig">Siguiente</button></div>' +
       '<button id="oc-tut-salir">Salir del tutorial</button>';
     document.body.appendChild(foco);
