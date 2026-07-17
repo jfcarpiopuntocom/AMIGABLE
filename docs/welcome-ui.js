@@ -81,6 +81,7 @@ reminder.innerHTML=`
       <p class="marca">Amigable-123</p>
       <h2>Un momento</h2>
       <p class="cuerpo" style="margin-bottom:16px;">Antes de continuar, confirma que ya viste el tutorial de bienvenida. Toma un minuto y es lo que hace que todo lo demás tenga sentido.</p>
+      <button id="am-rec-ver" style="width:100%;min-height:44px;padding:10px;border-radius:7px;border:2px solid var(--brass,#5294AC);background:transparent;color:var(--azul-medio,#2E6278) !important;-webkit-text-fill-color:var(--azul-medio,#2E6278) !important;font-family:var(--font-display,sans-serif);font-size:15px;font-weight:700;cursor:pointer;margin:0 0 14px;">Ver el tutorial ahora</button>
       <label><input type="checkbox" id="am-rec-check"> Sí, ya utilicé el tutorial de bienvenida</label>
       <button id="am-rec-continuar" disabled>Continuar</button>
     </div>`;
@@ -106,6 +107,10 @@ recBtn.addEventListener("click",()=>{
     reminder.classList.remove("abierto");
   }
 });
+document.getElementById("am-rec-ver").addEventListener("click",()=>{
+  reminder.classList.remove("abierto");
+  modal.classList.add("abierto");
+});
 // Sin click-outside-to-close ni tecla Escape aqui a proposito: el candado
 // de confirmacion es el punto entero de este modal.
 
@@ -121,7 +126,9 @@ function quizasMostrar(){
 // Reabre el wizard completo sin tocar ninguna flag — es solo un replay.
 window.OCWelcome={abrir:()=>modal.classList.add("abierto")};
 
-window.addEventListener("oc-login",()=>{
+window.addEventListener("oc-login",(e)=>{
+  // Solo mostrar al dueño (no al empleado, contador ni demo)
+  if(!e.detail||e.detail.rol!=="dueno"||e.detail.demo)return;
   const gate=document.getElementById("oc-gate");
   if(gate&&gate.style.display!=="none")return;
   quizasMostrar();
