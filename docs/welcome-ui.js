@@ -63,6 +63,7 @@ modal.innerHTML=`
       <p class="tagline">Administra tu negocio, a color</p>
       <p class="formal">Control de inventario, clientes y perchas</p>
       <p class="cuerpo">Manejar tu negocio no tiene por qué ser aburrido ni abrumador. Aquí tus productos hablan en colores que se encienden solos cuando hay que actuar: verde si todo marcha bien, dorado si hay dinero esperándote, rojo si toca actuar ya. Funciona sin internet, tus datos son solo tuyos, y no hay suscripciones ni anuncios de nadie.</p>
+      <button id="am-welcome-tut" style="width:100%;min-height:46px;margin-bottom:8px;border-radius:8px;border:2px solid #E86040;background:#E86040;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:15px;font-weight:700;cursor:pointer;">Hacer el tutorial guiado</button>
       <button id="am-welcome-guia">Ver la guía</button>
       <button id="am-welcome-ok">Empezar</button>
     </div>`;
@@ -92,6 +93,10 @@ function cerrar(){
   try{localStorage.setItem(FLAG,"1")}catch(_){}
 }
 document.getElementById("am-welcome-ok").addEventListener("click",cerrar);
+document.getElementById("am-welcome-tut").addEventListener("click",()=>{
+  cerrar();
+  if(window.OCTutorial&&window.OCTutorial.iniciar)window.OCTutorial.iniciar();
+});
 document.getElementById("am-welcome-guia").addEventListener("click",()=>{
   cerrar();
   if(window.OCHelp&&window.OCHelp.abrir)window.OCHelp.abrir();
@@ -108,8 +113,9 @@ recBtn.addEventListener("click",()=>{
   }
 });
 document.getElementById("am-rec-ver").addEventListener("click",()=>{
+  // Lanza el TUTORIAL interactivo (tutorial-ui.js) — NO la guia de lectura.
   reminder.classList.remove("abierto");
-  modal.classList.add("abierto");
+  if(window.OCTutorial&&window.OCTutorial.iniciar)window.OCTutorial.iniciar();
 });
 // Sin click-outside-to-close ni tecla Escape aqui a proposito: el candado
 // de confirmacion es el punto entero de este modal.

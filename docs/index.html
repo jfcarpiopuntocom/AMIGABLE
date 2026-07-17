@@ -3248,8 +3248,7 @@ async function enviarResumenSemanalWhatsApp(){
   if (totalPend > 0) L.push(`Comisiones pendientes: ${fmtMoney(totalPend)} (${pend.length} percha/s).`);
   if (criticos.length){ L.push("Stock crítico:"); criticos.forEach(c => L.push("• " + c)); }
   else L.push("Sin stock crítico. Todo en orden.");
-  const mensaje = L.join("
-");
+  const mensaje = L.join("\n");
   if (navigator.share) { try { await navigator.share({ text: mensaje }); return; } catch (_) {} }
   // (2026-07-17) el resumen semanal es "para ti": si el dueno registro su
   // WhatsApp en Avanzado, se abre directo a su propio numero — cero pasos extra.
@@ -3518,6 +3517,7 @@ setTimeout(() => {
 <script src="./help-ui.js"></script>
 <script src="./vista-perchas.js"></script>
 <script src="./welcome-ui.js"></script>
+<script src="./tutorial-ui.js"></script>
 <script>
 // Item 4 (revision JFC 2026-07-05): capa PWA minima — cachea el shell
 // (HTML/JS/CSS/assets propios) para que la app abra sin conexion. Nunca
