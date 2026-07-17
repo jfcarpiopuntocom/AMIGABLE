@@ -3231,6 +3231,49 @@ async function enviarResumenWhatsApp(){
   window.open("https://wa.me/?text=" + encodeURIComponent(L.join("\n")), "_blank");
 }
 
+// Mejora #5 (JFC 2026-07-17): resumen SEMANAL por WhatsApp, ofrecido solo (no
+// enviado en automático). Se ofrece máximo una vez cada 7 días con un toast
+// descartable — nunca bloquea el flujo ni se repite el mismo día.
+async function enviarResumenSemanalWhatsApp(){
+  const [dash, liq] = await Promise.all([
+    fetch(`${API}/dashboard?ubicacionId=${ubicacionActual}`).then(r => r.json()).catch(() => ({})),
+    fetch(`${API}/liquidaciones`).then(r => r.json()).catch(() => []),
+  ]);
+  const rs = dash.resumenSemana || {};
+  const pend = (Array.isArray(liq) ? liq : []).filter(f => f.estado === "pendiente");
+  const totalPend = pend.reduce((a, f) => a + (f.comisionSocio || 0), 0);
+  const criticos = (dash.alertas || []).filter(a => a.estado === "rojo").slice(0, 5).map(a => a.mensaje);
+  const L = ["*Resumen semanal — amigable-123*"];
+  L.push(`Ventas de la semana: ${fmtMoney(rs.entra || 0)} en ${rs.ventasCount || 0} venta(s).`);
+  if (totalPend > 0) L.push(`Comisiones pendientes: ${fmtMoney(totalPend)} (${pend.length} percha/s).`);
+  if (criticos.length){ L.push("Stock crítico:"); criticos.forEach(c => L.push("• " + c)); }
+  else L.push("Sin stock crítico. Todo en orden.");
+  const mensaje = L.join("
+");
+  if (navigator.share) { try { await navigator.share({ text: mensaje }); return; } catch (_) {} }
+  window.open("https://wa.me/?text=" + encodeURIComponent(mensaje), "_blank");
+}
+
+function ofrecerResumenSemanalSiToca(){
+  if (!window.OCAuth || window.OCAuth.rolActual() !== "dueno") return;
+  if (window.OCAuth.esDemo && window.OCAuth.esDemo()) return;
+  let ultimo = 0;
+  try { ultimo = Number(localStorage.getItem("amg_resumen_semanal_ofrecido") || 0); } catch (_) {}
+  if (Date.now() - ultimo < 7 * 86400000) return;
+  try { localStorage.setItem("amg_resumen_semanal_ofrecido", String(Date.now())); } catch (_) {}
+  const toast = document.createElement("div");
+  toast.style.cssText = "position:fixed;bottom:16px;left:16px;right:16px;max-width:420px;margin:0 auto;background:#0F1923;border:2px solid #25D366;border-radius:10px;padding:14px 16px;z-index:9500;box-shadow:0 8px 30px #060d14;";
+  toast.innerHTML = `<p style="color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;font-size:14px;margin:0 0 10px;font-weight:700;">📊 ¿Enviarte el resumen de esta semana por WhatsApp?</p>
+    <div style="display:flex;gap:8px;">
+      <button id="oc-resumen-sem-si" style="flex:1;min-height:44px;border:none;border-radius:7px;background:#25D366;color:#04210f !important;-webkit-text-fill-color:#04210f !important;font-weight:700;cursor:pointer;">Enviar</button>
+      <button id="oc-resumen-sem-no" style="min-height:44px;padding:0 14px;border:2px solid #5294AC;border-radius:7px;background:transparent;color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;cursor:pointer;">Ahora no</button>
+    </div>`;
+  document.body.appendChild(toast);
+  toast.querySelector("#oc-resumen-sem-si").addEventListener("click", () => { enviarResumenSemanalWhatsApp(); toast.remove(); });
+  toast.querySelector("#oc-resumen-sem-no").addEventListener("click", () => toast.remove());
+}
+window.addEventListener("oc-login", () => setTimeout(ofrecerResumenSemanalSiToca, 1200));
+
 // MEJORA 3 — Recibo instantáneo al pagar comisión.
 // Después de marcar como pagado, la app arma un mini-recibo en WhatsApp listo
 // para enviarle a la promotora/socio. Un toque cierra el ciclo sin salir de la app.
