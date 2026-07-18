@@ -14,4 +14,21 @@ _tools/
 # NO se publican — contienen el codigo fuente comentado (knowledge base) que se
 # oculta del repo publico. Los backups siguen accesibles en disco, sin subirse.
 docs/*_20[0-9][0-9]-[0-9][0-9]-*
+*_20[0-9][0-9]-[0-9][0-9]-*
 _backups/
+
+# public/: carpeta de backups/versiones legacy (JFC 2026-07-18) — NO es la
+# carpeta de despliegue real (esa es docs/, GitHub Pages). Contiene copias
+# versionadas (v1_0, v1_1, "oficial") y una subcarpeta backups/ con fecha.
+# Se queda local, nunca se publica.
+public/
+
+# Material interno de planeacion/dev (JFC 2026-07-18): notas, propuestas y
+# subsistemas en desarrollo que no son parte de la app publicada. Local only.
+/*.zip
+/AMIGABLE subsistema de sincronizacion y log entre dispositivos/
+/implementation_plan.md
+/index trunco para avances.html
+/AMIGABLE-propuesta-Avatiun.html
+/check-no-cloud.sh
+/.claude/start.js
