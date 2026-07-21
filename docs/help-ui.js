@@ -83,6 +83,19 @@
       te los puede quitar. La activación desbloquea productos y exportaciones ilimitadas.
       Incluye <b>2 años de parches y actualizaciones</b> — el estándar del sector es 1.
     </p>
+    <h3>La promesa</h3>
+    <ul style="font-size:14px;line-height:1.6;">
+      <li>Te ahorra <b>50% de tu tiempo</b> comparado con hacerlo a mano.</li>
+      <li>Se aprende <b>en 10 minutos</b> — sin manual necesario.</li>
+      <li>Construida para <b>durar 10 años</b> — ninguna suscripción te la puede quitar.</li>
+    </ul>
+    <h3>Tu licencia</h3>
+    <p style="font-size:14px;line-height:1.6;margin:0 0 14px;">
+      Licencia privada: uso permanente de la app, con cumplimiento consensuado
+      y sin invocar propiedad intelectual en tu contra. La app en sí vive en
+      nuestro sitio web — pero todo lo que tú ingresas se mantiene solamente
+      en tus dispositivos. Nunca sube a ninguna "nube" ni servidor central.
+    </p>
     <button id="oc-help-ver-bienvenida" style="width:100%;min-height:44px;padding:10px;border-radius:8px;
       border:2px solid var(--azul-medio,#2E6278);background:transparent;color:var(--azul-medio,#2E6278);
       font-family:var(--font-display,sans-serif);font-size:14px;font-weight:700;cursor:pointer;">

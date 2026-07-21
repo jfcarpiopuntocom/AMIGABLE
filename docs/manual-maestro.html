@@ -477,6 +477,25 @@
     <div class="stat"><div class="n" data-contar="15">0</div><div class="l">% IVA Ecuador aplicado</div></div>
   </div>
   <p style="font-size:14px;color:var(--ink-soft);">Los contadores arrancan al llegar a esta sección — así se ve en acción uno de los efectos dinámicos del manual.</p>
+
+  <h3>La promesa</h3>
+  <div class="grid3">
+    <div class="tarjeta tilt revela">
+      <h4 style="margin-top:0;color:var(--sim-verde-dk);">Te ahorra 50% del tiempo</h4>
+      <p style="margin:0;font-size:16px;">Comparado con llevar el control a mano, en Excel o de memoria.</p>
+    </div>
+    <div class="tarjeta tilt revela">
+      <h4 style="margin-top:0;color:var(--sim-amarillo-dk);">Se aprende en 10 minutos</h4>
+      <p style="margin:0;font-size:16px;">El color hace el trabajo de interpretar — no hace falta manual para empezar a usarla.</p>
+    </div>
+    <div class="tarjeta tilt revela">
+      <h4 style="margin-top:0;color:var(--sim-azul-dk);">Dura 10 años</h4>
+      <p style="margin:0;font-size:16px;">Sin suscripción que te la pueda quitar. Incluye 2 años de parches y actualizaciones.</p>
+    </div>
+  </div>
+
+  <h3>Tu licencia</h3>
+  <p>amigable-123 se entrega con una <strong>licencia privada</strong>: uso permanente de la app, con cumplimiento consensuado y sin invocar propiedad intelectual en tu contra. La app en sí vive en nuestro sitio web — pero <strong>todo lo que tú ingresas se mantiene solamente en tus dispositivos</strong>. Nunca sube a ninguna "nube" ni servidor central.</p>
 </section>
 
 <section class="bloque revela" id="primeros-pasos">
@@ -919,6 +938,9 @@
 
   <h3>Actividad reciente</h3>
   <p>Un historial cronológico de todo lo que pasó: ventas, ajustes de stock con su motivo, altas de producto, anulaciones, cambios de estrella, transferencias entre perchas y liquidaciones de comisión. Es tu bitácora anti-descuadre — si algo no cuadra al final del mes, aquí está el rastro completo.</p>
+
+  <h3>Reporte trimestral $100 (opcional)</h3>
+  <p>Al fondo de Avanzado hay un botón opcional para pedir, <strong>máximo una vez por trimestre</strong>, un reporte donde JFC revisa tus números a fondo y los compara contra los ratios saludables de tu sector, actividad y ciudad — los mismos indicadores tipo "Valle de la Muerte" que usan los inversionistas para detectar problemas a tiempo: financieros, de marketing y de los canales que te traen clientes. <strong>Tú apruebas exactamente qué datos se envían</strong> antes de que salga nada — un checklist te deja desmarcar cualquier categoría. Es orientación, no dependencia: la meta es que lo necesites cada vez menos, no más.</p>
 </section>
 
 <section class="bloque revela" id="csv-respaldo">
@@ -1000,6 +1022,11 @@ Carmen Ulloa,</pre>
 
   <h3>Puntos de restauración automáticos</h3>
   <p>Además del respaldo manual, amigable-123 guarda —solo dentro de ese navegador— una foto de tus datos cada cierto tiempo, por si borras algo sin querer. <strong>Esto no reemplaza el respaldo manual:</strong> si se borra el caché del navegador o cambias de celular, esos puntos se pierden con él.</p>
+
+  <h3>Formato D — Respaldo automatizado a tu correo y/o WhatsApp</h3>
+  <p>La forma más segura de no perder nunca tus datos por olvido: en <strong>Avanzado</strong> eliges cada cuánto quieres que la app te recuerde respaldar — diario, semanal, quincenal o mensual — y por cuáles canales, correo y/o WhatsApp. <strong>El mensual es el mínimo obligatorio</strong> y no se puede alargar más: así, si algún mes se te pasa por completo, nunca pierdes más de 30 días de historial.</p>
+  <div class="tip"><strong>El backup va a TI, no a nosotros.</strong> Nunca sueltas control de tus datos. La app descarga el archivo y te abre el correo o WhatsApp con el destinatario y el mensaje ya escritos — el único paso que te queda es adjuntar el archivo recién descargado y tocar Enviar. Es lo más automático posible sin que absolutamente nada pase por un servidor nuestro.</div>
+  <p>Cada semana, si ya hiciste al menos un respaldo, la app te muestra un aviso amigable preguntando si te llegó bien a tu correo, y te desea una buena semana. Si no te llegó, un toque lo reenvía.</p>
 </section>
 
 <section class="bloque revela" id="transferencias">
@@ -1312,13 +1339,18 @@ Carmen Ulloa,</pre>
   }
 
   // -------- Simulador de semáforo interactivo --------
+  // REDISEÑADO (portado desde friendly-123, 2026-07-21): antes usaba el
+  // MISMO gradiente en los 3 niveles y solo prendia un glow de box-shadow en
+  // n3 — "eso del glow no sirve". Ahora replica EXACTO el sistema real de
+  // index.html: 3 tonos solidos y planos por color (bg = aguado, base =
+  // medio, dk = intenso), sin degrade interno, sin glow.
   var ESTADOS = {
-    verde:   {bg:'linear-gradient(135deg, #00C87A 0%, #009A5A 100%)', borde:'#009A5A', msg:'Stock saludable', stock:22},
-    amarillo:{bg:'linear-gradient(135deg, #FFC700 0%, #B8860B 100%)', borde:'#B8860B', msg:'Buen margen — hay dinero esperándote', stock:9, tinta:'#0F1923'},
-    naranja: {bg:'linear-gradient(135deg, #F97316 0%, #C05000 100%)', borde:'#C05000', msg:'Quedan pocas — revisar pronto', stock:5},
-    rojo:    {bg:'linear-gradient(135deg, #E8365D 0%, #B0183E 100%)', borde:'#B0183E', msg:'Sin stock — repón cuanto antes', stock:0},
-    azul:    {bg:'linear-gradient(135deg, #5294AC 0%, #2E6278 100%)', borde:'#2E6278', msg:'Margen 13% — revisa el precio o el costo', stock:48},
-    negro:   {bg:'#0A0A0F', borde:'#000000', msg:'Sin ventas hace 82 días — tu dinero está descansando ahí', stock:15}
+    verde:   {bg:'#C0F5E0', base:'#00C87A', dk:'#009A5A', msg:'Stock saludable', stock:22},
+    amarillo:{bg:'#FFF3C2', base:'#FFC700', dk:'#B8860B', msg:'Buen margen — hay dinero esperándote', stock:9, tintaOscuraHastaN2:true},
+    naranja: {bg:'#FDD9BE', base:'#F97316', dk:'#C05000', msg:'Quedan pocas — revisar pronto', stock:5},
+    rojo:    {bg:'#FAD5DE', base:'#E8365D', dk:'#B0183E', msg:'Sin stock — repón cuanto antes', stock:0},
+    azul:    {bg:'#D4ECF5', base:'#5294AC', dk:'#2E6278', msg:'Margen 13% — revisa el precio o el costo', stock:48},
+    negro:   {bg:'#17171D', base:'#0A0A0F', dk:'#000000', msg:'Sin ventas hace 82 días — tu dinero está descansando ahí', stock:15, siempreBlanco:true}
   };
   var estadoActual = 'verde', nivelActual = 1;
   var demoCaja = document.getElementById('demoCaja');
@@ -1327,15 +1359,21 @@ Carmen Ulloa,</pre>
   function pintarDemo(){
     var e = ESTADOS[estadoActual];
     if(!demoCaja) return;
-    var factor = nivelActual === 1 ? 0.55 : nivelActual === 2 ? 0.8 : 1;
-    demoCaja.style.background = e.bg;
-    demoCaja.style.borderColor = e.borde;
-    demoCaja.style.color = e.tinta || '#FFFFFF';
-    demoCaja.style.boxShadow = nivelActual === 3 ? ('0 0 22px -2px ' + e.borde) : 'none';
+    var tonos = [e.bg, e.base, e.dk]; // índice 0/1/2 = nivel 1/2/3
+    var fondo = tonos[nivelActual - 1];
+    var borde = nivelActual === 1 ? e.base : e.dk;
+    var tinta;
+    if (e.siempreBlanco) tinta = '#FFFFFF';
+    else if (e.tintaOscuraHastaN2) tinta = nivelActual === 3 ? '#FFFFFF' : '#0F1923';
+    else tinta = nivelActual === 1 ? '#0F1923' : '#FFFFFF';
+    demoCaja.style.background = fondo;
+    demoCaja.style.borderColor = borde;
+    demoCaja.style.color = tinta;
+    demoCaja.style.boxShadow = 'none'; // nunca glow — plano, siempre
     demoStock.textContent = e.stock;
-    demoStock.style.color = e.tinta || '#FFFFFF';
+    demoStock.style.color = tinta;
     demoMsg.textContent = e.msg + '  ·  intensidad ' + nivelActual + '/3';
-    demoMsg.style.color = e.tinta || '#FFFFFF';
+    demoMsg.style.color = tinta;
   }
   document.querySelectorAll('.simulador .estado-btn').forEach(function(btn){
     btn.addEventListener('click', function(){
