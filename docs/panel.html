@@ -8,24 +8,33 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="dark">
 <title>Panel · PC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Source+Sans+3:wght@400;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* Paleta homologada a la identidad visual de amigable-123 (docs/index.html :root).
+     Se mantiene la POSTURA de consola oscura (deliberada para este panel admin),
+     solo se corrigieron los VALORES de token para que coincidan con la marca:
+     azul-oscuro de cabecera, rust como acento primario, Sinclair Bloom plano
+     para los estados (verde/amarillo/naranja/rojo/azul), y la tipografía real
+     (Space Grotesk / Source Sans 3 / JetBrains Mono). JFC, 2026-07-21. */
   :root{
-    --bg:#0f1117;
-    --surface:#1a1e2a;
-    --surface2:#222736;
-    --border:#2e3448;
-    --gold:#c9953a;
-    --gold-dim:#b8862f;
-    --green:#28c98a;
-    --green-dim:#1a7a52;
-    --amber:#d4832a;
-    --red:#c94040;
-    --blue:#4a7fd4;      /* marca Olimpo 2.0 (consola) — distinta del POS */
-    --ink:#e8e4dc;
-    --ink-soft:#b8b3bf;  /* secundario legible (>= #999, regla de legibilidad) */
-    --ink-dim:#9d9aa8;   /* terciario — nunca más oscuro que #999 */
-    --font:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
-    --mono:"Cascadia Code","JetBrains Mono","Consolas",monospace;
+    --bg:#0F1923;        /* --azul-oscuro de la app */
+    --surface:#16222D;
+    --surface2:#1C2B38;
+    --border:#2C3E50;    /* --ink-soft de la app, reusado como borde oscuro */
+    --gold:#E86040;      /* --rust — acento primario real de la marca (antes dorado apagado) */
+    --gold-dim:#C05000;  /* --rust-deep */
+    --green:#00C87A;     /* --sim-verde */
+    --green-dim:#009A5A; /* --sim-verde-dk */
+    --amber:#F97316;     /* --sim-naranja */
+    --red:#E8365D;       /* --sim-rojo */
+    --blue:#5294AC;      /* --sim-azul — marca Olimpo 2.0 (consola) — distinta del POS */
+    --ink:#F8F9FB;        /* --crema */
+    --ink-soft:#CCCCCC;  /* secundario legible (>= #999, regla de legibilidad) */
+    --ink-dim:#999999;   /* terciario — nunca más oscuro que #999 */
+    --font:"Source Sans 3","Segoe UI",sans-serif;
+    --font-display:"Space Grotesk","Avenir Next Condensed",sans-serif;
+    --mono:"JetBrains Mono",monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;}
@@ -34,7 +43,7 @@
   #gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:0;}
   #gate-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:36px 32px 28px;width:min(340px,92vw);display:flex;flex-direction:column;align-items:center;gap:20px;}
   #gate-brand{font-size:14px;font-family:var(--mono);color:var(--ink-dim);letter-spacing:0.08em;text-transform:uppercase;}
-  #gate-title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:0.01em;}
+  #gate-title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:0.01em;font-family:var(--font-display);}
 
   /* Casillas de entrada (●●●) */
   .slots{display:flex;gap:10px;justify-content:center;}
@@ -57,10 +66,10 @@
   #panel.visible{display:block;}
 
   /* Topbar */
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:3px solid #FFC700;background:var(--bg);position:sticky;top:0;z-index:10;}
   .topbar-brand{display:flex;align-items:center;gap:10px;}
-  .topbar-sello{width:34px;height:34px;border-radius:8px;background:var(--gold);color:#000;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .topbar-brand h1{font-size:16px;font-weight:700;}
+  .topbar-sello{width:34px;height:34px;border-radius:8px;background:var(--gold);color:#fff;font-weight:800;font-size:14px;font-family:var(--font-display);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .topbar-brand h1{font-size:16px;font-weight:700;font-family:var(--font-display);}
   .topbar-brand .role{font-size:13px;color:var(--ink-soft);font-family:var(--mono);margin-top:1px;}
   .topbar-right{display:flex;align-items:center;gap:14px;}
   .dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2.5s ease-in-out infinite;}
@@ -79,7 +88,7 @@
 
   /* Sección heading */
   .sec-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;margin-top:34px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-  .sec-head h2{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gold);}
+  .sec-head h2{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gold);font-family:var(--font-display);}
   .sec-head .hint{font-size:13px;font-family:var(--mono);color:var(--ink-dim);}
 
   /* Callout de ROLES — evita confundir master con dueño y proyectos entre sí */
@@ -99,13 +108,13 @@
   .pcard.main{border-top:3px solid var(--gold);}
   .pcard.otro{border-top:3px solid var(--blue);}
   .pcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
-  .pcard-nombre{font-size:17px;font-weight:700;line-height:1.2;}
+  .pcard-nombre{font-size:17px;font-weight:700;line-height:1.2;font-family:var(--font-display);}
   .pcard-sub{font-size:13px;color:var(--ink-soft);font-family:var(--mono);margin-top:2px;}
   .badge{font-size:12px;font-family:var(--mono);font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:4px;flex-shrink:0;}
-  .badge-prod{background:rgba(40,201,138,.16);color:var(--green);}
-  .badge-demo{background:rgba(212,131,42,.18);color:var(--amber);}
-  .badge-main{background:rgba(201,149,58,.18);color:var(--gold);}
-  .badge-otro{background:rgba(74,127,212,.18);color:var(--blue);}
+  .badge-prod{background:rgba(0,200,122,.16);color:var(--green);}
+  .badge-demo{background:rgba(249,115,22,.18);color:var(--amber);}
+  .badge-main{background:rgba(232,96,64,.18);color:var(--gold);}
+  .badge-otro{background:rgba(82,148,172,.18);color:var(--blue);}
   .pcard-desc{font-size:14px;color:var(--ink-soft);line-height:1.5;}
 
   /* Filas de datos técnicos dentro de cada card */
@@ -122,7 +131,7 @@
   .btn-outline{background:transparent;border-color:var(--border);color:var(--ink-soft);}
   .btn-outline:hover{border-color:var(--gold-dim);color:var(--ink);}
   .btn-danger{background:transparent;border-color:var(--red);color:var(--red);}
-  .btn-danger:hover{background:rgba(201,64,64,.12);}
+  .btn-danger:hover{background:rgba(232,54,93,.12);}
 
   /* Tabla comparativa de versiones */
   .tabla-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;background:var(--surface);}
@@ -133,19 +142,19 @@
   table.versiones tr:last-child td{border-bottom:none;}
   table.versiones td.nom{font-family:var(--font);font-weight:700;}
   .pill{display:inline-block;font-size:12px;font-family:var(--mono);font-weight:700;padding:2px 8px;border-radius:4px;}
-  .pill.green{background:rgba(40,201,138,.16);color:var(--green);}
-  .pill.amber{background:rgba(212,131,42,.18);color:var(--amber);}
-  .pill.gold{background:rgba(201,149,58,.18);color:var(--gold);}
-  .pill.blue{background:rgba(74,127,212,.18);color:var(--blue);}
+  .pill.green{background:rgba(0,200,122,.16);color:var(--green);}
+  .pill.amber{background:rgba(249,115,22,.18);color:var(--amber);}
+  .pill.gold{background:rgba(232,96,64,.18);color:var(--gold);}
+  .pill.blue{background:rgba(82,148,172,.18);color:var(--blue);}
 
   /* ── LICENCIAS (integrado desde el ex master-recovery-panel, JFC 2026-07-10) ──
      Todo el monitoreo de instancias vive AQUÍ, en el panel maestro. NO en un
      archivo aparte. Badges de los 4 estados del killswitch. */
   .lic-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:.04em;font-family:var(--mono);}
-  .lic-badge.activa{background:rgba(40,201,138,.18);color:var(--green);}
-  .lic-badge.observada{background:rgba(74,127,212,.18);color:var(--blue);}
-  .lic-badge.limitada{background:rgba(212,131,42,.20);color:var(--amber);}
-  .lic-badge.bloqueada{background:rgba(201,64,64,.20);color:var(--red);}
+  .lic-badge.activa{background:rgba(0,200,122,.18);color:var(--green);}
+  .lic-badge.observada{background:rgba(82,148,172,.18);color:var(--blue);}
+  .lic-badge.limitada{background:rgba(249,115,22,.20);color:var(--amber);}
+  .lic-badge.bloqueada{background:rgba(232,54,93,.20);color:var(--red);}
   .lic-input{padding:9px 12px;border:1.5px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--ink);font-size:14px;font-family:var(--mono);}
   .lic-input:focus{outline:none;border-color:var(--gold-dim);}
   #lic-tabla td.date{font-size:12px;color:var(--ink-soft);font-family:var(--mono);}
@@ -174,7 +183,7 @@
   #modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:200;}
   #modal-overlay.visible{display:flex;}
   #modal-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px 26px;width:min(320px,90vw);display:flex;flex-direction:column;align-items:center;gap:16px;}
-  #modal-titulo{font-size:16px;font-weight:700;text-align:center;}
+  #modal-titulo{font-size:16px;font-weight:700;text-align:center;font-family:var(--font-display);}
   #modal-desc{font-size:14px;color:var(--ink-soft);text-align:center;line-height:1.5;}
   #modal-msg{font-size:13px;font-family:var(--mono);min-height:16px;color:var(--red);}
   #modal-cancelar{font-size:13px;color:var(--ink-dim);background:transparent;border:none;cursor:pointer;padding:4px 8px;}

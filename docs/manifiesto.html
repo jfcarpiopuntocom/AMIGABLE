@@ -21,25 +21,25 @@
 <meta name="twitter:image" content="https://jfcarpiopuntocom.github.io/AMIGABLE/favicon.png" />
 <meta name="color-scheme" content="light only" />
 <meta name="supported-color-schemes" content="light" />
-<meta name="theme-color" content="#FFFFFF" />
+<meta name="theme-color" content="#0F1923" />
 <link rel="canonical" href="https://jfcarpiopuntocom.github.io/AMIGABLE/manifiesto.html" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Source+Sans+3:wght@400;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#0B1220;
-    --ink-soft:#3B4759;
-    --muted:#6B7684;
-    --line:#E6E9EF;
+    --ink:#0F1923;
+    --ink-soft:#2C3E50;
+    --muted:#2C3E50;
+    --line:#E2E8ED;
     --bg:#FFFFFF;
-    --bg-soft:#F7F8FA;
-    --accent:#0B5FFF;
+    --bg-soft:#F8F9FB;
+    --accent:#2E6278;
     --accent-2:#00C87A;
-    --accent-3:#FF6A3D;
-    --serif:'Instrument Serif', Georgia, serif;
-    --sans:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --accent-3:#E86040;
+    --serif:'Space Grotesk', 'Avenir Next Condensed', sans-serif;
+    --sans:'Source Sans 3', 'Segoe UI', sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
@@ -58,35 +58,35 @@
     display:flex;align-items:center;justify-content:space-between;
     padding:18px 40px;
     backdrop-filter:blur(20px) saturate(180%);
-    background:rgba(255,255,255,.75);
-    border-bottom:1px solid rgba(11,18,32,.06);
+    background:#0F1923;
+    border-bottom:3px solid #FFC700;
   }
   nav .brand{
     font-family:var(--serif);
     font-size:22px;
     letter-spacing:-.01em;
     display:flex;align-items:center;gap:10px;
+    color:#FFFFFF;
   }
   nav .brand .dot{
     width:10px;height:10px;border-radius:50%;
-    background:linear-gradient(135deg,var(--accent),var(--accent-2));
-    box-shadow:0 0 0 4px rgba(11,95,255,.12);
+    background:#FFC700;
   }
   nav .links{display:flex;gap:28px;align-items:center;font-size:14px;font-weight:500}
-  nav .links a{color:var(--ink-soft);text-decoration:none;transition:color .2s}
-  nav .links a:hover{color:var(--ink)}
+  nav .links a{color:#CCCCCC;text-decoration:none;transition:color .2s}
+  nav .links a:hover{color:#FFFFFF}
   .lang-toggle{
     display:inline-flex;align-items:center;gap:0;
-    border:1px solid var(--line);border-radius:999px;
-    padding:3px;background:#fff;
-    font-size:12px;font-weight:600;
+    border:1px solid #2C3E50;border-radius:999px;
+    padding:3px;background:#0F1923;
+    font-size:13px;font-weight:600;
   }
   .lang-toggle button{
     border:0;background:transparent;padding:6px 14px;border-radius:999px;
-    cursor:pointer;color:var(--muted);font-weight:600;
+    cursor:pointer;color:#CCCCCC;font-weight:600;
     transition:all .25s ease;
   }
-  .lang-toggle button.active{background:var(--ink);color:#fff}
+  .lang-toggle button.active{background:#FFC700;color:#0F1923}
 
   .hero{
     position:relative;
@@ -115,10 +115,10 @@
   .hero-inner{position:relative;z-index:1;max-width:980px;margin:0 auto}
   .eyebrow{
     display:inline-block;
-    font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+    font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
     color:var(--accent);
-    padding:8px 18px;border:1px solid rgba(11,95,255,.18);border-radius:999px;
-    background:rgba(11,95,255,.05);
+    padding:8px 18px;border:1px solid #D4ECF5;border-radius:999px;
+    background:#EAF4F8;
     margin-bottom:32px;
   }
   h1{
@@ -220,7 +220,7 @@
     width:64px;height:64px;border-radius:18px;
     display:flex;align-items:center;justify-content:center;
     font-size:30px;margin-bottom:26px;
-    background:linear-gradient(135deg,#F0F5FF,#E6F7EF);
+    background:#EAF4F8;
     border:1px solid var(--line);
   }
   .aud-card h3{
@@ -265,15 +265,16 @@
   }
 
   .colors{
-    background:#0B1220;
+    background:#0F1923;
     color:#fff;
     border-radius:32px;
     margin:0 28px;
     padding:110px 70px;
+    border-bottom:3px solid #FFC700;
   }
   .colors h2{color:#fff}
-  .colors h2 em{color:#8FB4FF}
-  .colors .section-head p{color:rgba(255,255,255,.6)}
+  .colors h2 em{color:#FFC700}
+  .colors .section-head p{color:#CCCCCC}
   .color-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
@@ -281,23 +282,23 @@
     margin-top:60px;
   }
   .color-card{
-    background:rgba(255,255,255,.04);
-    border:1px solid rgba(255,255,255,.1);
+    background:#17212C;
+    border:1px solid #2C3E50;
     border-radius:20px;
     padding:32px 28px;
     transition:all .3s ease;
   }
   .color-card:hover{
-    background:rgba(255,255,255,.07);
+    background:#1E2C3A;
     transform:translateY(-4px);
   }
   .color-dot{
     width:28px;height:28px;border-radius:999px;
     margin-bottom:18px;
-    box-shadow:0 0 0 6px rgba(255,255,255,.06);
+    box-shadow:0 0 0 6px #1E2C3A;
   }
   .color-card h4{font-size:18px;font-weight:700;margin-bottom:8px}
-  .color-card p{font-size:14.5px;color:rgba(255,255,255,.65);line-height:1.65}
+  .color-card p{font-size:14.5px;color:#CCCCCC;line-height:1.65}
 
   .features{background:var(--bg)}
   .feat-grid{
@@ -312,7 +313,7 @@
   }
   .feat .tag{
     display:inline-block;
-    font-size:11px;
+    font-size:13px;
     font-weight:700;
     letter-spacing:.14em;
     text-transform:uppercase;
@@ -320,9 +321,9 @@
     border-radius:999px;
     margin-bottom:14px;
   }
-  .feat.ventas .tag{background:#E6F0FF;color:#0B5FFF}
-  .feat.inv .tag{background:#E6F9F0;color:#00A35A}
-  .feat.com .tag{background:#FFF0E6;color:#E85D2E}
+  .feat.ventas .tag{background:#D4ECF5;color:#2E6278}
+  .feat.inv .tag{background:#C0F5E0;color:#009A5A}
+  .feat.com .tag{background:#FDD9BE;color:#C05000}
   .feat h4{font-size:19px;font-weight:700;margin-bottom:12px;letter-spacing:-.01em}
   .feat p{font-size:15px;color:var(--ink-soft);line-height:1.7}
 
@@ -373,10 +374,7 @@
   .cta{
     text-align:center;
     padding:150px 40px;
-    background:
-      radial-gradient(700px circle at 15% 25%, rgba(11,95,255,.07), transparent 55%),
-      radial-gradient(600px circle at 85% 75%, rgba(0,200,122,.07), transparent 55%),
-      #fff;
+    background:#F8F9FB;
   }
   .cta h2{margin-bottom:26px}
   .cta p{
@@ -417,7 +415,7 @@
 
 <!-- NAV -->
 <nav>
-  <div class="brand"><span class="dot"></span><span>amigable-123</span></div>
+  <div class="brand"><span class="dot"></span><span>AMIGABLE-123</span></div>
   <div class="links">
     <a href="#problema">El problema</a>
     <a href="#filosofia">Filosofía</a>
@@ -692,8 +690,8 @@
 </section>
 
 <footer>
-  <div>Ya existe algo pensado exactamente para esto. Se llama <strong>amigable-123</strong>.</div>
-  <div>Hecho con respeto para quienes viven del mostrador. &nbsp;<a href="https://jfcarpio.com" style="color:inherit;opacity:.6;">jfcarpio.com</a></div>
+  <div>Ya existe algo pensado exactamente para esto. Se llama <strong>AMIGABLE-123</strong>.</div>
+  <div>Hecho con respeto para quienes viven del mostrador. &nbsp;<a href="https://jfcarpio.com" style="color:#2C3E50;">jfcarpio.com</a></div>
 </footer>
 
 <script>
@@ -746,7 +744,7 @@ function applyLang(lang) {
 
   // Safe localStorage
   try {
-    localStorage.setItem("amigable_lang", lang);
+    localStorage.setItem("f123_lang", lang);
   } catch (e) {}
 }
 
@@ -762,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial language
   let savedLang = 'es';
   try {
-    const saved = localStorage.getItem("amigable_lang");
+    const saved = localStorage.getItem("f123_lang");
     if (saved === 'es' || saved === 'en') savedLang = saved;
   } catch (e) {}
 
@@ -829,9 +827,9 @@ counters.forEach(c => cio.observe(c));
 // cacheado queden atascados en una version vieja para siempre.
 (async function(){try{
 var r=await fetch("./version.json?ts="+Date.now(),{cache:"no-store"});
-if(!r.ok){try{var eb=JSON.parse(localStorage.getItem("amigable_errores")||"[]");eb.push({ts:Date.now(),tipo:"version-check",msg:"version.json "+r.status});if(eb.length>50)eb.splice(0,eb.length-50);localStorage.setItem("amigable_errores",JSON.stringify(eb))}catch(_){}return}
+if(!r.ok){try{var eb=JSON.parse(localStorage.getItem("f123_errores")||"[]");eb.push({ts:Date.now(),tipo:"version-check",msg:"version.json "+r.status});if(eb.length>50)eb.splice(0,eb.length-50);localStorage.setItem("f123_errores",JSON.stringify(eb))}catch(_){}return}
 var v=String(((await r.json())||{}).version||"");if(!v)return;
-var K="amg_version_vista",prev=localStorage.getItem(K);
+var K="f123_version_vista",prev=localStorage.getItem(K);
 if(prev===v)return;localStorage.setItem(K,v);
 try{var cs=await caches.keys();for(var c of cs){try{await caches.delete(c)}catch(_){}}}catch(_){}
 location.reload();

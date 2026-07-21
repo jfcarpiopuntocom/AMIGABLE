@@ -73,12 +73,13 @@
   ::selection{background:var(--sim-amarillo); color:var(--ink);}
   :focus-visible{outline:3px solid var(--rust); outline-offset:2px;}
 
-  /* ---------- Barra de progreso de lectura (Efecto dinámico 1) ---------- */
+  /* ---------- Barra de progreso de lectura (Efecto dinámico 1) ----------
+     FIX (JFC 2026-07-21): tenia glow de color — la regla es CERO glow en
+     TODO el documento, sin excepciones. Plano. */
   #barraProgreso{
     position:fixed; top:0; left:0; height:5px; width:0%;
     background:var(--sim-amarillo);
     z-index:999; transition:width .12s linear;
-    box-shadow:0 0 10px 1px var(--sim-amarillo-dk);
   }
 
   /* ---------- Header fijo ---------- */
@@ -267,11 +268,15 @@
   }
   .simulador button.estado-btn:hover{transform:translateY(-2px);}
   .simulador button.estado-btn.activo{color:#FFFFFF; border-color:transparent;}
+  /* FIX (JFC 2026-07-21): fallback plano (sin degrade) — coincide con el
+     estado inicial real que pinta pintarDemo() (verde, nivel 1 = -bg claro,
+     tinta oscura), para que nunca se vea ni un flash de gradiente viejo
+     antes de que el JS corra. */
   .demo-caja{
-    max-width:280px; border-radius:12px; padding:20px; border:3px solid var(--sim-verde-dk);
-    background:linear-gradient(135deg, var(--sim-verde) 0%, var(--sim-verde-dk) 100%);
-    transition:background .25s ease, border-color .25s ease, box-shadow .25s ease;
-    color:#FFFFFF;
+    max-width:280px; border-radius:12px; padding:20px; border:3px solid var(--sim-verde);
+    background:var(--sim-verde-bg);
+    transition:background .25s ease, border-color .25s ease;
+    color:#0F1923;
   }
   .demo-caja .dnombre{font-family:var(--font-display); font-weight:700; font-size:18px;}
   .demo-caja .dstock{font-family:var(--font-display); font-size:36px; font-weight:700; margin-top:6px;}
@@ -499,18 +504,19 @@
     </div>
     <div class="tarjeta tilt revela">
       <h4 style="margin-top:0;color:var(--sim-azul-dk);">Dura 10 años</h4>
-      <p style="margin:0;font-size:16px;">Sin suscripción que te la pueda quitar. Incluye 2 años de parches y actualizaciones.</p>
+      <p style="margin:0;font-size:16px;">Sin suscripción que te la pueda quitar. Incluye 10 años de parches y soporte, ligados al correo que registras al activar.</p>
     </div>
   </div>
 
   <h3>Tu licencia</h3>
   <p>amigable-123 se entrega con una <strong>licencia privada</strong>: uso permanente de la app, con cumplimiento consensuado y sin invocar propiedad intelectual en tu contra. La app en sí vive en nuestro sitio web — pero <strong>todo lo que tú ingresas se mantiene solamente en tus dispositivos</strong>. Nunca sube a ninguna "nube" ni servidor central.</p>
+  <p><strong>Gratis hasta que tu negocio crezca:</strong> puedes usar amigable-123 sin pagar nada mientras tengas hasta <strong>25 productos</strong>, <strong>100 ventas al mes</strong> y <strong>1 empleado o encargado</strong> además de ti. Al superar cualquiera de esos límites, se activa tu copia con un pago único (los métodos de pago se anuncian en nuestro sitio).</p>
 </section>
 
 <section class="bloque revela" id="primeros-pasos">
   <div class="eyebrow">Sección 2</div>
   <h2>Primeros pasos</h2>
-  <p class="lead">Instalar amigable-123 toma menos de dos minutos. Estos son los pasos, en orden, para tener el local funcionando hoy mismo.</p>
+  <p class="lead">amigable-123 no es una app de tienda: es un sitio web que visitas desde Chrome o Safari, y que se queda funcionando en tu celular o tablet aunque se vaya el internet. Cada vez que vuelves a abrirlo con conexión, se actualiza solo. El 34% de los negocios pequeños en Latinoamérica sufre cortes de internet mientras atiende su local, kiosko o stand de feria — amigable-123 sigue vendiendo igual. Abrirlo toma menos de dos minutos.</p>
 
   <div class="paso">
     <div class="num">1</div>
@@ -539,15 +545,11 @@
 
   <div class="tip"><strong>Recomendación JFC:</strong> el primer día, deja la app en modo demo (o con datos de prueba) y practica vender, ajustar stock y cerrar el día antes de cargar tu inventario real. Así aprendes sin miedo a "romper" nada.</div>
 
-  <h3>Checklist de arranque</h3>
+  <h3>Lo único obligatorio para arrancar</h3>
+  <p class="lead">amigable-123 se aprende en 10 minutos, no necesitas una lista de tareas antes de usarla. Lo único que pedimos son dos datos, para que quedes registrado y protegido:</p>
   <ul class="checklist">
-    <li>App instalada en el celular o tablet del local</li>
-    <li>3 códigos de acceso definidos (dueño, empleado, contador) + correo de recuperación registrado en Avanzado → Acceso (si EmailJS está configurado, llega por correo; si no, el código aparece en pantalla)</li>
-    <li>Sucursales y perchas creadas con su tipo (propio, socio, franquicia, consignación)</li>
-    <li>Al menos 10 productos reales cargados con precio, costo y umbrales</li>
-    <li>Gastos mensuales de cada ubicación registrados en Avanzado</li>
-    <li>Primer respaldo cifrado descargado y guardado fuera del celular</li>
-    <li>Empleado capacitado en Vender + ajuste rápido de stock</li>
+    <li>Tu correo, para recibir tus respaldos y quedar habilitado 10 años de parches y soporte</li>
+    <li>Tu WhatsApp, como contacto directo con JFC y como segundo método de respaldo</li>
   </ul>
 </section>
 
@@ -622,11 +624,11 @@
         <span class="barra" style="height:22px;background:var(--sim-amarillo-dk);"></span>
       </div>
       <strong>Nivel 3 — Encendido</strong>
-      <p style="font-size:15px;margin:4px 0 0;">Máxima urgencia dentro del color, con resplandor visual. "Última unidad — no esperes más."</p>
+      <p style="font-size:15px;margin:4px 0 0;">Máxima urgencia dentro del color, tono plano al máximo. "Última unidad — no esperes más."</p>
     </div>
   </div>
 
-  <div class="alerta"><strong>El rojo es distinto:</strong> además del degradé, el rojo pulsa suavemente (una animación de urgencia) para que ningún producto en emergencia pase desapercibido, incluso si el dueño solo mira la pantalla de reojo.</div>
+  <div class="alerta"><strong>El rojo es distinto:</strong> además de su tono plano, el rojo pulsa suavemente (una animación de urgencia, no un degradé de color) para que ningún producto en emergencia pase desapercibido, incluso si el dueño solo mira la pantalla de reojo.</div>
 
   <h3>La regla de oro: nunca memorices, solo mira el color</h3>
   <p>Todo el diseño de amigable-123 parte de una convicción de Juan Fernando Carpio: un dueño de negocio en Ecuador no tiene tiempo de leer reportes de 12 columnas cada mañana. Sí tiene tiempo de mirar una pantalla 8 segundos y saber, sin pensar, qué hacer primero. Por eso cada color tiene siempre la misma pregunta implícita:</p>
