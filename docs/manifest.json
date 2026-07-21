@@ -1,7 +1,7 @@
 {
   "name": "AMIGABLE-123",
   "short_name": "AMIGABLE",
-  "description": "Tu negocio, a color. Punto de venta y control de inventario sin servidor.",
+  "description": "Deja de adivinar. Empieza a ver. Punto de venta y control de inventario sin servidor.",
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
