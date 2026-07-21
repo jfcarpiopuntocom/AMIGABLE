@@ -92,19 +92,20 @@
     margin-top:5px;
   }
   header.top .marca{display:flex; align-items:center; gap:12px;}
+  header.top .marca-logo-col{display:flex; flex-direction:column; align-items:flex-start; gap:2px; flex-shrink:0;}
   /* FIX (JFC 2026-07-21): el header del manual maestro no mostraba el logo
      real en ningun lado — solo un circulo de texto "123" generico. Distinto
      del header de la app operativa (index.html), donde JFC decidio a
      proposito NO poner logo — esa decision era sobre la UI de trabajo
      diario, no sobre documentos de marketing/ayuda como este manual, donde
      SI corresponde mostrar la marca. */
-  header.top .marca img.marca-logo{height:40px; width:auto; display:block; flex-shrink:0;}
+  header.top .marca-logo-col img.marca-logo{height:40px; width:auto; display:block;}
   /* Responsive (mobile-first): en pantallas angostas el logo ancho +
      titulo + reloj no caben en una fila — se reduce el logo y se permite
      wrap antes de que el titulo quede atropellado por encima del logo. */
   @media (max-width:600px){
     header.top{flex-wrap:wrap; row-gap:8px;}
-    header.top .marca img.marca-logo{height:26px;}
+    header.top .marca-logo-col img.marca-logo{height:26px;}
     header.top h1{font-size:17px;}
   }
   header.top h1{font-size:20px; color:#FFFFFF; margin:0;}
@@ -377,11 +378,11 @@
 
 <header class="top">
   <div class="marca">
-    <img class="marca-logo" src="./logo.png" alt="amigable-123" onerror="this.style.display='none'; this.nextElementSibling.querySelector('h1').insertAdjacentHTML('afterbegin','amigable-123 — ');">
-    <div>
-      <h1>Manual Maestro</h1>
+    <div class="marca-logo-col">
+      <img class="marca-logo" src="./logo.png" alt="amigable-123" onerror="this.style.display='none'; this.closest('.marca').querySelector('h1').insertAdjacentHTML('afterbegin','amigable-123 — ');">
       <div class="tagline">Deja de adivinar. Empieza a ver.</div>
     </div>
+    <h1>Manual Maestro</h1>
   </div>
   <div id="relojManual">--:--</div>
 </header>
