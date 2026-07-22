@@ -157,7 +157,13 @@
     a.href = url;
     a.download = nombre;
     document.body.appendChild(a);
-    a.click();
+    // FIX PREVENTIVO iOS/webview (JFC 2026-07-22) — NO simplificar a solo
+    // a.click(). En iPhone/iPad el atributo download se ignora y el archivo
+    // se abre en una pestaña; y algunos webviews muy cerrados lanzan al hacer
+    // click programático. Envolvemos en try/catch y, como último recurso,
+    // abrimos el blob en una pestaña para que el dueño lo guarde a mano.
+    // Nunca dejamos al dueño sin su archivo.
+    try { a.click(); } catch (_) { try { window.open(url, "_blank"); } catch (_) {} }
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
     return { nombre, humano: stampHumano(now) };
@@ -165,7 +171,7 @@
 
   function cuerpoEmail(nombreArchivo, humano) {
     return `Respaldo de amigable-123 generado el ${humano}.\n\n`
-         + `1) Adjunta el archivo "${nombreArchivo}" que se acaba de descargar en este dispositivo (carpeta Descargas).\n`
+         + `1) Adjunta el archivo "${nombreArchivo}" que se acaba de descargar en este dispositivo (en Android/PC está en Descargas; en iPhone/iPad se abre en una pestaña: usa Compartir y "Guardar en Archivos").\n`
          + `2) Envíalo a este correo (a ti mismo/a).\n\n`
          + `— El backup va a TI, no a un servidor. Nunca sueltas control de tus datos.`;
   }
@@ -182,10 +188,44 @@
     window.location.href = href;
   }
 
+  // FIX PREVENTIVO MÓVIL (JFC 2026-07-22) — NO BORRAR. window.open ocurre
+  // DESPUÉS de un await (la descarga del respaldo), o sea fuera del gesto del
+  // usuario. Safari/Chrome en teléfono/tablet bloquean ese popup y devuelven
+  // null: el respaldo por WhatsApp fallaba SIN aviso. Aquí, si el open se
+  // bloquea, mostramos un enlace tocable — un toque ES un gesto fresco, así
+  // que el enlace siempre abre. Redundancia barata, salva la función en móvil.
+  function mostrarLinkFallback(url, etiqueta) {
+    try {
+      const prev = document.getElementById("oc-backup-linkfallback");
+      if (prev) prev.remove();
+      const wrap = document.createElement("div");
+      wrap.id = "oc-backup-linkfallback";
+      wrap.style.cssText = "position:fixed;bottom:150px;left:50%;transform:translateX(-50%);z-index:9492;"
+        + "background:#0F1923;color:#fff;border:2px solid #E8A020;border-radius:12px;padding:12px 16px;"
+        + "max-width:420px;width:calc(100% - 28px);box-shadow:0 12px 28px rgba(15,25,35,.35);"
+        + "font-family:Georgia,serif;font-size:14px;line-height:1.45;text-align:center;";
+      const intro = document.createElement("div");
+      intro.style.cssText = "margin-bottom:8px;color:#fff;";
+      intro.textContent = "Tu navegador bloqueó la ventana. Toca aquí para abrirlo:";
+      const a = document.createElement("a");
+      a.href = url; a.target = "_blank"; a.rel = "noopener";
+      a.textContent = etiqueta;
+      a.style.cssText = "display:inline-block;min-height:44px;line-height:44px;padding:0 18px;"
+        + "background:#25D366;color:#0a3d20;border-radius:8px;font-weight:700;text-decoration:none;";
+      a.addEventListener("click", () => { try { wrap.remove(); } catch (_) {} });
+      wrap.appendChild(intro); wrap.appendChild(a);
+      document.body.appendChild(wrap);
+      // Auto-limpieza: no dejar el enlace colgado en pantalla indefinidamente.
+      setTimeout(() => { try { wrap.remove(); } catch (_) {} }, 25000);
+    } catch (_) {}
+  }
+
   function abrirWa(num, nombreArchivo, humano) {
     const texto = cuerpoWa(nombreArchivo, humano);
     const url = `https://wa.me/${normalizeWa(num)}?text=${encodeURIComponent(texto)}`;
-    window.open(url, "_blank", "noopener");
+    let w = null;
+    try { w = window.open(url, "_blank", "noopener"); } catch (_) { w = null; }
+    if (!w) mostrarLinkFallback(url, "Abrir WhatsApp");
   }
 
   // Corre la rutina completa: descarga + abre canales elegidos + marca timestamp.
@@ -281,8 +321,8 @@
       <div style="font-weight:700;color:#E8A020;margin-bottom:4px;">${_textoAssu}</div>
       <div style="margin-bottom:10px;">${_cuerpoAssu}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button id="oc-backup-assured-ok" style="flex:1;min-height:40px;padding:8px 12px;border:2px solid #00C87A;background:#00C87A;color:#fff;border-radius:8px;font-weight:700;cursor:pointer;">Sí, llegó — buena semana</button>
-        <button id="oc-backup-assured-resend" style="flex:1;min-height:40px;padding:8px 12px;border:2px solid #2E6278;background:#fff;color:#2E6278;border-radius:8px;font-weight:700;cursor:pointer;">Reenviar ahora</button>
+        <button id="oc-backup-assured-ok" style="flex:1;min-height:44px;padding:8px 12px;border:2px solid #00C87A;background:#00C87A;color:#fff;border-radius:8px;font-weight:700;cursor:pointer;">Sí, llegó — buena semana</button>
+        <button id="oc-backup-assured-resend" style="flex:1;min-height:44px;padding:8px 12px;border:2px solid #2E6278;background:#fff;color:#2E6278;border-radius:8px;font-weight:700;cursor:pointer;">Reenviar ahora</button>
       </div>`;
     document.body.appendChild(wrap);
     document.getElementById("oc-backup-assured-ok").addEventListener("click", () => {
@@ -373,8 +413,8 @@
       <div style="font-weight:700;color:#E8A020;margin-bottom:4px;">Es hora de tu respaldo</div>
       <div style="margin-bottom:10px;">${msg}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button id="oc-backup-remind-ok" style="flex:1;min-height:40px;padding:8px 12px;border:2px solid #E8A020;background:#E8A020;color:#fff;border-radius:8px;font-weight:700;cursor:pointer;">Respaldar ahora</button>
-        <button id="oc-backup-remind-later" style="flex:1;min-height:40px;padding:8px 12px;border:2px solid #2E6278;background:#fff;color:#2E6278;border-radius:8px;font-weight:700;cursor:pointer;">Más tarde</button>
+        <button id="oc-backup-remind-ok" style="flex:1;min-height:44px;padding:8px 12px;border:2px solid #E8A020;background:#E8A020;color:#fff;border-radius:8px;font-weight:700;cursor:pointer;">Respaldar ahora</button>
+        <button id="oc-backup-remind-later" style="flex:1;min-height:44px;padding:8px 12px;border:2px solid #2E6278;background:#fff;color:#2E6278;border-radius:8px;font-weight:700;cursor:pointer;">Más tarde</button>
       </div>`;
     document.body.appendChild(wrap);
     document.getElementById("oc-backup-remind-ok").addEventListener("click", () => {
