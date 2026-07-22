@@ -12,15 +12,17 @@
 //      Resend caído, timeout), devolvemos { enviado: false, codigo: pin } y
 //      auth-ui.js muestra el PIN en pantalla — el dueño nunca queda sin salida.
 //
-// PARA ACTIVAR EL ENVÍO POR CORREO — pasos únicos (5 minutos):
-//   1. Crear cuenta gratuita en resend.com (3.000 emails/mes gratis)
-//   2. En Resend → Domains → Add Domain → verificar jfcarpio.com (2 registros DNS)
-//   3. En Resend → API Keys → Create API Key → copiar el key
-//   4. En la carpeta cloudflare-worker/:
-//      wrangler secret put RESEND_API_KEY    ← pegar el key
-//      wrangler secret put FROM_EMAIL        ← ej: noreply@jfcarpio.com
-//      wrangler deploy
-//   Listo. Sin tocar ningún archivo de código.
+// ESTADO ACTUAL (JFC 2026-07-22): YA DESPLEGADO Y FUNCIONANDO.
+//   RESEND_API_KEY está puesto como secret y el Worker envía con el remitente
+//   onboarding@resend.dev (el fallback del Worker), que funciona en cualquier
+//   cuenta Resend SIN verificar dominio. No hay que hacer nada más.
+//
+// SI ALGÚN DÍA quieres que el correo salga desde tu propio dominio:
+//   1. En Resend → Domains → Add Domain → verificar tu dominio (registros DNS).
+//   2. wrangler secret put FROM_EMAIL   ← ej: noreply@tudominio.com
+//   3. wrangler deploy
+//   OJO: NO pongas un FROM_EMAIL de un dominio sin verificar — Resend lo
+//   rechaza y el envío falla en silencio. Mientras dudes, deja el default.
 
 (function () {
   // Misma URL obfuscada que auth-ui.js — se lee en el momento de la llamada

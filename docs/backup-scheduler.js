@@ -17,7 +17,8 @@
 // LIMITACIÓN HONESTA (importante — no la escondemos al usuario):
 //   Los enlaces mailto: y wa.me NO pueden adjuntar archivos por sí solos
 //   (limitación de los estándares). Lo que hacemos:
-//     1) Descargamos automáticamente el archivo .json cifrado del respaldo.
+//     1) Descargamos automáticamente el archivo .json del respaldo (texto
+//        plano, NO cifrado — ver la "Nota honesta" del panel).
 //     2) Abrimos mailto: (o wa.me:) con el destinatario, asunto y cuerpo YA
 //        escritos. El usuario da 1 toque más (adjuntar el archivo recién
 //        descargado) y otro toque a Enviar. Es lo más automático posible
@@ -30,6 +31,17 @@
   const LS_PREFS = "oc_backup_prefs_v1";
   const LS_LAST  = "oc_backup_last_v1"; // { ts: number, canal: "email"|"whatsapp"|"both" }
   const LS_ASSURED = "oc_backup_assurance_last_v1";
+  // Snooze: hasta cuándo NO volver a mostrar el recordatorio. Lo pone "Más
+  // tarde" (24h) y el auto-config (un ciclo de gracia). Sin esto, toca() se
+  // basa solo en la fecha del último backup y el nag reaparece en cada login.
+  const LS_SNOOZE = "oc_backup_snooze_v1";
+
+  function getSnooze() {
+    try { return parseInt(localStorage.getItem(LS_SNOOZE) || "0", 10) || 0; } catch (_) { return 0; }
+  }
+  function setSnooze(ms) {
+    try { localStorage.setItem(LS_SNOOZE, String(Date.now() + ms)); } catch (_) {}
+  }
 
   // Frecuencias en días. Mensual (30) es el mínimo obligatorio: no se puede
   // elegir MÁS de 30 días. Se puede elegir menos (diario, semanal, quincenal).
@@ -104,7 +116,14 @@
 
   function normalizeWa(num) {
     // wa.me acepta solo dígitos, sin +. Aceptamos que el dueño escriba +593 99 990 5080
-    return (num || "").replace(/[^\d]/g, "");
+    let d = (num || "").replace(/[^\d]/g, "");
+    // Ecuador: el móvil nacional se escribe 09XXXXXXXX (10 dígitos), pero
+    // wa.me EXIGE formato internacional sin +. Sin esto, un dueño que teclea
+    // su número como lo marca a diario (0999905080) generaba un wa.me/0999...
+    // que abre un chat vacío o inexistente. Transformación determinista
+    // (no un guess): 09XXXXXXXX → 593 + los 9 dígitos sin el 0 inicial.
+    if (/^09\d{8}$/.test(d)) d = "593" + d.slice(1);
+    return d;
   }
 
   // FIX PREVENTIVO: normalizeWa() solo limpia el texto, no valida que sea un
@@ -311,11 +330,19 @@
               configurado: true,
             });
             setPrefs(prefs);
+            // Recién auto-configurado: da un ciclo de gracia (la frecuencia
+            // elegida) antes del primer aviso, para no nagear 4s después de
+            // que el dueño activó el dispositivo y aún no tiene datos. NO
+            // sembramos un backup falso (rompería el assurance semanal).
+            setSnooze(frecDe(prefs.frecKey).dias * 24 * 60 * 60 * 1000);
           } else {
             return; // sin email y sin config, no molestar
           }
         }
-        if (toca(prefs)) {
+        // Snooze silencia SOLO el recordatorio ("Más tarde"/gracia inicial),
+        // nunca el assurance de "¿llegó tu respaldo?".
+        const snoozed = getSnooze() > Date.now();
+        if (toca(prefs) && !snoozed) {
           mostrarRecordatorioRespaldo();
         } else if (tocaAssurance()) {
           mostrarAssurance();
@@ -356,8 +383,10 @@
     });
     document.getElementById("oc-backup-remind-later").addEventListener("click", () => {
       wrap.remove();
-      // Postponer 24h: marca assured para que no vuelva a molestar hoy.
-      try { localStorage.setItem(LS_ASSURED, String(Date.now() - (6 * 24 * 60 * 60 * 1000))); } catch (_) {}
+      // Postponer 24h de verdad. Antes esto seteaba LS_ASSURED, que toca()
+      // ignora — el recordatorio reaparecía en el siguiente login. El snooze
+      // sí lo respeta chequearAlArrancar().
+      setSnooze(24 * 60 * 60 * 1000);
     });
   }
 
