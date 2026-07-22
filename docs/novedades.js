@@ -245,7 +245,7 @@
     sec.innerHTML =
       '<h3 class="seccion" style="margin-top:0;">Novedades</h3>' +
       '<div class="oc-nov-card">' +
-        '<h4 style="margin:0 0 6px;font-size:15px;">🧪 Gamificación — feature experimental</h4>' +
+        '<h4 style="margin:0 0 6px;font-size:15px;">Tu día de hoy</h4>' +
         '<p style="font-size:14px;color:var(--ink-soft,#5d5340);margin:0 0 10px;">' + escHtmlLocal(mensajeRacha(st)) + '</p>' +
         '<div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px;">' +
           '<div><div style="font-size:24px;">' + racheFuego(st.racha) + '</div><div style="font-size:13px;color:var(--ink-soft,#5d5340);">Racha: ' + st.racha + ' día' + (st.racha === 1 ? "" : "s") + '</div></div>' +
@@ -305,11 +305,11 @@
     card.className = "tag-card";
     card.style.cssText = "text-align:left;margin-top:22px;";
     card.innerHTML =
-      '<h3 class="seccion" style="margin-top:0;">🧪 Gamificación del empleado (experimental)</h3>' +
-      '<p style="font-size:14px;color:var(--ink-soft,#5d5340);margin-top:0;">Le agrega a tus empleados un panel propio de "Novedades": racha de uso, puntos e insignias por buenos hábitos (ventas, fotos de percha, transferencias). No compite entre empleados, no sale del dispositivo, no afecta ningún dato de negocio.</p>' +
+      '<h3 class="seccion" style="margin-top:0;">Motivación del empleado</h3>' +
+      '<p style="font-size:14px;color:var(--ink-soft,#5d5340);margin-top:0;">Le agrega a tus empleados un panel propio de "Novedades": racha de uso, puntos e insignias por buenos hábitos del turno (ventas, fotos de percha, transferencias). No compite entre empleados, no sale del dispositivo, no afecta ningún dato de negocio.</p>' +
       '<label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;cursor:pointer;">' +
         '<input type="checkbox" id="oc-nov-toggle" style="width:20px;height:20px;">' +
-        'Activar gamificación experimental' +
+        'Activar logros y racha para empleados' +
       '</label>';
     vista.appendChild(card);
     var chk = document.getElementById("oc-nov-toggle");

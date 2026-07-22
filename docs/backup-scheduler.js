@@ -477,8 +477,15 @@
   // ==========================================================================
   function renderPanel(mount) {
     if (!mount) return;
-    // No mostrar a demo — ver nota en esDuenoReal().
-    if (window.OCAuth && window.OCAuth.esDemo && window.OCAuth.esDemo()) { mount.innerHTML = ""; return; }
+    // En demo: mostrar una vista previa desactivada para que el dueño sepa que existe.
+    // Para usarla de verdad, activa el dispositivo con PIN 789.
+    if (window.OCAuth && window.OCAuth.esDemo && window.OCAuth.esDemo()) {
+      mount.innerHTML = `<div style="border:2px dashed #9E9E9E;border-radius:12px;padding:14px 16px;background:#F5F5F5;margin-top:16px;">
+        <h3 style="margin:0 0 4px;color:#555;font-family:Georgia,serif;font-size:18px;">Respaldo automático a correo / WhatsApp</h3>
+        <p style="margin:0;font-size:14px;color:#555;line-height:1.5;">Disponible para dueños reales. Ingresa con PIN <strong>789</strong> para configurar la frecuencia y el destino del respaldo automático — el archivo va a <em>ti</em>, nunca a nosotros.</p>
+      </div>`;
+      return;
+    }
 
     // Bug fix: si el dispositivo no está activado, el export da 403. Mejor
     // avisarlo aquí que dejar que el usuario configure todo y falle al primer intento.
