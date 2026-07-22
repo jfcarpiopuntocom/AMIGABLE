@@ -249,9 +249,18 @@
       + "background:#F8F9FB;color:#0F1923;border:2px solid #E8A020;border-radius:12px;padding:14px 16px;"
       + "max-width:420px;width:calc(100% - 28px);box-shadow:0 12px 28px rgba(15,25,35,.28);"
       + "font-family:Georgia,serif;font-size:15px;line-height:1.45;";
+    // Texto dinámico según canal — evita decirle "correo" a quien respaldó solo por WhatsApp.
+    const _last = getLast();
+    const _canalAssu = _last ? _last.canal : (getPrefs().canalEmail ? "email" : "whatsapp");
+    const _textoAssu = _canalAssu === "whatsapp"
+      ? "¿Llegó el mensaje de respaldo a tu WhatsApp?"
+      : (_canalAssu === "both" ? "¿Llegó tu respaldo — correo o WhatsApp?" : "¿Llegó tu respaldo a tu correo?");
+    const _cuerpoAssu = _canalAssu === "whatsapp"
+      ? "Ábrelo en tu WhatsApp y verifica que tienes el archivo. Es tuyo — nunca pasa por nosotros. ¡Buena semana!"
+      : "Ábrelo en tu bandeja y verifica que sí lo tienes. Es tuyo — nunca pasa por nosotros. ¡Buena semana!";
     wrap.innerHTML = `
-      <div style="font-weight:700;color:#E8A020;margin-bottom:4px;">¿Llegó tu respaldo a tu correo?</div>
-      <div style="margin-bottom:10px;">Ábrelo en tu bandeja y verifica que sí lo tienes. Es tuyo — nunca pasa por nosotros. ¡Buena semana!</div>
+      <div style="font-weight:700;color:#E8A020;margin-bottom:4px;">${_textoAssu}</div>
+      <div style="margin-bottom:10px;">${_cuerpoAssu}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button id="oc-backup-assured-ok" style="flex:1;min-height:40px;padding:8px 12px;border:2px solid #00C87A;background:#00C87A;color:#fff;border-radius:8px;font-weight:700;cursor:pointer;">Sí, llegó — buena semana</button>
         <button id="oc-backup-assured-resend" style="flex:1;min-height:40px;padding:8px 12px;border:2px solid #2E6278;background:#fff;color:#2E6278;border-radius:8px;font-weight:700;cursor:pointer;">Reenviar ahora</button>
@@ -386,7 +395,7 @@
             <input type="range" id="oc-bk-frec" min="0" max="3" step="1" value="${frecIdxSafe}"
               style="width:100%;max-width:320px;accent-color:#E86040;height:6px;cursor:pointer;">
             <div style="display:flex;justify-content:space-between;max-width:320px;margin-top:5px;">
-              ${FREQS.map((f) => `<span style="font-size:12px;color:#2C3E50;text-align:center;width:25%;">${f.label}</span>`).join("")}
+              ${FREQS.map((f) => `<span style="font-size:13px;color:#2C3E50;text-align:center;width:25%;">${f.label.replace(" (mínimo)","")}</span>`).join("")}
             </div>
             <p id="oc-bk-frec-label" style="margin:6px 0 0;font-size:13px;color:#E86040;font-weight:700;">
               Seleccionado: ${FREQS[frecIdxSafe].label}
@@ -421,7 +430,7 @@
           <b>Nota honesta:</b>
           los enlaces mailto: y wa.me no pueden adjuntar archivos automáticamente (limitación de los estándares web). Por eso descargamos el archivo primero y te abrimos el mensaje con el destinatario y el texto ya listos — tú solo adjuntas y envías. Es lo más automático posible sin que nada pase por nosotros.
         </p>
-        <p style="margin:8px 0 0;font-size:12px;color:#5A6270;">
+        <p style="margin:8px 0 0;font-size:13px;color:#5A6270;">
           <b>Alcance de este respaldo:</b> incluye productos, ventas, clientes, comisiones y configuración de negocio.
           El archivo no está cifrado — guárdalo en un lugar de tu confianza.
           Para un respaldo completo (incluyendo claves de seguridad y fotos de perchas) usa <b>Avanzado → Exportar respaldo</b>.
