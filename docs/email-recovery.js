@@ -37,41 +37,57 @@
   }
 
   async function enviarCodigo(email, pin, instanceId) {
-    var base = workerBase();
-    if (!base) return { enviado: false, codigo: pin }; // sin URL → pantalla
-
-    var ctrl = null;
-    var timeout = null;
+    // DECISIÓN FINAL JFC 2026-07-22 (ver memoria feedback_metodo_autoenvio_html5):
+    // el PIN se AUTOENVÍA por el MISMO método que el respaldo — el propio
+    // cliente de correo del dueño, vía mailto:. SIN backend, SIN Resend. El
+    // PIN además se muestra SIEMPRE en pantalla (auth-ui usa el codigo que
+    // devolvemos), así que aunque el mailto no abra, el dueño nunca queda sin
+    // su clave. El correo va de él hacia él: jamás pasa por un servidor.
     try {
-      ctrl = new AbortController();
-      timeout = setTimeout(function () { try { ctrl.abort(); } catch (_) {} }, 8000);
-    } catch (_) {}
-
-    try {
-      var resp = await fetch(base + "/recover-pin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email, pin: pin, instanceId: instanceId || "" }),
-        signal: ctrl ? ctrl.signal : undefined,
-      });
-      if (timeout) clearTimeout(timeout);
-
-      if (!resp.ok) {
-        console.warn("[email-recovery] Worker respondió", resp.status);
-        return { enviado: false, codigo: pin };
+      if (email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        var asunto = "Tu clave de acceso — amigable-123";
+        var cuerpo = "Tu clave de dueño en amigable-123 es: " + pin
+          + "\n\nGuárdala en un lugar seguro. Este correo va de ti hacia ti: nunca pasa por ningún servidor."
+          + "\nSi no la solicitaste tú, cámbiala en Avanzado → Claves.";
+        window.location.href = "mailto:" + encodeURIComponent(email)
+          + "?subject=" + encodeURIComponent(asunto)
+          + "&body=" + encodeURIComponent(cuerpo);
       }
-      var result;
-      try { result = await resp.json(); } catch (_) { result = {}; }
-      if (result && result.enviado === true) return { enviado: true };
-      // Worker vivo pero Resend no configurado → pantalla
-      return { enviado: false, codigo: pin };
-
-    } catch (err) {
-      if (timeout) clearTimeout(timeout);
-      console.warn("[email-recovery] red o timeout:", err && err.message);
-      return { enviado: false, codigo: pin }; // fallback siempre
-    }
+    } catch (_) {}
+    return { enviado: false, codigo: pin };
   }
+
+  /* =====================================================================
+     DORMANT (JFC 2026-07-22) — envío del PIN vía Cloudflare Worker + Resend.
+     Desactivado por DECISIÓN FINAL: el PIN se autoenvía por mailto (arriba),
+     jamás por un servidor. NO BORRAR (regla de features dormant). Para
+     reactivar (NO recomendado, viola NO-CLOUD): mover este cuerpo dentro de
+     enviarCodigo y quitar el return de arriba.
+
+     async function _enviarCodigoResendDORMANT(email, pin, instanceId) {
+       var base = workerBase();
+       if (!base) return { enviado: false, codigo: pin };
+       var ctrl = null, timeout = null;
+       try { ctrl = new AbortController(); timeout = setTimeout(function(){ try{ctrl.abort();}catch(_){} }, 8000); } catch (_) {}
+       try {
+         var resp = await fetch(base + "/recover-pin", {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({ email: email, pin: pin, instanceId: instanceId || "" }),
+           signal: ctrl ? ctrl.signal : undefined,
+         });
+         if (timeout) clearTimeout(timeout);
+         if (!resp.ok) { console.warn("[email-recovery] Worker respondio", resp.status); return { enviado: false, codigo: pin }; }
+         var result; try { result = await resp.json(); } catch (_) { result = {}; }
+         if (result && result.enviado === true) return { enviado: true };
+         return { enviado: false, codigo: pin };
+       } catch (err) {
+         if (timeout) clearTimeout(timeout);
+         console.warn("[email-recovery] red o timeout:", err && err.message);
+         return { enviado: false, codigo: pin };
+       }
+     }
+     ===================================================================== */
 
   window.OCEmailRecovery = {
     enviarCodigo: enviarCodigo,

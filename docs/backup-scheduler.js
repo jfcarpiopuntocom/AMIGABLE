@@ -135,10 +135,11 @@
     return normalizeWa(num).length >= 8;
   }
 
-  // Descarga real del respaldo. Reusa el flujo canónico: /api/respaldo/exportar.
-  async function descargarRespaldo() {
+  // Construye el paquete de respaldo (sin efectos secundarios). Reusa el flujo
+  // canónico: /api/respaldo/exportar (interceptado por mock-backend, local).
+  async function construirArchivoRespaldo() {
     const res = await fetch("/api/respaldo/exportar");
-    // Bug fix: 403 = dispositivo no activado (no "backend caído"). Mensaje específico.
+    // 403 = dispositivo no activado (no "backend caído"). Mensaje específico.
     if (res.status === 403) throw new Error("Este dispositivo no está activado. Entra con el PIN 789 para activarlo y luego podrás respaldar.");
     if (!res.ok) throw new Error("No se pudo leer los datos del negocio.");
     const datos = await res.json();
@@ -149,24 +150,26 @@
       datos,
     };
     const texto = JSON.stringify(paquete, null, 2);
-    const blob = new Blob([texto], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
     const now = new Date();
     const nombre = `respaldo-amigable-123-${stampArchivo(now)}.json`;
+    return { texto, nombre, humano: stampHumano(now) };
+  }
+
+  // Descarga del archivo al dispositivo (fallback para laptop / navegadores sin
+  // Web Share). FIX iOS/webview (JFC 2026-07-22) — NO simplificar a solo
+  // a.click(): en iPhone/iPad el atributo download se ignora (abre pestaña) y
+  // algunos webviews cerrados lanzan. try/catch + fallback a pestaña: nunca
+  // dejamos al dueño sin su archivo.
+  function descargarArchivo(texto, nombre) {
+    const blob = new Blob([texto], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = nombre;
     document.body.appendChild(a);
-    // FIX PREVENTIVO iOS/webview (JFC 2026-07-22) — NO simplificar a solo
-    // a.click(). En iPhone/iPad el atributo download se ignora y el archivo
-    // se abre en una pestaña; y algunos webviews muy cerrados lanzan al hacer
-    // click programático. Envolvemos en try/catch y, como último recurso,
-    // abrimos el blob en una pestaña para que el dueño lo guarde a mano.
-    // Nunca dejamos al dueño sin su archivo.
     try { a.click(); } catch (_) { try { window.open(url, "_blank"); } catch (_) {} }
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    return { nombre, humano: stampHumano(now) };
   }
 
   function cuerpoEmail(nombreArchivo, humano) {
@@ -243,22 +246,59 @@
       alert("Tu WhatsApp en Avanzado parece incompleto (con código de país). Corrígelo antes de respaldar.");
       return;
     }
-    // Bug fix: el check navigator.onLine === false fue removido. El respaldo
-    // lee de mock-backend.js (fetch interceptado localmente, sin red). El
-    // archivo se descarga offline sin problema. mailto:/wa.me se abren cuando
-    // el usuario tenga conexión — no necesitan internet en este momento.
+    // Sin chequeo navigator.onLine: el respaldo lee de mock-backend.js (fetch
+    // local, sin red). El compartir/mailto/wa.me se abren aunque no haya red.
     let info;
     try {
-      info = await descargarRespaldo();
+      info = await construirArchivoRespaldo();
     } catch (e) {
       alert("No se pudo generar el respaldo: " + e.message);
       return;
     }
-    // Abrimos primero email (misma pestaña, es un mailto:), luego wa.me en nueva pestaña.
-    // Si el usuario eligió ambos, primero wa.me (nueva pestaña) y después mailto,
-    // para no perder el mailto por el open() de wa.me.
-    if (prefs.canalWhatsapp) abrirWa(prefs.whatsapp, info.nombre, info.humano);
-    if (prefs.canalEmail)    setTimeout(() => abrirMailto(prefs.email, info.nombre, info.humano), 300);
+
+    // ========================================================================
+    // MÉTODO IDEAL (DECISIÓN FINAL JFC 2026-07-22) — ver memoria
+    // feedback_metodo_autoenvio_html5. El respaldo se AUTOENVÍA con HTML5 puro,
+    // SIN backend ni cloud: la app fuerza al dueño a mandarse su propia info a
+    // sí mismo con el cliente que YA tiene configurado.
+    //   1) Web Share API (navigator.share) con el archivo YA ADJUNTO: en
+    //      teléfono/tablet abre el menú de compartir del sistema con el .json
+    //      pegado; el dueño elige SU WhatsApp/Gmail y se lo envía a sí mismo.
+    //      Un toque para elegir, uno para enviar. Sin adjuntar a mano.
+    //   2) Fallback (laptop / navegador sin Web Share): descarga el archivo +
+    //      abre correo/WhatsApp premade (el dueño adjunta el archivo recién
+    //      descargado). Es el techo posible sin servidor en escritorio.
+    // NUNCA meter un servidor en medio de estos datos. Esa regla es de JFC.
+    // ========================================================================
+    let resultado = "fallback"; // "compartido" | "fallback" | "cancelado"
+    try {
+      // navigator.share exige un File; comprobamos canShare con el archivo real
+      // (algunos navegadores dicen tener share pero no aceptan archivos).
+      const file = new File([info.texto], info.nombre, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        const canalTxt = prefs.canalWhatsapp && !prefs.canalEmail ? "WhatsApp" : "correo o WhatsApp";
+        await navigator.share({
+          files: [file],
+          title: "Respaldo amigable-123",
+          text: `Respaldo de tu negocio (amigable-123) ${info.humano}. Envíatelo a TI mismo/a por ${canalTxt} — es tuyo, no pasa por ningún servidor.`,
+        });
+        resultado = "compartido";
+      }
+    } catch (e) {
+      // AbortError = el dueño cerró el menú de compartir a propósito: no
+      // insistimos con el fallback ni marcamos un respaldo que no ocurrió.
+      resultado = (e && e.name === "AbortError") ? "cancelado" : "fallback";
+    }
+
+    if (resultado === "cancelado") return; // no marcar backup, seguir recordando
+
+    if (resultado === "fallback") {
+      // Descarga + canales premade. WhatsApp primero (nueva pestaña) y mailto
+      // con un pequeño retraso, para que el open() de wa.me no se coma el mailto.
+      descargarArchivo(info.texto, info.nombre);
+      if (prefs.canalWhatsapp) abrirWa(prefs.whatsapp, info.nombre, info.humano);
+      if (prefs.canalEmail)    setTimeout(() => abrirMailto(prefs.email, info.nombre, info.humano), 300);
+    }
 
     const canal = prefs.canalEmail && prefs.canalWhatsapp ? "both" : (prefs.canalEmail ? "email" : "whatsapp");
     setLast(canal);
