@@ -119,7 +119,9 @@
   // Descarga real del respaldo. Reusa el flujo canónico: /api/respaldo/exportar.
   async function descargarRespaldo() {
     const res = await fetch("/api/respaldo/exportar");
-    if (!res.ok) throw new Error("No se pudo leer los datos del negocio (backend caído?).");
+    // Bug fix: 403 = dispositivo no activado (no "backend caído"). Mensaje específico.
+    if (res.status === 403) throw new Error("Este dispositivo no está activado. Entra con el PIN 789 para activarlo y luego podrás respaldar.");
+    if (!res.ok) throw new Error("No se pudo leer los datos del negocio.");
     const datos = await res.json();
     const paquete = {
       app: "amigable-123",
@@ -182,15 +184,10 @@
       alert("Tu WhatsApp en Avanzado parece incompleto (con código de país). Corrígelo antes de respaldar.");
       return;
     }
-    // FIX PREVENTIVO: negocios de feria/mercado suelen quedarse sin señal —
-    // distinguir "estás offline" de un error real evita que el dueño
-    // interprete un fallo de red como que la app está rota. No marcamos
-    // setLast() en ningún caso de fallo: el recordatorio vuelve a aparecer
-    // la próxima vez que abra Avanzado, que es lo correcto.
-    if (typeof navigator !== "undefined" && navigator.onLine === false) {
-      alert("Estás sin conexión ahora mismo. El respaldo necesita internet un momento para leer tus datos — inténtalo de nuevo cuando tengas señal.");
-      return;
-    }
+    // Bug fix: el check navigator.onLine === false fue removido. El respaldo
+    // lee de mock-backend.js (fetch interceptado localmente, sin red). El
+    // archivo se descarga offline sin problema. mailto:/wa.me se abren cuando
+    // el usuario tenga conexión — no necesitan internet en este momento.
     let info;
     try {
       info = await descargarRespaldo();
@@ -333,9 +330,22 @@
   // ==========================================================================
   function renderPanel(mount) {
     if (!mount) return;
-    // FIX PREVENTIVO: no mostrar la config de backup a quien solo prueba la
-    // demo — ver nota en esDuenoReal() más arriba.
+    // No mostrar a demo — ver nota en esDuenoReal().
     if (window.OCAuth && window.OCAuth.esDemo && window.OCAuth.esDemo()) { mount.innerHTML = ""; return; }
+
+    // Bug fix: si el dispositivo no está activado, el export da 403. Mejor
+    // avisarlo aquí que dejar que el usuario configure todo y falle al primer intento.
+    try {
+      const owned = JSON.parse(localStorage.getItem("amigable_owned") || "null") || {};
+      if (!owned.instanceId) {
+        mount.innerHTML = `<div style="border:2px solid #E86040;border-radius:12px;padding:14px 16px;background:#FFF3EE;margin-top:16px;">
+          <p style="margin:0;font-size:15px;font-weight:700;color:#C05000;">Para activar el respaldo automático primero activa este dispositivo.</p>
+          <p style="margin:8px 0 0;font-size:14px;color:#2C3E50;">En la pantalla de acceso ingresa el PIN <strong>789</strong>. Una vez activado, vuelve aquí a configurar tu correo y frecuencia.</p>
+        </div>`;
+        return;
+      }
+    } catch (_) {}
+
     const prefs = getPrefs();
     const opts = FREQS.map((f) => {
       const sel = f.key === prefs.frecKey ? "selected" : "";
@@ -388,6 +398,11 @@
         <p style="margin:8px 0 0;font-size:13px;color:#2C3E50;">
           <b>Nota honesta:</b>
           los enlaces mailto: y wa.me no pueden adjuntar archivos automáticamente (limitación de los estándares web). Por eso descargamos el archivo primero y te abrimos el mensaje con el destinatario y el texto ya listos — tú solo adjuntas y envías. Es lo más automático posible sin que nada pase por nosotros.
+        </p>
+        <p style="margin:8px 0 0;font-size:12px;color:#5A6270;">
+          <b>Alcance de este respaldo:</b> incluye productos, ventas, clientes, comisiones y configuración de negocio.
+          El archivo no está cifrado — guárdalo en un lugar de tu confianza.
+          Para un respaldo completo (incluyendo claves de seguridad y fotos de perchas) usa <b>Avanzado → Exportar respaldo</b>.
         </p>
       </div>
     `;
