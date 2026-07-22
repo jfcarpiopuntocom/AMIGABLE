@@ -276,6 +276,10 @@
     });
   }
 
+  // Tracker del timeout activo — evita que logins rápidos acumulen múltiples
+  // timers (login → logout → login en <4s) y muestren dos toasts seguidos.
+  let _chequeoTimeout = null;
+
   // Chequea al arrancar (con delay para no molestar en el splash) si toca
   // respaldo o assurance. Nunca es bloqueante.
   //
@@ -290,7 +294,9 @@
   // automáticamente. La promesa "mínimo mensual" no puede depender de que
   // el dueño recuerde abrir Avanzado.
   function chequearAlArrancar() {
-    setTimeout(() => {
+    if (_chequeoTimeout) clearTimeout(_chequeoTimeout);
+    _chequeoTimeout = setTimeout(() => {
+      _chequeoTimeout = null;
       try {
         if (!esDuenoReal()) return; // solo el dueño real, nunca demo
         let prefs = getPrefs();
@@ -331,7 +337,11 @@
     const prefs = getPrefs();
     const f = frecDe(prefs.frecKey);
     const canales = [prefs.canalEmail && "correo", prefs.canalWhatsapp && "WhatsApp"].filter(Boolean).join(" + ");
-    const msg = `Toca "Respaldar ahora" y te preparamos el archivo + un correo/WhatsApp con todo listo. Solo te queda adjuntar y enviar — <b>a ti mismo/a</b>. Frecuencia elegida: <b>${f.label.toLowerCase()}</b> por ${canales || "correo"}.`;
+    // Mensaje dinámico — el canal real del dueño, no "correo/WhatsApp" genérico.
+    const _canalMsg = canales === "WhatsApp" ? "un mensaje de WhatsApp"
+      : (canales === "correo + WhatsApp" ? "un correo y un mensaje de WhatsApp"
+      : "un correo");
+    const msg = `Toca "Respaldar ahora" y te preparamos el archivo + ${_canalMsg} con todo listo. Solo te queda adjuntar y enviar — <b>a ti mismo/a</b>. Frecuencia elegida: <b>${f.label.toLowerCase()}</b> por ${canales || "correo"}.`;
     wrap.innerHTML = `
       <div style="font-weight:700;color:#E8A020;margin-bottom:4px;">Es hora de tu respaldo</div>
       <div style="margin-bottom:10px;">${msg}</div>
