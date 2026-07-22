@@ -87,7 +87,7 @@
     <ul style="font-size:14px;line-height:1.6;">
       <li>Te ahorra <b>50% de tu tiempo</b> comparado con hacerlo a mano.</li>
       <li>Se aprende <b>en 10 minutos</b> — sin manual necesario.</li>
-      <li>Construida para <b>durar 10 años</b> — ninguna suscripción te la puede quitar.</li>
+      <li>Construida para <b>durar 10 años</b>, con <b>2 años de soporte directo incluidos</b>.</li>
     </ul>
     <h3>Tu licencia</h3>
     <p style="font-size:14px;line-height:1.6;margin:0 0 14px;">

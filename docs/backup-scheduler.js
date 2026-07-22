@@ -17,7 +17,8 @@
 // LIMITACIÓN HONESTA (importante — no la escondemos al usuario):
 //   Los enlaces mailto: y wa.me NO pueden adjuntar archivos por sí solos
 //   (limitación de los estándares). Lo que hacemos:
-//     1) Descargamos automáticamente el archivo .json cifrado del respaldo.
+//     1) Descargamos automáticamente el archivo .json del respaldo (texto
+//        plano, NO cifrado — ver la "Nota honesta" del panel).
 //     2) Abrimos mailto: (o wa.me:) con el destinatario, asunto y cuerpo YA
 //        escritos. El usuario da 1 toque más (adjuntar el archivo recién
 //        descargado) y otro toque a Enviar. Es lo más automático posible
@@ -30,6 +31,17 @@
   const LS_PREFS = "oc_backup_prefs_v1";
   const LS_LAST  = "oc_backup_last_v1"; // { ts: number, canal: "email"|"whatsapp"|"both" }
   const LS_ASSURED = "oc_backup_assurance_last_v1";
+  // Snooze: hasta cuándo NO volver a mostrar el recordatorio. Lo pone "Más
+  // tarde" (24h) y el auto-config (un ciclo de gracia). Sin esto, toca() se
+  // basa solo en la fecha del último backup y el nag reaparece en cada login.
+  const LS_SNOOZE = "oc_backup_snooze_v1";
+
+  function getSnooze() {
+    try { return parseInt(localStorage.getItem(LS_SNOOZE) || "0", 10) || 0; } catch (_) { return 0; }
+  }
+  function setSnooze(ms) {
+    try { localStorage.setItem(LS_SNOOZE, String(Date.now() + ms)); } catch (_) {}
+  }
 
   // Frecuencias en días. Mensual (30) es el mínimo obligatorio: no se puede
   // elegir MÁS de 30 días. Se puede elegir menos (diario, semanal, quincenal).
@@ -104,7 +116,14 @@
 
   function normalizeWa(num) {
     // wa.me acepta solo dígitos, sin +. Aceptamos que el dueño escriba +593 99 990 5080
-    return (num || "").replace(/[^\d]/g, "");
+    let d = (num || "").replace(/[^\d]/g, "");
+    // Ecuador: el móvil nacional se escribe 09XXXXXXXX (10 dígitos), pero
+    // wa.me EXIGE formato internacional sin +. Sin esto, un dueño que teclea
+    // su número como lo marca a diario (0999905080) generaba un wa.me/0999...
+    // que abre un chat vacío o inexistente. Transformación determinista
+    // (no un guess): 09XXXXXXXX → 593 + los 9 dígitos sin el 0 inicial.
+    if (/^09\d{8}$/.test(d)) d = "593" + d.slice(1);
+    return d;
   }
 
   // FIX PREVENTIVO: normalizeWa() solo limpia el texto, no valida que sea un
@@ -116,10 +135,13 @@
     return normalizeWa(num).length >= 8;
   }
 
-  // Descarga real del respaldo. Reusa el flujo canónico: /api/respaldo/exportar.
-  async function descargarRespaldo() {
+  // Construye el paquete de respaldo (sin efectos secundarios). Reusa el flujo
+  // canónico: /api/respaldo/exportar (interceptado por mock-backend, local).
+  async function construirArchivoRespaldo() {
     const res = await fetch("/api/respaldo/exportar");
-    if (!res.ok) throw new Error("No se pudo leer los datos del negocio (backend caído?).");
+    // 403 = dispositivo no activado (no "backend caído"). Mensaje específico.
+    if (res.status === 403) throw new Error("Este dispositivo no está activado. Entra con el PIN 789 para activarlo y luego podrás respaldar.");
+    if (!res.ok) throw new Error("No se pudo leer los datos del negocio.");
     const datos = await res.json();
     const paquete = {
       app: "amigable-123",
@@ -128,23 +150,31 @@
       datos,
     };
     const texto = JSON.stringify(paquete, null, 2);
-    const blob = new Blob([texto], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
     const now = new Date();
     const nombre = `respaldo-amigable-123-${stampArchivo(now)}.json`;
+    return { texto, nombre, humano: stampHumano(now) };
+  }
+
+  // Descarga del archivo al dispositivo (fallback para laptop / navegadores sin
+  // Web Share). FIX iOS/webview (JFC 2026-07-22) — NO simplificar a solo
+  // a.click(): en iPhone/iPad el atributo download se ignora (abre pestaña) y
+  // algunos webviews cerrados lanzan. try/catch + fallback a pestaña: nunca
+  // dejamos al dueño sin su archivo.
+  function descargarArchivo(texto, nombre) {
+    const blob = new Blob([texto], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = nombre;
     document.body.appendChild(a);
-    a.click();
+    try { a.click(); } catch (_) { try { window.open(url, "_blank"); } catch (_) {} }
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    return { nombre, humano: stampHumano(now) };
   }
 
   function cuerpoEmail(nombreArchivo, humano) {
     return `Respaldo de amigable-123 generado el ${humano}.\n\n`
-         + `1) Adjunta el archivo "${nombreArchivo}" que se acaba de descargar en este dispositivo (carpeta Descargas).\n`
+         + `1) Adjunta el archivo "${nombreArchivo}" que se acaba de descargar en este dispositivo (en Android/PC está en Descargas; en iPhone/iPad se abre en una pestaña: usa Compartir y "Guardar en Archivos").\n`
          + `2) Envíalo a este correo (a ti mismo/a).\n\n`
          + `— El backup va a TI, no a un servidor. Nunca sueltas control de tus datos.`;
   }
@@ -161,10 +191,44 @@
     window.location.href = href;
   }
 
+  // FIX PREVENTIVO MÓVIL (JFC 2026-07-22) — NO BORRAR. window.open ocurre
+  // DESPUÉS de un await (la descarga del respaldo), o sea fuera del gesto del
+  // usuario. Safari/Chrome en teléfono/tablet bloquean ese popup y devuelven
+  // null: el respaldo por WhatsApp fallaba SIN aviso. Aquí, si el open se
+  // bloquea, mostramos un enlace tocable — un toque ES un gesto fresco, así
+  // que el enlace siempre abre. Redundancia barata, salva la función en móvil.
+  function mostrarLinkFallback(url, etiqueta) {
+    try {
+      const prev = document.getElementById("oc-backup-linkfallback");
+      if (prev) prev.remove();
+      const wrap = document.createElement("div");
+      wrap.id = "oc-backup-linkfallback";
+      wrap.style.cssText = "position:fixed;bottom:150px;left:50%;transform:translateX(-50%);z-index:9492;"
+        + "background:#0F1923;color:#fff;border:2px solid #E8A020;border-radius:12px;padding:12px 16px;"
+        + "max-width:420px;width:calc(100% - 28px);box-shadow:0 12px 28px rgba(15,25,35,.35);"
+        + "font-family:Georgia,serif;font-size:14px;line-height:1.45;text-align:center;";
+      const intro = document.createElement("div");
+      intro.style.cssText = "margin-bottom:8px;color:#fff;";
+      intro.textContent = "Tu navegador bloqueó la ventana. Toca aquí para abrirlo:";
+      const a = document.createElement("a");
+      a.href = url; a.target = "_blank"; a.rel = "noopener";
+      a.textContent = etiqueta;
+      a.style.cssText = "display:inline-block;min-height:44px;line-height:44px;padding:0 18px;"
+        + "background:#25D366;color:#0a3d20;border-radius:8px;font-weight:700;text-decoration:none;";
+      a.addEventListener("click", () => { try { wrap.remove(); } catch (_) {} });
+      wrap.appendChild(intro); wrap.appendChild(a);
+      document.body.appendChild(wrap);
+      // Auto-limpieza: no dejar el enlace colgado en pantalla indefinidamente.
+      setTimeout(() => { try { wrap.remove(); } catch (_) {} }, 25000);
+    } catch (_) {}
+  }
+
   function abrirWa(num, nombreArchivo, humano) {
     const texto = cuerpoWa(nombreArchivo, humano);
     const url = `https://wa.me/${normalizeWa(num)}?text=${encodeURIComponent(texto)}`;
-    window.open(url, "_blank", "noopener");
+    let w = null;
+    try { w = window.open(url, "_blank", "noopener"); } catch (_) { w = null; }
+    if (!w) mostrarLinkFallback(url, "Abrir WhatsApp");
   }
 
   // Corre la rutina completa: descarga + abre canales elegidos + marca timestamp.
@@ -182,27 +246,59 @@
       alert("Tu WhatsApp en Avanzado parece incompleto (con código de país). Corrígelo antes de respaldar.");
       return;
     }
-    // FIX PREVENTIVO: negocios de feria/mercado suelen quedarse sin señal —
-    // distinguir "estás offline" de un error real evita que el dueño
-    // interprete un fallo de red como que la app está rota. No marcamos
-    // setLast() en ningún caso de fallo: el recordatorio vuelve a aparecer
-    // la próxima vez que abra Avanzado, que es lo correcto.
-    if (typeof navigator !== "undefined" && navigator.onLine === false) {
-      alert("Estás sin conexión ahora mismo. El respaldo necesita internet un momento para leer tus datos — inténtalo de nuevo cuando tengas señal.");
-      return;
-    }
+    // Sin chequeo navigator.onLine: el respaldo lee de mock-backend.js (fetch
+    // local, sin red). El compartir/mailto/wa.me se abren aunque no haya red.
     let info;
     try {
-      info = await descargarRespaldo();
+      info = await construirArchivoRespaldo();
     } catch (e) {
       alert("No se pudo generar el respaldo: " + e.message);
       return;
     }
-    // Abrimos primero email (misma pestaña, es un mailto:), luego wa.me en nueva pestaña.
-    // Si el usuario eligió ambos, primero wa.me (nueva pestaña) y después mailto,
-    // para no perder el mailto por el open() de wa.me.
-    if (prefs.canalWhatsapp) abrirWa(prefs.whatsapp, info.nombre, info.humano);
-    if (prefs.canalEmail)    setTimeout(() => abrirMailto(prefs.email, info.nombre, info.humano), 300);
+
+    // ========================================================================
+    // MÉTODO IDEAL (DECISIÓN FINAL JFC 2026-07-22) — ver memoria
+    // feedback_metodo_autoenvio_html5. El respaldo se AUTOENVÍA con HTML5 puro,
+    // SIN backend ni cloud: la app fuerza al dueño a mandarse su propia info a
+    // sí mismo con el cliente que YA tiene configurado.
+    //   1) Web Share API (navigator.share) con el archivo YA ADJUNTO: en
+    //      teléfono/tablet abre el menú de compartir del sistema con el .json
+    //      pegado; el dueño elige SU WhatsApp/Gmail y se lo envía a sí mismo.
+    //      Un toque para elegir, uno para enviar. Sin adjuntar a mano.
+    //   2) Fallback (laptop / navegador sin Web Share): descarga el archivo +
+    //      abre correo/WhatsApp premade (el dueño adjunta el archivo recién
+    //      descargado). Es el techo posible sin servidor en escritorio.
+    // NUNCA meter un servidor en medio de estos datos. Esa regla es de JFC.
+    // ========================================================================
+    let resultado = "fallback"; // "compartido" | "fallback" | "cancelado"
+    try {
+      // navigator.share exige un File; comprobamos canShare con el archivo real
+      // (algunos navegadores dicen tener share pero no aceptan archivos).
+      const file = new File([info.texto], info.nombre, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        const canalTxt = prefs.canalWhatsapp && !prefs.canalEmail ? "WhatsApp" : "correo o WhatsApp";
+        await navigator.share({
+          files: [file],
+          title: "Respaldo amigable-123",
+          text: `Respaldo de tu negocio (amigable-123) ${info.humano}. Envíatelo a TI mismo/a por ${canalTxt} — es tuyo, no pasa por ningún servidor.`,
+        });
+        resultado = "compartido";
+      }
+    } catch (e) {
+      // AbortError = el dueño cerró el menú de compartir a propósito: no
+      // insistimos con el fallback ni marcamos un respaldo que no ocurrió.
+      resultado = (e && e.name === "AbortError") ? "cancelado" : "fallback";
+    }
+
+    if (resultado === "cancelado") return; // no marcar backup, seguir recordando
+
+    if (resultado === "fallback") {
+      // Descarga + canales premade. WhatsApp primero (nueva pestaña) y mailto
+      // con un pequeño retraso, para que el open() de wa.me no se coma el mailto.
+      descargarArchivo(info.texto, info.nombre);
+      if (prefs.canalWhatsapp) abrirWa(prefs.whatsapp, info.nombre, info.humano);
+      if (prefs.canalEmail)    setTimeout(() => abrirMailto(prefs.email, info.nombre, info.humano), 300);
+    }
 
     const canal = prefs.canalEmail && prefs.canalWhatsapp ? "both" : (prefs.canalEmail ? "email" : "whatsapp");
     setLast(canal);
@@ -252,12 +348,21 @@
       + "background:#F8F9FB;color:#0F1923;border:2px solid #E8A020;border-radius:12px;padding:14px 16px;"
       + "max-width:420px;width:calc(100% - 28px);box-shadow:0 12px 28px rgba(15,25,35,.28);"
       + "font-family:Georgia,serif;font-size:15px;line-height:1.45;";
+    // Texto dinámico según canal — evita decirle "correo" a quien respaldó solo por WhatsApp.
+    const _last = getLast();
+    const _canalAssu = _last ? _last.canal : (getPrefs().canalEmail ? "email" : "whatsapp");
+    const _textoAssu = _canalAssu === "whatsapp"
+      ? "¿Llegó el mensaje de respaldo a tu WhatsApp?"
+      : (_canalAssu === "both" ? "¿Llegó tu respaldo — correo o WhatsApp?" : "¿Llegó tu respaldo a tu correo?");
+    const _cuerpoAssu = _canalAssu === "whatsapp"
+      ? "Ábrelo en tu WhatsApp y verifica que tienes el archivo. Es tuyo — nunca pasa por nosotros. ¡Buena semana!"
+      : "Ábrelo en tu bandeja y verifica que sí lo tienes. Es tuyo — nunca pasa por nosotros. ¡Buena semana!";
     wrap.innerHTML = `
-      <div style="font-weight:700;color:#E8A020;margin-bottom:4px;">¿Llegó tu respaldo a tu correo?</div>
-      <div style="margin-bottom:10px;">Ábrelo en tu bandeja y verifica que sí lo tienes. Es tuyo — nunca pasa por nosotros. ¡Buena semana!</div>
+      <div style="font-weight:700;color:#E8A020;margin-bottom:4px;">${_textoAssu}</div>
+      <div style="margin-bottom:10px;">${_cuerpoAssu}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button id="oc-backup-assured-ok" style="flex:1;min-height:40px;padding:8px 12px;border:2px solid #00C87A;background:#00C87A;color:#fff;border-radius:8px;font-weight:700;cursor:pointer;">Sí, llegó — buena semana</button>
-        <button id="oc-backup-assured-resend" style="flex:1;min-height:40px;padding:8px 12px;border:2px solid #2E6278;background:#fff;color:#2E6278;border-radius:8px;font-weight:700;cursor:pointer;">Reenviar ahora</button>
+        <button id="oc-backup-assured-ok" style="flex:1;min-height:44px;padding:8px 12px;border:2px solid #00C87A;background:#00C87A;color:#fff;border-radius:8px;font-weight:700;cursor:pointer;">Sí, llegó — buena semana</button>
+        <button id="oc-backup-assured-resend" style="flex:1;min-height:44px;padding:8px 12px;border:2px solid #2E6278;background:#fff;color:#2E6278;border-radius:8px;font-weight:700;cursor:pointer;">Reenviar ahora</button>
       </div>`;
     document.body.appendChild(wrap);
     document.getElementById("oc-backup-assured-ok").addEventListener("click", () => {
@@ -270,6 +375,10 @@
     });
   }
 
+  // Tracker del timeout activo — evita que logins rápidos acumulen múltiples
+  // timers (login → logout → login en <4s) y muestren dos toasts seguidos.
+  let _chequeoTimeout = null;
+
   // Chequea al arrancar (con delay para no molestar en el splash) si toca
   // respaldo o assurance. Nunca es bloqueante.
   //
@@ -278,13 +387,42 @@
   // eso el rol se revalida DOS VECES: aquí al programar el timeout, y otra
   // vez justo antes de pintar cada popup — nunca confiar en una sola
   // lectura de rol tomada segundos antes de usarla.
+  //
+  // AUTO-CONFIG (JFC 2026-07-21): si el dueño nunca abrió Avanzado pero
+  // tiene correo guardado en oc_secure, activamos el mínimo mensual
+  // automáticamente. La promesa "mínimo mensual" no puede depender de que
+  // el dueño recuerde abrir Avanzado.
   function chequearAlArrancar() {
-    setTimeout(() => {
+    if (_chequeoTimeout) clearTimeout(_chequeoTimeout);
+    _chequeoTimeout = setTimeout(() => {
+      _chequeoTimeout = null;
       try {
         if (!esDuenoReal()) return; // solo el dueño real, nunca demo
-        const prefs = getPrefs();
-        if (!prefs.configurado) return; // no molestar hasta que el dueño abra Avanzado y configure
-        if (toca(prefs)) {
+        let prefs = getPrefs();
+        if (!prefs.configurado) {
+          // Intentar auto-configurar con el correo de oc_secure
+          const emailGuardado = (window.OCSecure && window.OCSecure.leerCorreo) ? window.OCSecure.leerCorreo() : "";
+          if (emailGuardado) {
+            prefs = Object.assign({}, prefs, {
+              email: emailGuardado,
+              canalEmail: true,
+              frecKey: "mensual",
+              configurado: true,
+            });
+            setPrefs(prefs);
+            // Recién auto-configurado: da un ciclo de gracia (la frecuencia
+            // elegida) antes del primer aviso, para no nagear 4s después de
+            // que el dueño activó el dispositivo y aún no tiene datos. NO
+            // sembramos un backup falso (rompería el assurance semanal).
+            setSnooze(frecDe(prefs.frecKey).dias * 24 * 60 * 60 * 1000);
+          } else {
+            return; // sin email y sin config, no molestar
+          }
+        }
+        // Snooze silencia SOLO el recordatorio ("Más tarde"/gracia inicial),
+        // nunca el assurance de "¿llegó tu respaldo?".
+        const snoozed = getSnooze() > Date.now();
+        if (toca(prefs) && !snoozed) {
           mostrarRecordatorioRespaldo();
         } else if (tocaAssurance()) {
           mostrarAssurance();
@@ -306,13 +444,17 @@
     const prefs = getPrefs();
     const f = frecDe(prefs.frecKey);
     const canales = [prefs.canalEmail && "correo", prefs.canalWhatsapp && "WhatsApp"].filter(Boolean).join(" + ");
-    const msg = `Toca "Respaldar ahora" y te preparamos el archivo + un correo/WhatsApp con todo listo. Solo te queda adjuntar y enviar — <b>a ti mismo/a</b>. Frecuencia elegida: <b>${f.label.toLowerCase()}</b> por ${canales || "correo"}.`;
+    // Mensaje dinámico — el canal real del dueño, no "correo/WhatsApp" genérico.
+    const _canalMsg = canales === "WhatsApp" ? "un mensaje de WhatsApp"
+      : (canales === "correo + WhatsApp" ? "un correo y un mensaje de WhatsApp"
+      : "un correo");
+    const msg = `Toca "Respaldar ahora" y te preparamos el archivo + ${_canalMsg} con todo listo. Solo te queda adjuntar y enviar — <b>a ti mismo/a</b>. Frecuencia elegida: <b>${f.label.toLowerCase()}</b> por ${canales || "correo"}.`;
     wrap.innerHTML = `
       <div style="font-weight:700;color:#E8A020;margin-bottom:4px;">Es hora de tu respaldo</div>
       <div style="margin-bottom:10px;">${msg}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button id="oc-backup-remind-ok" style="flex:1;min-height:40px;padding:8px 12px;border:2px solid #E8A020;background:#E8A020;color:#fff;border-radius:8px;font-weight:700;cursor:pointer;">Respaldar ahora</button>
-        <button id="oc-backup-remind-later" style="flex:1;min-height:40px;padding:8px 12px;border:2px solid #2E6278;background:#fff;color:#2E6278;border-radius:8px;font-weight:700;cursor:pointer;">Más tarde</button>
+        <button id="oc-backup-remind-ok" style="flex:1;min-height:44px;padding:8px 12px;border:2px solid #E8A020;background:#E8A020;color:#fff;border-radius:8px;font-weight:700;cursor:pointer;">Respaldar ahora</button>
+        <button id="oc-backup-remind-later" style="flex:1;min-height:44px;padding:8px 12px;border:2px solid #2E6278;background:#fff;color:#2E6278;border-radius:8px;font-weight:700;cursor:pointer;">Más tarde</button>
       </div>`;
     document.body.appendChild(wrap);
     document.getElementById("oc-backup-remind-ok").addEventListener("click", () => {
@@ -321,8 +463,10 @@
     });
     document.getElementById("oc-backup-remind-later").addEventListener("click", () => {
       wrap.remove();
-      // Postponer 24h: marca assured para que no vuelva a molestar hoy.
-      try { localStorage.setItem(LS_ASSURED, String(Date.now() - (6 * 24 * 60 * 60 * 1000))); } catch (_) {}
+      // Postponer 24h de verdad. Antes esto seteaba LS_ASSURED, que toca()
+      // ignora — el recordatorio reaparecía en el siguiente login. El snooze
+      // sí lo respeta chequearAlArrancar().
+      setSnooze(24 * 60 * 60 * 1000);
     });
   }
 
@@ -333,14 +477,25 @@
   // ==========================================================================
   function renderPanel(mount) {
     if (!mount) return;
-    // FIX PREVENTIVO: no mostrar la config de backup a quien solo prueba la
-    // demo — ver nota en esDuenoReal() más arriba.
+    // No mostrar a demo — ver nota en esDuenoReal().
     if (window.OCAuth && window.OCAuth.esDemo && window.OCAuth.esDemo()) { mount.innerHTML = ""; return; }
+
+    // Bug fix: si el dispositivo no está activado, el export da 403. Mejor
+    // avisarlo aquí que dejar que el usuario configure todo y falle al primer intento.
+    try {
+      const owned = JSON.parse(localStorage.getItem("amigable_owned") || "null") || {};
+      if (!owned.instanceId) {
+        mount.innerHTML = `<div style="border:2px solid #E86040;border-radius:12px;padding:14px 16px;background:#FFF3EE;margin-top:16px;">
+          <p style="margin:0;font-size:15px;font-weight:700;color:#C05000;">Para activar el respaldo automático primero activa este dispositivo.</p>
+          <p style="margin:8px 0 0;font-size:14px;color:#2C3E50;">En la pantalla de acceso ingresa el PIN <strong>789</strong>. Una vez activado, vuelve aquí a configurar tu correo y frecuencia.</p>
+        </div>`;
+        return;
+      }
+    } catch (_) {}
+
     const prefs = getPrefs();
-    const opts = FREQS.map((f) => {
-      const sel = f.key === prefs.frecKey ? "selected" : "";
-      return `<option value="${f.key}" ${sel}>${f.label}</option>`;
-    }).join("");
+    const frecIdx = FREQS.findIndex((f) => f.key === prefs.frecKey);
+    const frecIdxSafe = frecIdx >= 0 ? frecIdx : 3; // default mensual
     mount.innerHTML = `
       <div style="border:2px solid #E8A020;border-radius:12px;padding:14px 16px;background:#FFF8EC;margin-top:16px;">
         <h3 style="margin:0 0 4px;color:#C05000;font-family:Georgia,serif;font-size:19px;">
@@ -354,12 +509,17 @@
         </p>
 
         <div style="display:grid;grid-template-columns:1fr;gap:10px;">
-          <label style="font-size:14px;font-weight:700;">
-            Frecuencia
-            <select id="oc-bk-frec" style="display:block;margin-top:4px;padding:8px;border:2px solid #E86040;border-radius:6px;min-height:40px;width:100%;max-width:280px;">
-              ${opts}
-            </select>
-          </label>
+          <div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Frecuencia de respaldo automático</div>
+            <input type="range" id="oc-bk-frec" min="0" max="3" step="1" value="${frecIdxSafe}"
+              style="width:100%;max-width:320px;accent-color:#E86040;height:6px;cursor:pointer;">
+            <div style="display:flex;justify-content:space-between;max-width:320px;margin-top:5px;">
+              ${FREQS.map((f) => `<span style="font-size:13px;color:#2C3E50;text-align:center;width:25%;">${f.label.replace(" (mínimo)","")}</span>`).join("")}
+            </div>
+            <p id="oc-bk-frec-label" style="margin:6px 0 0;font-size:13px;color:#E86040;font-weight:700;">
+              Seleccionado: ${FREQS[frecIdxSafe].label}
+            </p>
+          </div>
 
           <label style="font-size:14px;font-weight:700;">
             <input type="checkbox" id="oc-bk-canalEmail" ${prefs.canalEmail ? "checked" : ""} style="min-width:20px;min-height:20px;vertical-align:middle;margin-right:6px;">
@@ -389,6 +549,11 @@
           <b>Nota honesta:</b>
           los enlaces mailto: y wa.me no pueden adjuntar archivos automáticamente (limitación de los estándares web). Por eso descargamos el archivo primero y te abrimos el mensaje con el destinatario y el texto ya listos — tú solo adjuntas y envías. Es lo más automático posible sin que nada pase por nosotros.
         </p>
+        <p style="margin:8px 0 0;font-size:13px;color:#5A6270;">
+          <b>Alcance de este respaldo:</b> incluye productos, ventas, clientes, comisiones y configuración de negocio.
+          El archivo no está cifrado — guárdalo en un lugar de tu confianza.
+          Para un respaldo completo (incluyendo claves de seguridad y fotos de perchas) usa <b>Avanzado → Exportar respaldo</b>.
+        </p>
       </div>
     `;
 
@@ -397,9 +562,17 @@
       if (m) { m.textContent = txt; m.style.color = color || "#2E6278"; }
     }
 
+    // Slider: actualiza el label de frecuencia en tiempo real al mover
+    document.getElementById("oc-bk-frec").addEventListener("input", function () {
+      const idx = parseInt(this.value, 10);
+      const lbl = document.getElementById("oc-bk-frec-label");
+      if (lbl && FREQS[idx]) lbl.textContent = "Seleccionado: " + FREQS[idx].label;
+    });
+
     document.getElementById("oc-bk-guardar").addEventListener("click", () => {
+      const frecSliderIdx = parseInt(document.getElementById("oc-bk-frec").value, 10);
       const nueva = {
-        frecKey: document.getElementById("oc-bk-frec").value,
+        frecKey: (FREQS[frecSliderIdx] || FREQS[3]).key, // lee del slider, fallback mensual
         email: document.getElementById("oc-bk-email").value.trim(),
         whatsapp: document.getElementById("oc-bk-wa").value.trim(),
         canalEmail: document.getElementById("oc-bk-canalEmail").checked,
