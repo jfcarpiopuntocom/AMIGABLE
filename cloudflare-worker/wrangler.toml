@@ -3,5 +3,5 @@ main = "worker.js"
 compatibility_date = "2026-01-01"
 
 kv_namespaces = [
-  { binding = "LICENCIAS", id = "REEMPLAZAR_CON_ID_DEL_KV_NAMESPACE" }
+  { binding = "LICENCIAS", id = "df0d18c7aada468c8c03f81793fbf1e9" }
 ]
