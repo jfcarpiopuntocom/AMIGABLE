@@ -275,12 +275,31 @@
   // eso el rol se revalida DOS VECES: aquí al programar el timeout, y otra
   // vez justo antes de pintar cada popup — nunca confiar en una sola
   // lectura de rol tomada segundos antes de usarla.
+  //
+  // AUTO-CONFIG (JFC 2026-07-21): si el dueño nunca abrió Avanzado pero
+  // tiene correo guardado en oc_secure, activamos el mínimo mensual
+  // automáticamente. La promesa "mínimo mensual" no puede depender de que
+  // el dueño recuerde abrir Avanzado.
   function chequearAlArrancar() {
     setTimeout(() => {
       try {
         if (!esDuenoReal()) return; // solo el dueño real, nunca demo
-        const prefs = getPrefs();
-        if (!prefs.configurado) return; // no molestar hasta que el dueño abra Avanzado y configure
+        let prefs = getPrefs();
+        if (!prefs.configurado) {
+          // Intentar auto-configurar con el correo de oc_secure
+          const emailGuardado = (window.OCSecure && window.OCSecure.leerCorreo) ? window.OCSecure.leerCorreo() : "";
+          if (emailGuardado) {
+            prefs = Object.assign({}, prefs, {
+              email: emailGuardado,
+              canalEmail: true,
+              frecKey: "mensual",
+              configurado: true,
+            });
+            setPrefs(prefs);
+          } else {
+            return; // sin email y sin config, no molestar
+          }
+        }
         if (toca(prefs)) {
           mostrarRecordatorioRespaldo();
         } else if (tocaAssurance()) {
@@ -347,10 +366,8 @@
     } catch (_) {}
 
     const prefs = getPrefs();
-    const opts = FREQS.map((f) => {
-      const sel = f.key === prefs.frecKey ? "selected" : "";
-      return `<option value="${f.key}" ${sel}>${f.label}</option>`;
-    }).join("");
+    const frecIdx = FREQS.findIndex((f) => f.key === prefs.frecKey);
+    const frecIdxSafe = frecIdx >= 0 ? frecIdx : 3; // default mensual
     mount.innerHTML = `
       <div style="border:2px solid #E8A020;border-radius:12px;padding:14px 16px;background:#FFF8EC;margin-top:16px;">
         <h3 style="margin:0 0 4px;color:#C05000;font-family:Georgia,serif;font-size:19px;">
@@ -364,12 +381,17 @@
         </p>
 
         <div style="display:grid;grid-template-columns:1fr;gap:10px;">
-          <label style="font-size:14px;font-weight:700;">
-            Frecuencia
-            <select id="oc-bk-frec" style="display:block;margin-top:4px;padding:8px;border:2px solid #E86040;border-radius:6px;min-height:40px;width:100%;max-width:280px;">
-              ${opts}
-            </select>
-          </label>
+          <div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Frecuencia de respaldo automático</div>
+            <input type="range" id="oc-bk-frec" min="0" max="3" step="1" value="${frecIdxSafe}"
+              style="width:100%;max-width:320px;accent-color:#E86040;height:6px;cursor:pointer;">
+            <div style="display:flex;justify-content:space-between;max-width:320px;margin-top:5px;">
+              ${FREQS.map((f) => `<span style="font-size:12px;color:#2C3E50;text-align:center;width:25%;">${f.label}</span>`).join("")}
+            </div>
+            <p id="oc-bk-frec-label" style="margin:6px 0 0;font-size:13px;color:#E86040;font-weight:700;">
+              Seleccionado: ${FREQS[frecIdxSafe].label}
+            </p>
+          </div>
 
           <label style="font-size:14px;font-weight:700;">
             <input type="checkbox" id="oc-bk-canalEmail" ${prefs.canalEmail ? "checked" : ""} style="min-width:20px;min-height:20px;vertical-align:middle;margin-right:6px;">
@@ -412,9 +434,17 @@
       if (m) { m.textContent = txt; m.style.color = color || "#2E6278"; }
     }
 
+    // Slider: actualiza el label de frecuencia en tiempo real al mover
+    document.getElementById("oc-bk-frec").addEventListener("input", function () {
+      const idx = parseInt(this.value, 10);
+      const lbl = document.getElementById("oc-bk-frec-label");
+      if (lbl && FREQS[idx]) lbl.textContent = "Seleccionado: " + FREQS[idx].label;
+    });
+
     document.getElementById("oc-bk-guardar").addEventListener("click", () => {
+      const frecSliderIdx = parseInt(document.getElementById("oc-bk-frec").value, 10);
       const nueva = {
-        frecKey: document.getElementById("oc-bk-frec").value,
+        frecKey: (FREQS[frecSliderIdx] || FREQS[3]).key, // lee del slider, fallback mensual
         email: document.getElementById("oc-bk-email").value.trim(),
         whatsapp: document.getElementById("oc-bk-wa").value.trim(),
         canalEmail: document.getElementById("oc-bk-canalEmail").checked,
