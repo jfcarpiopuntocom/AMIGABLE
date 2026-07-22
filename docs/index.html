@@ -2819,7 +2819,9 @@ async function mostrarFormEditarProducto(id){
     await ocAlert("No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.");
     return;
   }
-  const contenedor = document.getElementById("fichaResultado");
+  // Usa fichaTargetActual (igual que pintarFicha) para que el form aparezca en el
+  // mismo contenedor donde estaba la ficha — modal de Inventario O panel de Escanear.
+  const contenedor = document.getElementById(fichaTargetActual) || document.getElementById("fichaResultado");
   const q = (s) => escHtml(s == null ? "" : s); // item 20: escape completo (<,>,&,comillas), no solo comillas
   const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"';
   contenedor.innerHTML = `
