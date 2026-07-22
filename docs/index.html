@@ -1770,14 +1770,15 @@ function tarjetaCliente(c, esDueno, ctx) {
     ? `<div style="font-size:15px;color:#2C3E50;margin-top:3px;">${c.frecuencia} compra(s) en 90 días · ${fmtMoney(c.monto)}${c.recencia != null ? ` · última hace ${c.recencia} día(s)` : " · sin compras aún"}${c.email ? ` · ${escHtml(c.email)}` : ""}</div>`
     : "";
   const puedeEvaluar = window.OCAuth && window.OCAuth.rolActual && (window.OCAuth.rolActual() === "dueno" || window.OCAuth.rolActual() === "empleado");
-  // filaRate: 5 botones on/off; cada uno llama evaluarCliente con su valor (1-5).
+  // filaRate: 5 botones on/off en un .oc-rate-row con data-valor para que
+  // evaluarCliente() detecte el valor actual sin depender del atributo SVG fill.
   const filaRate = (campo, valor, iconoFn, titulo) => {
     let btns = "";
     for (let n = 1; n <= 5; n++) {
       btns += `<button class="oc-rate-btn" title="${titulo} ${n} de 5"
         onclick="evaluarCliente('${c.id}','${campo}',${n},this)">${iconoFn(n <= valor, 22)}</button>`;
     }
-    return btns;
+    return `<span class="oc-rate-row" data-valor="${valor}">${btns}</span>`;
   };
   // Chip de promedio histórico — aparece junto al nombre si ya hay calificaciones.
   const promEje = (campo) => {
@@ -1842,6 +1843,11 @@ async function cargarClientes(){
       <div style="font-size:15px;color:#2C3E50;margin:2px 0 8px;">${e.frase}</div>
       ${lista.map((c) => tarjetaCliente(c, esDueno)).join("")}</div>`;
   }).join("") || '<p style="font-size:16px;">Todavía no hay clientes. Agrega el primero arriba.</p>';
+  // Pruning: elimina claves de OCRateOpen para paneles que ya no existen en el DOM.
+  // Evita que el Set crezca indefinidamente con clientes eliminados o renombrados.
+  setTimeout(() => {
+    window.OCRateOpen.forEach(k => { if (!document.getElementById("oc-rate-" + k)) window.OCRateOpen.delete(k); });
+  }, 0);
   // Matriz de estaciones 2x2 — solo dueno. Eje horizontal: qué tan reciente
   // compra. Eje vertical: cuánto valor deja. Es la lectura RFM en un vistazo.
   const mc = document.getElementById("matrizClientes");
@@ -3520,15 +3526,24 @@ window.addEventListener("oc-login", () => setTimeout(ofrecerResumenSemanalSiToca
 // ============================================================================
 async function evaluarCliente(clienteId, campo, valor, btn) {
   if (btn) btn.disabled = true;
+  // Previene doble envío: lock por clienteId+campo durante el ciclo fetch+refresh.
+  // btn.disabled se libera en finally (~50ms), pero el lock dura 350ms (cubre el setTimeout 300ms).
+  const _lockKey = clienteId + ":" + campo;
+  evaluarCliente._locks = evaluarCliente._locks || new Set;
+  if (evaluarCliente._locks.has(_lockKey)) { if (btn) btn.disabled = false; return; }
+  evaluarCliente._locks.add(_lockKey);
   try {
-    // Si el usuario toca el mismo valor ya encendido → toggle: limpia a 0.
+    // Toggle: si el usuario toca el mismo valor que ya está activo → limpia a 0.
+    // Usa data-valor en el contenedor .oc-rate-row para evitar depender del atributo SVG fill.
     if (btn && btn.parentElement) {
-      const encendidos = btn.parentElement.querySelectorAll(".oc-rate-btn svg[fill]:not([fill='none'])");
-      if (encendidos.length === valor) valor = 0;
+      const row = btn.closest(".oc-rate-row") || btn.parentElement;
+      const currentVal = parseInt(row.dataset.valor || "0", 10);
+      if (currentVal === valor) valor = 0;
+      row.dataset.valor = String(valor); // actualizar para la próxima interacción
       // Actualización optimista: pinta/borra iconos al instante sin esperar fetch.
       try {
         const iconoFn = campo === "trato" ? svgHeartR : svgStarR;
-        btn.parentElement.querySelectorAll(".oc-rate-btn").forEach((b, i) => {
+        row.querySelectorAll(".oc-rate-btn").forEach((b, i) => {
           b.innerHTML = iconoFn(i + 1 <= valor, 22);
         });
       } catch(_) {}
@@ -3545,12 +3560,22 @@ async function evaluarCliente(clienteId, campo, valor, btn) {
     const res = await fetch(`${API}/clientes/${clienteId}/evaluacion`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
     });
-    // Mostrar/ocultar "Hora del incidente" según si la calificación es negativa (1-2).
-    const wrap = document.getElementById(`oc-inc-wrap-${clienteId}`);
-    if (wrap) wrap.style.display = (valor >= 1 && valor <= 2) ? "flex" : "none";
-    setTimeout(cargarClientes, 300);
+    if (res.ok) {
+      // Mostrar/ocultar "Hora del incidente" según si la calificación es negativa (1-2).
+      const wrap = document.getElementById(`oc-inc-wrap-${clienteId}`);
+      if (wrap) wrap.style.display = (valor >= 1 && valor <= 2) ? "flex" : "none";
+      setTimeout(cargarClientes, 300);
+    } else {
+      // Fetch fallido: revertir optimistic update lo antes posible.
+      console.warn("[evaluarCliente] PATCH no-ok:", res.status, clienteId, campo, valor);
+      setTimeout(cargarClientes, 50);
+    }
   } catch(e) { console.error("Error evaluando cliente:", e); setTimeout(cargarClientes, 400); }
-  finally { if (btn) btn.disabled = false; }
+  finally {
+    if (btn) btn.disabled = false;
+    // Liberar el lock 350ms después (cubre el setTimeout de cargarClientes de 300ms).
+    setTimeout(() => evaluarCliente._locks && evaluarCliente._locks.delete(_lockKey), 350);
+  }
 }
 
 async function despedirCliente(clienteId, nombre) {
