@@ -113,14 +113,20 @@
   }
 
   .elegant-shadow {
-    box-shadow: 0 10px 15px -3px rgb(15 23 42 / 0.05), 
+    box-shadow: 0 10px 15px -3px rgb(15 23 42 / 0.05),
                 0 4px 6px -4px rgb(15 23 42 / 0.05);
   }
+
+  /* Homologación con roi-tienda.html / reporte-usuario.html / manifiesto.html
+     (JFC, 2026-07-22): misma familia de paneles, mismo sistema. El nav lleva
+     borde dorado #FFC700 (no el brass/teal #5294AC) y el texto secundario usa
+     el --ink-soft del sistema en vez de los grises pálidos de Tailwind. */
+  .text-slate-400, .text-slate-500 { color: #2C3E50 !important; }
 </style>
 </head>
 <body class="bg-white antialiased" style="color:#0F1923;">
   <!-- Top Navigation -->
-  <nav class="sticky top-0 z-50" style="background:#0F1923;border-bottom:3px solid #5294AC;">
+  <nav class="sticky top-0 z-50" style="background:#0F1923;border-bottom:3px solid #FFC700;">
     <div class="max-w-7xl mx-auto px-8 py-5 flex items-center justify-between">
       <div class="flex items-center gap-x-3">
         <div class="w-9 h-9 rounded-2xl flex items-center justify-center" style="background:#E86040;">
@@ -150,8 +156,8 @@
   <!-- Hero -->
   <div class="max-w-5xl mx-auto px-8 pt-16 pb-12">
     <div class="max-w-3xl">
-      <div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-3xl bg-slate-100 text-slate-600 text-sm font-medium mb-6">
-        <i class="fa-solid fa-store text-[#5294AC]"></i>
+      <div class="inline-flex items-center gap-x-2 px-4 py-1.5 rounded-3xl text-sm font-medium mb-6" style="background:#1C2A38;color:#FFC700;">
+        <i class="fa-solid fa-store"></i>
         <span>Informe Ejecutivo 2026</span>
       </div>
       
