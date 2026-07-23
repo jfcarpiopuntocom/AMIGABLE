@@ -751,6 +751,10 @@
 
   <h3>Lista de reposición por percha</h3>
   <p>Debajo de las fotos, cada percha muestra una <strong>lista de reposición</strong>: los productos que se están acabando (stock en zona de reorden) <em>y</em> que además venden bien (cuadrante estrella o vaca de la matriz BCG). Es tu orden de compra priorizada: repón primero lo que se vende y se está agotando, no lo que simplemente está bajo.</p>
+
+  <h3>Un mismo producto en varias perchas</h3>
+  <p>¿Vendes el mismo artículo en el local Y en la feria? Abre la ficha del producto y toca <strong>"+ Agregar a esa percha"</strong>: se crea una fila nueva del mismo producto (mismo SKU, precio y foto) en la percha que elijas, con stock en 0, lista para recibir mercadería. La ficha original muestra un aviso <strong>"También en:"</strong> con un enlace directo a cada percha hermana y cuánto stock tiene cada una — un toque y saltas de una a otra sin buscar.</p>
+  <p style="font-size:15px;color:var(--ink-soft);">Cada fila tiene su propio stock, y se mueven unidades entre ellas con una <strong>transferencia</strong> (ver más abajo). Si cambias el precio en una percha, la app te avisa en la ficha si quedó distinto en alguna hermana — para que nunca vendas el mismo producto a dos precios sin darte cuenta.</p>
 </section>
 
 <section class="bloque revela" id="vender">
@@ -1117,8 +1121,22 @@ Carmen Ulloa,</pre>
   <h3>Tu nombre de negocio, arriba</h3>
   <p>Como dueño verás un lápiz ✎ junto al título de arriba. Tócalo y escribe el nombre real de tu negocio: queda guardado en tu instancia y viaja en tus respaldos y sincronizaciones. Si por lo que sea fallara, el título por defecto se queda y nada más se rompe.</p>
 
-  <h3>Tu equipo: empleados con su propio PIN</h3>
-  <p>En <strong>Avanzado → Empleados</strong> das de alta hasta 49 empleados, cada uno con su nombre y su PIN de 3 dígitos. Cuando entran con su PIN, <strong>cada movimiento que hacen queda firmado con su nombre</strong> en el historial: quién vendió, quién ajustó stock, quién anuló. Usa PINs distintos al tuyo y al del contador.</p>
+  <h3>Tu equipo: empleados y administradores, cada uno con su PIN</h3>
+  <p>En <strong>Avanzado → Equipo</strong> das de alta empleados y administradores, cada uno con su nombre, su PIN de 3 dígitos y opcionalmente su correo. Cuando entran con su PIN, <strong>cada movimiento que hacen queda firmado con su nombre</strong> en el historial: quién vendió, quién ajustó stock, quién anuló. Un administrador ve todo lo que ve el dueño excepto la clave/correo del dueño; un empleado solo ve lo operativo. Usa PINs distintos al tuyo y al del contador.</p>
+
+  <h3>Sincronización en tiempo real: todo el equipo, siempre al día</h3>
+  <p>Esto es distinto a "Sincronizar por WhatsApp" de abajo (esa manda respaldos completos, cuando tú quieras). Esta sincronización corre <strong>sola, 24/7, en segundo plano</strong>, apenas te licencias — sin que tengas que prender ni apagar nada, haya feria o sea un martes cualquiera. Ventas, ajustes de stock y transferencias que haga cualquier dispositivo de tu equipo llegan a los demás en <strong>segundos</strong>, para que dos personas nunca vendan las mismas últimas unidades sin saberlo, ni en la misma percha ni en perchas distintas.</p>
+  <div class="grid2">
+    <div class="tarjeta tilt">
+      <h4 style="margin-top:0;color:var(--brass-dk);">Cómo se une un celular nuevo</h4>
+      <p style="font-size:16px;margin:0;">En <strong>Avanzado → Sincronizar equipo</strong> tocas <strong>"Compartir con mi equipo"</strong>: se arma un mensaje de WhatsApp con el código de tu negocio. Quien lo reciba abre la app, toca <em>"¿Nuevo en este equipo?"</em> en la pantalla de PIN, pega el código <strong>una sola vez</strong> — y ese celular queda sincronizado para siempre. No hay que repetirlo antes de cada feria.</p>
+    </div>
+    <div class="tarjeta tilt">
+      <h4 style="margin-top:0;color:var(--brass-dk);">Qué tan seguro es</h4>
+      <p style="font-size:16px;margin:0;">Los datos viajan <strong>cifrados de punta a punta</strong>, solo entre los dispositivos de tu propio equipo. Nunca llegan a amigable-123 ni a nadie más — ni siquiera el autor de la app puede leerlos. Es completamente opcional: si nunca lo activas, la app sigue funcionando exactamente igual, 100% en tu dispositivo.</p>
+    </div>
+  </div>
+  <p style="font-size:15px;color:var(--ink-soft);">El panel de Avanzado muestra siempre cuántos equipos están conectados en ese momento ("Sincronizado · 3 equipos"). Si algo se ve raro, el botón <strong>"Resincronizar"</strong> reconecta al instante — pero es un salvavidas para casos raros, no algo que necesites tocar seguido. Ojo: hoy esto sincroniza <strong>ventas, ajustes y transferencias de stock</strong>; el catálogo (productos nuevos, precios, fotos) se configura antes del evento en un dispositivo y se reparte con el respaldo normal.</p>
 
   <h3>Control anti fraude</h3>
   <p>En <strong>Avanzado → Control anti fraude</strong> tienes, de un vistazo, tres cosas:</p>
