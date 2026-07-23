@@ -18,7 +18,7 @@
     { vista: "inventario", sel: "#gridInventario", titulo: "Tus productos hablan en colores", texto: "Rojo: reponer urgente. Amarillo: revisar pronto. Azul: buen margen, impúlsalo. Verde: todo en orden. No hay que interpretar números — el color te lo dice." },
     { vista: "escanear", sel: null, titulo: "Vende en segundos", texto: "Escanea el código de barras (o escribe el SKU) y la venta queda registrada con stock descontado. Sin cajas registradoras ni pasos extra." },
     { vista: "perchas", sel: "#perchaCrear", titulo: "Crea tus perchas", texto: "Una percha es un punto de venta: tu local, un stand de socio, una feria. Aquí las creas y les asignas productos, con comisión por socio si aplica." },
-    { vista: "clientes", sel: "#btnNuevoCliente", titulo: "Tus clientes", texto: "Registra clientes, evalúa trato y confiabilidad, y mira su historial. Tú decides a quién fiar y a quién no, con datos." },
+    { vista: "clientes", sel: "#btnAltaCliente", titulo: "Tus clientes", texto: "Registra clientes, evalúa trato y confiabilidad, y mira su historial. Tú decides a quién fiar y a quién no, con datos." },
     { vista: "comisiones", sel: null, titulo: "Comisiones sin peleas", texto: "La app calcula sola cuánto le toca a cada socio o promotora según lo vendido. Liquidas con un toque y puedes mandar el recibo por WhatsApp." },
     { vista: "avanzado", sel: null, titulo: "Avanzado: tu caja fuerte", texto: "Respaldos, claves, correo de recuperación, reportes contables y gastos. Todo vive en TU dispositivo — sin nube, sin suscripciones." },
   ];
