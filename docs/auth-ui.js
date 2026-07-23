@@ -16,7 +16,10 @@
   document.body.appendChild(cont);
   const msgEl=cont.querySelector("#oc-ue-msg");
   cont.querySelector("#oc-ue-cancelar").addEventListener("click",()=>cont.remove());
-  cont.querySelector("#oc-ue-confirmar").addEventListener("click",()=>{
+  cont.querySelector("#oc-ue-confirmar").addEventListener("click",(ev)=>{
+    const btn=ev.currentTarget;
+    if(btn.disabled)return;
+    btn.disabled=true;setTimeout(()=>{btn.disabled=false},1200);
     const codigo=cont.querySelector("#oc-ue-codigo").value.trim();
     if(!window.OCSyncControl){msgEl.textContent="Sincronización no disponible en este dispositivo.";return}
     const r=window.OCSyncControl.unirse(codigo);

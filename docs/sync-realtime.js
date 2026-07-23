@@ -98,24 +98,55 @@
   let ws = null, claveActual = null, salaIdActual = null, reintentoMs = 1000;
   let estadoActual = "apagado"; // apagado | conectando | conectado | reconectando
   let presenciaN = null; // cuantos dispositivos conectados ahora (null = desconocido)
+  let intentosSeguidos = 0; // reintentos consecutivos sin exito (refuerzo 2026-07-23)
+  let timeoutConexion = null;
   const listenersEstado = [];
   function notificarEstado(nuevo) {
     estadoActual = nuevo;
     listenersEstado.forEach((fn) => { try { fn(nuevo, presenciaN); } catch (_) {} });
   }
 
+  // Refuerzo (2026-07-23, auditoria delegada + verificacion manual): antes
+  // conectar() podia llamarse dos veces seguidas (Activar + reconexion
+  // automatica por visibilitychange casi al mismo tiempo, o un doble-click)
+  // sin cerrar el socket anterior — quedaba una conexion fantasma abierta
+  // consumiendo un cupo de la sala (max 12) y duplicando mensajes. Ahora
+  // conectar() SIEMPRE cierra lo que hubiera antes de abrir uno nuevo.
+  function cerrarWsExistente() {
+    if (timeoutConexion) { clearTimeout(timeoutConexion); timeoutConexion = null; }
+    if (ws) {
+      try { ws.onopen = ws.onmessage = ws.onclose = ws.onerror = null; ws.close(); } catch (_) {}
+      ws = null;
+    }
+  }
+
   async function conectar() {
     const sala = leerSala();
     if (!sala || !sala.codigo) { notificarEstado("apagado"); return; }
+    cerrarWsExistente();
     notificarEstado(estadoActual === "apagado" ? "conectando" : "reconectando");
-    claveActual = await derivarClave(sala.codigo);
-    salaIdActual = await idDeSala(sala.codigo);
+    // Refuerzo: el codigo se normaliza (mayusculas + sin espacios) SIEMPRE
+    // antes de derivar la clave/sala — sin esto, "amg-xxxx" y "AMG-XXXX"
+    // caen en salas distintas y el equipo nunca entiende por que no sincroniza.
+    const codigoNorm = normalizarCodigo(sala.codigo);
+    claveActual = await derivarClave(codigoNorm);
+    salaIdActual = await idDeSala(codigoNorm);
     try { ws = new WebSocket(RELAY_URL + salaIdActual); }
     catch (_) { return programarReintento(); }
 
     ws.binaryType = "arraybuffer";
+    // Refuerzo: si el handshake se cuelga (servidor acepta TCP pero nunca
+    // responde el upgrade), algunos navegadores nunca disparan onerror ni
+    // onclose — sin este timeout, el estado quedaba en "conectando" para
+    // siempre. A los 10s, si sigue CONNECTING, se fuerza el cierre y se
+    // deja que el backoff normal reintente.
+    timeoutConexion = setTimeout(() => {
+      if (ws && ws.readyState === WebSocket.CONNECTING) { try { ws.close(); } catch (_) {} }
+    }, 10000);
     ws.onopen = () => {
+      if (timeoutConexion) { clearTimeout(timeoutConexion); timeoutConexion = null; }
       reintentoMs = 1000;
+      intentosSeguidos = 0;
       notificarEstado("conectado");
       vaciarCola();
     };
@@ -141,9 +172,24 @@
     ws.onerror = () => { try { ws.close(); } catch (_) {} };
   }
 
+  function normalizarCodigo(codigo) {
+    return String(codigo || "").trim().toUpperCase().replace(/\s+/g, "");
+  }
+
   function programarReintento() {
     if (!leerSala()) return; // el dueño apago sync mientras tanto: no insistir
-    setTimeout(conectar, reintentoMs);
+    intentosSeguidos++;
+    // Refuerzo: no podemos distinguir "codigo invalido / sala inalcanzable"
+    // de "wifi que parpadeo" desde el WebSocket (el navegador no expone el
+    // motivo del cierre) — pero tras varios intentos seguidos fallidos SI
+    // podemos avisar, en vez de reintentar en silencio para siempre sin que
+    // nadie sepa que algo no cuadra.
+    if (intentosSeguidos >= 6) notificarEstado("reconectando");
+    // Jitter chico (+-20%) para que, si varios dispositivos del equipo se
+    // desconectan juntos (ej. wifi del local que parpadea), no reconecten
+    // todos en el mismo instante exacto.
+    const jitter = 1 + (Math.random() * 0.4 - 0.2);
+    setTimeout(conectar, Math.round(reintentoMs * jitter));
     reintentoMs = Math.min(reintentoMs * 2, 30000);
   }
 
@@ -182,18 +228,23 @@
     // codigo, sync queda encendido PARA SIEMPRE en este dispositivo — no es
     // un "modo evento" que se prende y apaga, es un estado permanente.
     activar(codigo) {
-      codigo = String(codigo || "").trim();
-      if (codigo.length < 6) return { ok: false, error: "El código debe tener al menos 6 caracteres." };
-      try { localStorage.setItem(ROOM_KEY, JSON.stringify({ codigo })); } catch (_) {}
+      // Refuerzo (2026-07-23): normalizar SIEMPRE antes de guardar — "amg-x"
+      // y "AMG-X" deben caer en la MISMA sala. Antes se guardaba tal cual lo
+      // tecleara el usuario, silencioso y confuso si alguien no usaba mayus.
+      const codigoNorm = normalizarCodigo(codigo);
+      if (codigoNorm.length < 6) return { ok: false, error: "El código debe tener al menos 6 caracteres." };
+      try { localStorage.setItem(ROOM_KEY, JSON.stringify({ codigo: codigoNorm })); } catch (_) {}
       reintentoMs = 1000;
+      intentosSeguidos = 0;
       conectar();
       return { ok: true };
     },
     unirse(codigo) { return this.activar(codigo); },
     desactivar() {
       try { localStorage.removeItem(ROOM_KEY); } catch (_) {}
-      if (ws) { try { ws.close(); } catch (_) {} ws = null; }
+      cerrarWsExistente();
       presenciaN = null;
+      intentosSeguidos = 0;
       notificarEstado("apagado");
     },
     // "Resincronizar" (nunca "forzar" — asusta al usuario normal): salvavidas
@@ -201,13 +252,16 @@
     // feria. Reconecta ya mismo, sin esperar el backoff normal.
     resincronizar() {
       if (!leerSala()) return { ok: false, error: "Sync no está activo en este dispositivo." };
-      if (ws) { try { ws.close(); } catch (_) {} ws = null; }
       reintentoMs = 1000;
+      intentosSeguidos = 0;
       conectar();
       return { ok: true };
     },
     estado() { return estadoActual; },
     presencia() { return presenciaN; },
+    // Refuerzo: expone si llevamos varios intentos seguidos sin exito, para
+    // que la UI pueda avisar ("revisa el código") en vez de reintentar mudo.
+    problemaPersistente() { return intentosSeguidos >= 6; },
     salaActiva() { const s = leerSala(); return s ? s.codigo : null; },
     onEstado(fn) { listenersEstado.push(fn); },
   };

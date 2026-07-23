@@ -56,13 +56,24 @@
 
   const pillTexto = (estado, n) => {
     if (estado === "conectado") return "Sincronizado" + (n != null ? ` · ${n} equipo${n === 1 ? "" : "s"}` : "");
+    // Refuerzo (2026-07-23): tras varios intentos seguidos sin exito, avisar
+    // en vez de reintentar mudo para siempre — el usuario no puede saber por
+    // que no sincroniza si nunca se le dice nada.
+    if (window.OCSyncControl.problemaPersistente && window.OCSyncControl.problemaPersistente()) {
+      return "No se pudo conectar — revisa el código o tu conexión";
+    }
     return ({
       apagado: "Solo local — sin sincronizar",
       conectando: "Conectando…",
       reconectando: "Reconectando…",
     }[estado] || estado);
   };
-  const pillColor = (estado) => estado === "conectado" ? "var(--sim-verde-dk,#1a6e3c)" : estado === "apagado" ? "var(--ink-soft)" : "#B8760A";
+  const pillColor = (estado) => {
+    if (estado === "conectado") return "var(--sim-verde-dk,#1a6e3c)";
+    if (estado === "apagado") return "var(--ink-soft)";
+    if (window.OCSyncControl.problemaPersistente && window.OCSyncControl.problemaPersistente()) return "var(--rojo,#a3392a)";
+    return "#B8760A";
+  };
 
   function pintarEstado(estado, n) {
     const el = document.getElementById("oc-sync-estado");
@@ -86,7 +97,14 @@
   }
   if (salaActiva) pintarQR(salaActiva);
 
-  document.getElementById("oc-sync-activar").addEventListener("click", () => {
+  document.getElementById("oc-sync-activar").addEventListener("click", (ev) => {
+    // Refuerzo (2026-07-23): sin esto, clics rapidos disparaban varias
+    // conexiones a la vez (ya blindado en conectar(), pero evitar el
+    // trabajo doble en el boton es mas limpio y evita parpadeo visual).
+    const btn = ev.currentTarget;
+    if (btn.disabled) return;
+    btn.disabled = true;
+    setTimeout(() => { btn.disabled = false; }, 1200);
     const codigo = document.getElementById("oc-sync-codigo").value;
     const r = window.OCSyncControl.activar(codigo);
     const msg = document.getElementById("oc-sync-msg");
