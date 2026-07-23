@@ -3162,7 +3162,9 @@ function pintarFicha(p){
       ${p.ubicacionNombre && p.ubicacionNombre !== "todas" ? `<div class="linea"><strong>Percha:</strong> ${escHtml(p.ubicacionNombre)}</div>` : ""}
       ${(p.otrasPerchas && p.otrasPerchas.length) ? `<div class="linea"><strong>${icoOC("percha", "currentColor", 12)} También en:</strong> ${p.otrasPerchas.map(h => `<span data-ver-hermano="${h.id}" style="cursor:pointer;text-decoration:underline;">${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)</span>`).join(" · ")}</div>` : ""}
       ${(window.OCAuth && window.OCAuth.rolActual() === "dueno") ? `<div class="linea"><strong>Costo:</strong> ${fmtMoney(p.costo||0)} · Margen: ${fmtMoney((p.precio||0)-(p.costo||0))} (${p.precio > 0 ? Math.round(((p.precio-(p.costo||0))/p.precio)*100) : 0}%)</div>` : ""}
-      <div class="linea"><strong>Stock actual:</strong> ${p.stockActual} unidades</div>
+      ${(window.OCAuth && window.OCAuth.rolActual() === "dueno" && p.otrasPerchas && p.otrasPerchas.some(h => h.precio != null && h.precio !== p.precio)) ? `<div class="linea" style="color:var(--rust,#E86040);"><strong>⚠ Precio distinto en otra percha</strong> — revisa "También en" arriba, se copió al crear la percha y no se actualiza sola.</div>` : ""}
+      ${(p.stockComprometido > 0) ? `<div class="linea" style="color:#B8760A;"><strong>Reservado en transferencias pendientes:</strong> ${p.stockComprometido} unidades</div>` : ""}
+      <div class="linea"><strong>Stock actual:</strong> ${p.stockActual} unidades${p.stockActual < 0 ? ` <span class="badge-estado rojo" style="margin-left:6px;">Descuadre — revisa el Log de actividad</span>` : ""}</div>
       ${p.perecible ? `<div class="linea"><strong>Vence:</strong> ${escHtml(p.fechaCaducidad || "sin fecha")}${p.metodoCosteo ? ` · ${escHtml(p.metodoCosteo)}` : ""}</div>` : ""}
       <span class="badge-estado ${escHtml(p.estado)}">${escHtml(p.mensaje)}</span>
       <div class="acciones-rapidas">
@@ -3782,8 +3784,19 @@ async function reactivarCliente(clienteId, nombre) {
 
 async function marcarComisionPagada(ubicacionId, promotorNombre, monto){
   if (!(await ocConfirm("¿Confirmas que ya le pagaste a la promotor/a lo que corresponde este mes?"))) return;
-  const res = await fetch(`${API}/liquidaciones/${ubicacionId}/marcar-pagado`, { method: "POST" });
-  if (!res.ok) return;
+  // try/catch #1 (auditoria 2026-07-23): antes un fallo de red aqui tiraba una
+  // excepcion no atrapada, y si el servidor respondia con error, fallaba en
+  // silencio total sin avisar nada al dueño (parecia que ya se habia pagado).
+  let res, r;
+  try {
+    res = await fetch(`${API}/liquidaciones/${ubicacionId}/marcar-pagado`, { method: "POST" });
+    r = await res.json();
+  } catch (err) {
+    console.error("[marcarComisionPagada]", err);
+    await ocAlert("No se pudo conectar con el servidor. El pago NO quedó registrado. Revisa tu conexión e intenta de nuevo.");
+    return;
+  }
+  if (!res.ok) { await ocAlert(r.error || "No se pudo marcar el pago."); return; }
   cargarComisiones();
   // Recibo para WhatsApp: solo se ofrece si hay nombre de promotora y monto > 0.
   if (promotorNombre && monto > 0) {
