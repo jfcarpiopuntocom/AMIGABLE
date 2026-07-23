@@ -3,6 +3,90 @@
    Vive FUERA de la subclave contable (junto a Gestión): preferencia de seguridad
    del dueño, no dato contable sensible. El módulo backup-scheduler.js hace todo
    el trabajo; aquí solo montamos. */
+// === SINCRONIZAR EQUIPO (tiempo real, 2026-07-23) ==========================
+// Solo dueño. Si nunca se activa, la app funciona exactamente igual que
+// siempre (solo local) — este panel es 100% opcional, cero dependencia.
+(function () {
+  if (!window.OCSyncControl) return; // sync-realtime.js no cargo (offline first-load raro): panel se omite, no rompe nada
+  const panel = document.createElement("div");
+  panel.className = "tag-card";
+  panel.id = "oc-sync-panel";
+  panel.style.cssText = "text-align:left;margin-top:22px;";
+  const salaActiva = window.OCSyncControl.salaActiva();
+  panel.innerHTML = `
+    <h3 class="seccion" style="margin-top:0;">Sincronizar equipo</h3>
+    <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">
+      Comparte un mismo código entre los dispositivos del equipo en un evento:
+      ventas, ajustes y transferencias de stock se avisan entre ellos en segundos,
+      para que nadie venda las mismas últimas unidades sin saberlo.
+      El catálogo (productos, precios, fotos) se configura antes, en un solo
+      dispositivo — esto sincroniza solo los movimientos de stock del día.
+    </p>
+    <div id="oc-sync-estado" style="font-size:13px;font-weight:700;margin-bottom:10px;"></div>
+    <div id="oc-sync-apagado" style="display:${salaActiva ? "none" : "flex"};gap:8px;flex-wrap:wrap;align-items:center;">
+      <input id="oc-sync-codigo" type="text" placeholder="Código de sala (mínimo 6 caracteres)" maxlength="40"
+        style="flex:1;min-width:220px;padding:8px;border:2px solid var(--azul-medio);border-radius:5px;font-size:14px;">
+      <button id="oc-sync-activar" class="ir">Activar</button>
+    </div>
+    <div id="oc-sync-activo" style="display:${salaActiva ? "block" : "none"};">
+      <p style="font-size:13px;color:var(--ink-soft);">Código de esta sala — compártelo con el equipo:</p>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <code id="oc-sync-codigo-actual" style="font-size:16px;font-weight:700;background:var(--paper-deep,#E2E8ED);padding:6px 12px;border-radius:6px;">${escHtml(salaActiva || "")}</code>
+        <div id="oc-sync-qr" style="margin-top:8px;"></div>
+      </div>
+      <button id="oc-sync-desactivar" style="margin-top:10px;border-color:var(--rojo);color:var(--rojo);">Desactivar sincronización</button>
+    </div>
+    <p id="oc-sync-msg" style="font-size:13px;margin-top:8px;font-weight:700;"></p>`;
+  vista.appendChild(panel);
+
+  const pillTexto = (estado) => ({
+    apagado: "Solo local — sin sincronizar",
+    conectando: "Conectando…",
+    conectado: "Sincronizado con el equipo",
+    reconectando: "Reconectando…",
+  }[estado] || estado);
+  const pillColor = (estado) => estado === "conectado" ? "var(--sim-verde-dk,#1a6e3c)" : estado === "apagado" ? "var(--ink-soft)" : "#B8760A";
+
+  function pintarEstado() {
+    const el = document.getElementById("oc-sync-estado");
+    if (!el) return;
+    const e = window.OCSyncControl.estado();
+    el.textContent = pillTexto(e);
+    el.style.color = pillColor(e);
+  }
+  pintarEstado();
+  window.OCSyncControl.onEstado(pintarEstado);
+
+  function pintarQR(codigo) {
+    const cont = document.getElementById("oc-sync-qr");
+    if (!cont || !window.qrcode) return;
+    try {
+      const q = window.qrcode(0, "M");
+      q.addData("AMIGABLE-SYNC:" + codigo);
+      q.make();
+      cont.innerHTML = `<img src="${q.createDataURL(4, 4)}" width="120" height="120" alt="QR del código de sala" style="border-radius:6px;">`;
+    } catch (_) { /* QR es un extra visual — si falla, el código en texto ya basta */ }
+  }
+  if (salaActiva) pintarQR(salaActiva);
+
+  document.getElementById("oc-sync-activar").addEventListener("click", () => {
+    const codigo = document.getElementById("oc-sync-codigo").value;
+    const r = window.OCSyncControl.activar(codigo);
+    const msg = document.getElementById("oc-sync-msg");
+    if (!r.ok) { msg.style.color = "var(--rojo,#a3392a)"; msg.textContent = r.error; return; }
+    msg.textContent = "";
+    document.getElementById("oc-sync-apagado").style.display = "none";
+    document.getElementById("oc-sync-activo").style.display = "block";
+    document.getElementById("oc-sync-codigo-actual").textContent = codigo.trim();
+    pintarQR(codigo.trim());
+  });
+  document.getElementById("oc-sync-desactivar").addEventListener("click", () => {
+    window.OCSyncControl.desactivar();
+    document.getElementById("oc-sync-apagado").style.display = "flex";
+    document.getElementById("oc-sync-activo").style.display = "none";
+  });
+})();
+// === FIN SINCRONIZAR EQUIPO ==================================================
 (function(){
   var bkMount = document.createElement("div");
   bkMount.id = "oc-backup-scheduler-mount";

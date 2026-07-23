@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Relay de sincronizacion en tiempo real, AMIGABLE (2026-07-23).
+  // Sordo y desmemoriado A PROPOSITO: solo rebota mensajes cifrados E2E
+  // entre dispositivos de la MISMA sala (instancia/licencia). Nunca guarda
+  // nada (cero storage.put), nunca ve el contenido en claro (el cliente
+  // cifra con AES-GCM antes de enviar). Si este Worker se cae o se borra,
+  // la app sigue funcionando exactamente igual en modo solo-local.
+  "name": "amigable-sync-relay",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-01",
+  "durable_objects": {
+    "bindings": [
+      { "name": "SALA", "class_name": "SalaSync" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["SalaSync"] }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}
