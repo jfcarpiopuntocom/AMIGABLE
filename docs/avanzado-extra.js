@@ -3,9 +3,12 @@
    Vive FUERA de la subclave contable (junto a Gestión): preferencia de seguridad
    del dueño, no dato contable sensible. El módulo backup-scheduler.js hace todo
    el trabajo; aquí solo montamos. */
-// === SINCRONIZAR EQUIPO (tiempo real, 2026-07-23) ==========================
-// Solo dueño. Si nunca se activa, la app funciona exactamente igual que
-// siempre (solo local) — este panel es 100% opcional, cero dependencia.
+// === SINCRONIZAR EQUIPO (tiempo real, 2026-07-23; ajustado por licencia) ===
+// Solo dueño. Si nunca hay licencia/codigo, la app funciona exactamente igual
+// que siempre (solo local) - este panel es 100% opcional, cero dependencia.
+// 2026-07-23: sync ya NO es un "modo evento" que se prende y apaga - el
+// dueño lo activa solo (automatico al licenciarse) y desde ahi corre 24/7
+// para siempre, haya o no haya feria. Este panel es de ESTADO, no de switch.
 (function () {
   if (!window.OCSyncControl) return; // sync-realtime.js no cargo (offline first-load raro): panel se omite, no rompe nada
   const panel = document.createElement("div");
@@ -13,45 +16,59 @@
   panel.id = "oc-sync-panel";
   panel.style.cssText = "text-align:left;margin-top:22px;";
   const salaActiva = window.OCSyncControl.salaActiva();
+  const codigoPrecargado = (function () {
+    try { return (JSON.parse(localStorage.getItem("amigable_owned") || "null") || {}).licenseCode || ""; } catch (_) { return ""; }
+  })();
   panel.innerHTML = `
     <h3 class="seccion" style="margin-top:0;">Sincronizar equipo</h3>
     <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">
-      Comparte un mismo código entre los dispositivos del equipo en un evento:
-      ventas, ajustes y transferencias de stock se avisan entre ellos en segundos,
-      para que nadie venda las mismas últimas unidades sin saberlo.
-      El catálogo (productos, precios, fotos) se configura antes, en un solo
-      dispositivo — esto sincroniza solo los movimientos de stock del día.
+      Todos los dispositivos de tu equipo (dueño, admins, empleados) que tengan
+      el código de tu negocio quedan sincronizados en segundos, siempre —
+      no solo en ferias. Ventas, ajustes y transferencias de stock se avisan
+      entre todos al instante, para que nadie venda las mismas últimas
+      unidades sin saberlo.
+    </p>
+    <p style="font-size:13px;color:var(--sim-verde-dk,#1a6e3c);font-weight:700;margin-top:0;">
+      Tus datos solo viajan cifrados entre los dispositivos de tu propio
+      equipo. Nunca llegan a AMIGABLE ni a nadie más — ni siquiera nosotros
+      podemos leerlos. Es completamente opcional.
     </p>
     <div id="oc-sync-estado" style="font-size:13px;font-weight:700;margin-bottom:10px;"></div>
     <div id="oc-sync-apagado" style="display:${salaActiva ? "none" : "flex"};gap:8px;flex-wrap:wrap;align-items:center;">
-      <input id="oc-sync-codigo" type="text" placeholder="Código de sala (mínimo 6 caracteres)" maxlength="40"
+      <input id="oc-sync-codigo" type="text" value="${escHtml(codigoPrecargado)}" placeholder="Código de tu negocio (AMG-XXXX-XXXX)" maxlength="40"
         style="flex:1;min-width:220px;padding:8px;border:2px solid var(--azul-medio);border-radius:5px;font-size:14px;">
       <button id="oc-sync-activar" class="ir">Activar</button>
     </div>
     <div id="oc-sync-activo" style="display:${salaActiva ? "block" : "none"};">
-      <p style="font-size:13px;color:var(--ink-soft);">Código de esta sala — compártelo con el equipo:</p>
+      <p style="font-size:13px;color:var(--ink-soft);">Código de tu equipo — compártelo con cada celular nuevo UNA sola vez:</p>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <code id="oc-sync-codigo-actual" style="font-size:16px;font-weight:700;background:var(--paper-deep,#E2E8ED);padding:6px 12px;border-radius:6px;">${escHtml(salaActiva || "")}</code>
         <div id="oc-sync-qr" style="margin-top:8px;"></div>
       </div>
-      <button id="oc-sync-desactivar" style="margin-top:10px;border-color:var(--rojo);color:var(--rojo);">Desactivar sincronización</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button id="oc-sync-compartir" class="ir" style="background:#25D366;border-color:#1da851;">Compartir con mi equipo</button>
+        <button id="oc-sync-resincronizar">Resincronizar</button>
+        <button id="oc-sync-desactivar" style="border-color:var(--rojo);color:var(--rojo);">Desactivar sincronización</button>
+      </div>
     </div>
     <p id="oc-sync-msg" style="font-size:13px;margin-top:8px;font-weight:700;"></p>`;
   vista.appendChild(panel);
 
-  const pillTexto = (estado) => ({
-    apagado: "Solo local — sin sincronizar",
-    conectando: "Conectando…",
-    conectado: "Sincronizado con el equipo",
-    reconectando: "Reconectando…",
-  }[estado] || estado);
+  const pillTexto = (estado, n) => {
+    if (estado === "conectado") return "Sincronizado" + (n != null ? ` · ${n} equipo${n === 1 ? "" : "s"}` : "");
+    return ({
+      apagado: "Solo local — sin sincronizar",
+      conectando: "Conectando…",
+      reconectando: "Reconectando…",
+    }[estado] || estado);
+  };
   const pillColor = (estado) => estado === "conectado" ? "var(--sim-verde-dk,#1a6e3c)" : estado === "apagado" ? "var(--ink-soft)" : "#B8760A";
 
-  function pintarEstado() {
+  function pintarEstado(estado, n) {
     const el = document.getElementById("oc-sync-estado");
     if (!el) return;
-    const e = window.OCSyncControl.estado();
-    el.textContent = pillTexto(e);
+    const e = estado || window.OCSyncControl.estado();
+    el.textContent = pillTexto(e, n != null ? n : window.OCSyncControl.presencia());
     el.style.color = pillColor(e);
   }
   pintarEstado();
@@ -64,7 +81,7 @@
       const q = window.qrcode(0, "M");
       q.addData("AMIGABLE-SYNC:" + codigo);
       q.make();
-      cont.innerHTML = `<img src="${q.createDataURL(4, 4)}" width="120" height="120" alt="QR del código de sala" style="border-radius:6px;">`;
+      cont.innerHTML = `<img src="${q.createDataURL(4, 4)}" width="120" height="120" alt="QR del código de tu negocio" style="border-radius:6px;">`;
     } catch (_) { /* QR es un extra visual — si falla, el código en texto ya basta */ }
   }
   if (salaActiva) pintarQR(salaActiva);
@@ -79,6 +96,30 @@
     document.getElementById("oc-sync-activo").style.display = "block";
     document.getElementById("oc-sync-codigo-actual").textContent = codigo.trim();
     pintarQR(codigo.trim());
+  });
+  const btnCompartir = document.getElementById("oc-sync-compartir");
+  if (btnCompartir) btnCompartir.addEventListener("click", () => {
+    const codigo = (window.OCSyncControl.salaActiva() || "").trim();
+    const negocio = (function () { try { const s = document.getElementById("oc-negocio-nombre"); return s ? s.textContent.trim() : ""; } catch (_) { return ""; } })();
+    // Ojo (2026-07-23): esto se manda UNA vez por celular nuevo, nunca por
+    // venta ni por evento — el texto lo dice explícito para que nadie piense
+    // que hay que repetirlo antes de cada feria.
+    const texto = [
+      `Únete a nuestro equipo en AMIGABLE-123${negocio ? " (" + negocio + ")" : ""}.`,
+      `Abre la app y toca "¿Nuevo en este equipo?" en la pantalla de PIN, pega este código UNA sola vez:`,
+      codigo,
+      ``,
+      `No hace falta repetirlo — tu celular queda sincronizado con el equipo para siempre.`,
+    ].join("\n");
+    window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank");
+  });
+  const btnResync = document.getElementById("oc-sync-resincronizar");
+  if (btnResync) btnResync.addEventListener("click", () => {
+    const msg = document.getElementById("oc-sync-msg");
+    window.OCSyncControl.resincronizar();
+    msg.style.color = "var(--sim-verde-dk,#1a6e3c)";
+    msg.textContent = "Resincronizando…";
+    setTimeout(() => { if (msg.textContent === "Resincronizando…") msg.textContent = ""; }, 3000);
   });
   document.getElementById("oc-sync-desactivar").addEventListener("click", () => {
     window.OCSyncControl.desactivar();

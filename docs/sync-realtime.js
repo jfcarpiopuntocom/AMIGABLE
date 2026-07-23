@@ -1,10 +1,11 @@
 // AMIGABLE — Cliente de sincronizacion en tiempo real (2026-07-23)
 // ============================================================================
-// QUE HACE: si el dueño activa "Sincronizar equipo" en Avanzado y comparte un
-// codigo de sala con los demas dispositivos, las VENTAS, AJUSTES, ANULACIONES
-// y TRANSFERENCIAS de stock hechas en cualquier dispositivo de la sala llegan
-// a los demas en segundos — para que 5-7 personas vendiendo del mismo
-// inventario en un evento no se atropellen ni sobrevendan.
+// QUE HACE: en cuanto el dueño se licencia (automatico) o un empleado escribe
+// UNA vez el codigo del negocio ("Unirme a mi equipo"), este dispositivo
+// queda sincronizado 24/7 PARA SIEMPRE — no es un modo evento que se prende
+// y apaga. Las VENTAS, AJUSTES, ANULACIONES y TRANSFERENCIAS de stock hechas
+// en cualquier dispositivo del equipo llegan a los demas en segundos, todos
+// los dias, haya o no haya feria — para que nadie sobrevenda ni se atropelle.
 //
 // COMO SE PROTEGE LA APP (lazy approach, cero dependencia obligatoria):
 //   - Si esto nunca se activa, o el relay esta caido, o se borra este
@@ -96,10 +97,11 @@
   // --- Estado de conexion ---
   let ws = null, claveActual = null, salaIdActual = null, reintentoMs = 1000;
   let estadoActual = "apagado"; // apagado | conectando | conectado | reconectando
+  let presenciaN = null; // cuantos dispositivos conectados ahora (null = desconocido)
   const listenersEstado = [];
   function notificarEstado(nuevo) {
     estadoActual = nuevo;
-    listenersEstado.forEach((fn) => { try { fn(nuevo); } catch (_) {} });
+    listenersEstado.forEach((fn) => { try { fn(nuevo, presenciaN); } catch (_) {} });
   }
 
   async function conectar() {
@@ -118,6 +120,17 @@
       vaciarCola();
     };
     ws.onmessage = async (ev) => {
+      // Frame de presencia (2026-07-23): el relay los manda en TEXTO plano,
+      // sin cifrar (solo es un numero de conexiones, no dato del negocio).
+      // Las Ops reales siempre son binarias (ArrayBuffer, cifradas). Este
+      // chequeo de tipo es la unica forma de distinguirlos.
+      if (typeof ev.data === "string") {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (msg && msg.__presencia__) { presenciaN = msg.n; notificarEstado(estadoActual); }
+        } catch (_) {}
+        return;
+      }
       try {
         const op = await descifrar(claveActual, ev.data);
         if (window.OCSync && window.OCSync.aplicarOpRemota) window.OCSync.aplicarOpRemota(op);
@@ -162,20 +175,39 @@
 
   // --- API publica para la UI (Avanzado) ---
   window.OCSyncControl = {
+    // activar(): usado por el dueño al licenciarse (auto, sin pantalla) y por
+    // el panel de Avanzado. unirse() es el mismo mecanismo con nombre claro
+    // para el flujo de equipo ("Unirme con el codigo de mi negocio").
+    // 2026-07-23 (ajuste del plan sincro-equipos): una vez guardado el
+    // codigo, sync queda encendido PARA SIEMPRE en este dispositivo — no es
+    // un "modo evento" que se prende y apaga, es un estado permanente.
     activar(codigo) {
       codigo = String(codigo || "").trim();
-      if (codigo.length < 6) return { ok: false, error: "El codigo de sala debe tener al menos 6 caracteres." };
+      if (codigo.length < 6) return { ok: false, error: "El código debe tener al menos 6 caracteres." };
       try { localStorage.setItem(ROOM_KEY, JSON.stringify({ codigo })); } catch (_) {}
       reintentoMs = 1000;
       conectar();
       return { ok: true };
     },
+    unirse(codigo) { return this.activar(codigo); },
     desactivar() {
       try { localStorage.removeItem(ROOM_KEY); } catch (_) {}
       if (ws) { try { ws.close(); } catch (_) {} ws = null; }
+      presenciaN = null;
       notificarEstado("apagado");
     },
+    // "Resincronizar" (nunca "forzar" — asusta al usuario normal): salvavidas
+    // raro para cuando alguien duda si esta sincronizado de verdad en plena
+    // feria. Reconecta ya mismo, sin esperar el backoff normal.
+    resincronizar() {
+      if (!leerSala()) return { ok: false, error: "Sync no está activo en este dispositivo." };
+      if (ws) { try { ws.close(); } catch (_) {} ws = null; }
+      reintentoMs = 1000;
+      conectar();
+      return { ok: true };
+    },
     estado() { return estadoActual; },
+    presencia() { return presenciaN; },
     salaActiva() { const s = leerSala(); return s ? s.codigo : null; },
     onEstado(fn) { listenersEstado.push(fn); },
   };

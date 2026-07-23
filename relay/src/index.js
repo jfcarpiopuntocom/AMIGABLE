@@ -35,6 +35,7 @@ export class SalaSync extends DurableObject {
     const par = new WebSocketPair();
     const [cliente, servidor] = Object.values(par);
     this.ctx.acceptWebSocket(servidor);
+    this._difundirPresencia();
     return new Response(null, { status: 101, webSocket: cliente });
   }
 
@@ -51,10 +52,29 @@ export class SalaSync extends DurableObject {
 
   webSocketClose(ws, code, reason) {
     try { ws.close(code, reason); } catch (_) {}
+    // El socket que se acaba de cerrar TODAVIA aparece en getWebSockets()
+    // en este punto (confirmado probando en vivo: sin excluirlo, el conteo
+    // quedaba desfasado +1 al desconectar) — se excluye a mano.
+    this._difundirPresencia(ws);
   }
 
   webSocketError(ws) {
     try { ws.close(1011, "error"); } catch (_) {}
+    this._difundirPresencia(ws);
+  }
+
+  // Contador de "cuantos equipos estan conectados ahora" (plan sincro-equipos,
+  // fase 3, 2026-07-23). Frame de TEXTO plano (no cifrado) — es solo un
+  // numero de conexiones, no dato del negocio, así que no hace falta E2E
+  // aqui. El cliente distingue texto (presencia) de binario (Op cifrada real).
+  // excluir: socket que se esta cerrando ahora mismo, si aplica.
+  _difundirPresencia(excluir) {
+    const activos = this.ctx.getWebSockets().filter((s) => s !== excluir);
+    const n = activos.length;
+    const frame = JSON.stringify({ __presencia__: true, n });
+    for (const s of activos) {
+      try { s.send(frame); } catch (_) {}
+    }
   }
 }
 
