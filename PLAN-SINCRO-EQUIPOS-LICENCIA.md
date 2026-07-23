@@ -35,6 +35,19 @@ la fricción que JFC correctamente rechaza: **leer un QR o repetir un código
 después de CADA venta.** La meta realista y lograble es: **un solo código,
 una sola vez, al configurar el teléfono — nunca más.**
 
+**Corrección de diseño (JFC 2026-07-23, tras revisar la primera versión de
+este plan):** el mensaje de WhatsApp de la Fase 2 es SOLO para el momento en
+que un teléfono nuevo entra al equipo — una vez en la vida de ese teléfono,
+jamás recurrente, jamás por venta ni por novedad. Y JFC prefiere la versión
+más fuerte: **sync 24/7 nativo, encendido por el simple hecho de tener
+licencia**, sin un interruptor de "activar/desactivar" que alguien tenga que
+tocar. Se activa solo al licenciarse (dueño) o al unirse con el código
+(equipo), y desde ahí corre para siempre en segundo plano — igual que el
+gateway de OmniRoute arranca solo con Windows, este arranca solo con la app.
+El botón de emergencia se llama **"Resincronizar"** (no "forzar" — ese verbo
+espanta al usuario normal), vive escondido en Avanzado, y NO es algo que se
+espera que nadie use seguido — es un salvavidas raro, no un paso del flujo.
+
 ---
 
 ## Fase 0 — Ya construido (no repetir, solo entender)
@@ -55,37 +68,54 @@ una sola vez, al configurar el teléfono — nunca más.**
 ## Fase 1 — Unificar licencia y sala de sync (el cambio central)
 
 **Objetivo:** que el `licenseCode` sea, automáticamente, la semilla de la
-sala de sync — sin que el dueño tenga que generar/copiar un código aparte.
+sala de sync — sin que el dueño tenga que generar/copiar un código aparte,
+Y SIN un interruptor manual de "activar sync": si el dispositivo tiene
+`licenseCode` (dueño) o un `amigable_sync_licencia` recibido (equipo), el
+sync YA está corriendo, siempre, en segundo plano, sin pedir permiso cada
+vez. Nada de "modo evento" que se prende y apaga — es un estado permanente
+del dispositivo, como estar conectado a internet.
 
-1. En `construirModalActivacion` (auth-ui.js): cuando se genera
-   `licenseCode` para el dispositivo del DUEÑO, guardarlo también como
-   sala de sync activa (llamar `window.OCSyncControl.activar(licenseCode)`
-   automáticamente al activar — cero paso manual para el dueño).
+1. En `construirModalActivacion` (auth-ui.js): al generar `licenseCode`
+   para el dispositivo del DUEÑO, llamar `window.OCSyncControl.activar(licenseCode)`
+   en el mismo instante — cero paso manual, cero botón, cero pantalla nueva.
 2. Nuevo flujo "Unirme al equipo de [negocio]" para dispositivos de
    empleados/admins: en vez de pedir PIN 789 (que da modo dueño ilimitado,
    no corresponde a un empleado), un flujo LIVIANO que solo pide el
    `licenseCode` del negocio (dado por el dueño UNA vez, por WhatsApp/voz/
-   papel — como ya se comparte cualquier clave de wifi de un local) y activa
-   sync con ese código. No activa modo dueño, no toca `amigable_owned`.
+   papel — como ya se comparte cualquier clave de wifi de un local). Al
+   confirmarlo, sync queda encendido PARA SIEMPRE en ese teléfono — no hay
+   que repetirlo, no hay que "reactivar" para el próximo evento. No activa
+   modo dueño, no toca `amigable_owned`.
 3. Guardar el `licenseCode` usado para sync en una clave de localStorage
    separada de la licencia de activación (`amigable_sync_licencia`) para
    que un dispositivo pueda estar sincronizado SIN estar "activado"
    (empleados no necesitan pagar/activar, solo sincronizar).
-4. Panel "Sincronizar equipo" en Avanzado: si ya hay `licenseCode` local,
-   usarlo como valor por defecto del campo (precargado, no vacío) — el
-   dueño solo confirma, no re-teclea.
+4. Panel "Sincronizar equipo" en Avanzado deja de ser un formulario de
+   activar/desactivar y pasa a ser un panel de ESTADO: muestra que está
+   corriendo (siempre, si hay licencia), el código para compartir con
+   nuevos teléfonos, y el botón "Resincronizar" de la Fase 3. Copy explícito
+   y visible: **"Tus datos solo viajan cifrados entre los dispositivos de tu
+   propio equipo. Nunca llegan a AMIGABLE ni a nadie más — ni siquiera
+   nosotros podemos leerlos."** — la gente debe poder confiar sin tener que
+   preguntar.
 
 ## Fase 2 — Onboarding de un dispositivo nuevo, sin QR repetido
 
+**Ojo, esto pasa UNA vez en la vida útil de cada teléfono — nunca por
+venta, nunca por evento, nunca recurrente.** Un teléfono que ya se unió
+queda sincronizado 24/7 para siempre; esta fase es solo la puerta de
+entrada la primera vez.
+
 1. Botón "Compartir con mi equipo" en Avanzado (dueño): genera un mensaje
    de WhatsApp pre-armado con el `licenseCode` y un link corto a la app
-   ("Abre esto y pega este código UNA vez: AMG-XXXX-XXXX"). Un solo envío,
-   no por cada venta — exactamente lo que JFC pide.
+   ("Abre esto y pega este código UNA vez: AMG-XXXX-XXXX. No hace falta
+   repetirlo — tu celular queda sincronizado para siempre"). Copy explícito
+   sobre el "para siempre" para que nadie piense que hay que reenviarlo
+   antes de cada feria.
 2. QR opcional (ya existe la librería `qrcode-local.js`) SOLO como atajo
    visual del mismo código, para el caso "estamos los dos en la feria y es
    más rápido escanear que dictar" — sigue siendo UNA vez por dispositivo,
-   nunca por venta. Dejar clarísimo en el texto de la UI: "esto se hace una
-   sola vez por celular, no todos los días."
+   para siempre, nunca por venta.
 
 ## Fase 3 — Version control inteligente + failsafes (robustecer lo ya construido)
 
@@ -106,10 +136,12 @@ de descuadre. Lo que falta para "award-winning":
    UTC) como fuente de verdad para "mes actual" en vez de `Date.now()`
    local en cada dispositivo — mitiga el riesgo #4 de la auditoría anterior
    (desfase de reloj entre celulares) sin necesitar servidor de tiempo.
-4. **Botón "Forzar resync"** en el panel de Avanzado: reconecta y re-declara
-   presencia — failsafe manual para cuando alguien duda si está sincronizado
-   de verdad (ansiedad real en feria, vale la pena el botón aunque rara vez
-   se use).
+4. **Botón "Resincronizar"** (nunca "forzar" — ese verbo asusta al usuario
+   normal) en el panel de Avanzado: reconecta y re-declara presencia. Es un
+   salvavidas raro para cuando alguien duda si está sincronizado de verdad
+   (ansiedad real en feria) — NO es parte del flujo esperado, no se le pide
+   a nadie que lo use seguido, y su presencia en la UI debe sentirse
+   discreta/secundaria, no como un paso más del proceso normal.
 
 ## Verificación (todas las fases)
 
@@ -131,3 +163,9 @@ de descuadre. Lo que falta para "award-winning":
 - NO tocar el Worker de licencias (`enviarHeartbeatLicencia`) — es un
   sistema aparte, con su propia regla de "solo estos campos viajan". El
   relay de sync sigue siendo 100% independiente de él.
+- NO diseñar esto como "modo evento/feria" que se prende y apaga — es un
+  estado permanente del dispositivo. Da igual si hay feria o es un martes
+  cualquiera: si el teléfono tiene licencia o código de equipo, sincroniza
+  24/7, punto.
+- NO llamar "Forzar" a ningún botón — usar "Resincronizar", y tratarlo como
+  excepción rara, no como parte del uso diario esperado.
