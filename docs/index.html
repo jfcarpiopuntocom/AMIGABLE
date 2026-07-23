@@ -181,17 +181,20 @@
     position:relative;
     background:var(--blanco-calido);
     border:1.5px solid rgba(33,28,20,0.22);
-    clip-path:polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+    /* ESQUINA CORTADA — DORMANT (JFC 2026-07-22): el corte + la diagonal se
+       leian como triangulito punta arriba en cada card de producto. Tarjetas
+       rectangulares blocky ahora. Para re-activar el corte de etiqueta:
+       clip-path:polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%); */
     box-shadow:0 1px 2px rgba(33,28,20,0.06), 0 6px 16px -8px rgba(33,28,20,0.28);
     transition:box-shadow .2s ease, transform .2s ease;
   }
   .tag-card::before{
-    content:"";
-    position:absolute;
-    top:0; right:0;
-    width:18px; height:18px;
-    background:linear-gradient(135deg, transparent 49.5%, rgba(33,28,20,0.14) 50%, transparent 50.5%);
-    pointer-events:none;
+    /* DIAGONAL DEL DOBLEZ — DORMANT (JFC 2026-07-22): acompanaba al corte de
+       esquina; sin corte, la linea sola parecia un triangulito. NO BORRAR.
+       Para re-activar: content:""; position:absolute; top:0; right:0;
+       width:18px; height:18px; background:linear-gradient(135deg, transparent
+       49.5%, rgba(33,28,20,0.14) 50%, transparent 50.5%); pointer-events:none; */
+    content:none;
   }
   .tag-card::after{
     /* TRIANGULO DE ESQUINA — DORMANT (retirado por JFC, 2026-07-22).
