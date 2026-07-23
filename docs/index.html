@@ -1566,9 +1566,10 @@ function vistaActivaId(){
 }
 
 // ============================================================================
-// VENDER: CUADRICULA TACTIL + CIERRE DEL DIA (JFC 2026-07-07)
-// Un toque = venderUno() (misma ruta que el buscador: cliente opcional del
-// select, toast de deshacer 5s). Nada de carrito: esto registra salidas, no
+// VENDER: CUADRICULA TACTIL + CIERRE DEL DIA (JFC 2026-07-07, actualizado 2026-07-23)
+// Un toque = abrirPanelVentaInfo() (misma ruta que Inventario y el buscador):
+// SIEMPRE se abre el panel para atar cliente o tomar los datos de la venta,
+// nunca una venta silenciosa. Nada de carrito: esto registra salidas, no
 // cobra. Estrellas primero, luego alfabetico; sin stock = apagado.
 // ============================================================================
 // Cache del ultimo fetch de productos del grid tactil: el listener de click
@@ -1606,18 +1607,8 @@ async function cargarGridVender(){
       const b = e.target.closest("[data-vender-tile]");
       if (!b || b.disabled) return;
       const id = b.dataset.venderTile;
-      // Datos de venta obligatorios (2026-07-23): mismo criterio en todos los
-      // botones de "vender" de la app — tipoProducto "ticket" O la percha del
-      // producto marcada como evento. Cualquiera de los dos basta; ninguno
-      // toca la logica de comisiones (esEvento es un marcador aparte de tipo).
       const prod = _gridVenderProductosCache.find(x => x.id === id);
-      const ubic = ubicaciones.find(u => u.id === prod?.ubicacionId);
-      const requierePanel = !!(prod && (prod.tipoProducto === "ticket" || (ubic && ubic.esEvento)));
-      if (requierePanel) { abrirPanelVentaInfo(id, prod.tipoProducto === "ticket"); return; }
-      b.disabled = true;
-      await venderUno(id);
-      cargarGridVender();
-      if (document.getElementById("cierreDia").open) cargarCierreLista(); // el "hoy: N" de abajo se actualiza al instante
+      abrirPanelVentaInfo(id, !!(prod && prod.tipoProducto === "ticket"));
     });
   }
 }
@@ -3360,9 +3351,6 @@ document.getElementById("inputEscaner").addEventListener("keydown", (e) => {
 let fichaTargetActual = "fichaResultado";
 function pintarFicha(p){
   const contenedor = document.getElementById(fichaTargetActual) || document.getElementById("fichaResultado");
-  // Mismo criterio que el grid tactil: ticket O percha marcada como evento.
-  const ubicP = ubicaciones.find(u => u.id === p.ubicacionId);
-  const requierePanel = p.tipoProducto === "ticket" || !!(ubicP && ubicP.esEvento);
   contenedor.innerHTML = `
     <div class="ficha-producto tag-card">
       ${p.foto ? `<img src="${p.foto}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:8px;border:2px solid var(--sim-plata-dk,#8A9AAA);float:right;margin-left:10px;">` : ""}
@@ -3381,14 +3369,11 @@ function pintarFicha(p){
       ${p.perecible ? `<div class="linea"><strong>Vence:</strong> ${escHtml(p.fechaCaducidad || "sin fecha")}${p.metodoCosteo ? ` · ${escHtml(p.metodoCosteo)}` : ""}</div>` : ""}
       <span class="badge-estado ${escHtml(p.estado)}">${escHtml(p.mensaje)}</span>
       <div class="acciones-rapidas">
-        ${(requierePanel || fichaTargetActual === "fichaModalBody")
-          ? `<button class="vender" onclick="abrirPanelVentaInfo('${p.id}', ${p.tipoProducto === "ticket" ? "true" : "false"})" ${p.stockActual === 0 ? "disabled" : ""}>${p.tipoProducto === "ticket" ? "Vender ticket/evento" : "Vender 1"}</button>`
-          : `<button class="vender" onclick="venderUno('${p.id}')" ${p.stockActual === 0 ? "disabled" : ""}>Vender 1</button>`}
+        <button class="vender" onclick="abrirPanelVentaInfo('${p.id}', ${p.tipoProducto === "ticket" ? "true" : "false"})" ${p.stockActual === 0 ? "disabled" : ""}>${p.tipoProducto === "ticket" ? "Vender ticket/evento" : "Vender 1"}</button>
         <button onclick="ajustar('${p.id}', 1)">+1 stock</button>
         <button onclick="ajustar('${p.id}', -1)">-1 stock</button>
         <button class="etiqueta" onclick="abrirEtiqueta('${p.id}')">Ver etiqueta</button>
       </div>
-      ${(!requierePanel && fichaTargetActual !== "fichaModalBody") ? `<button style="margin-top:8px;font-size:13px;background:transparent;border:none;color:var(--azul-medio);text-decoration:underline;cursor:pointer;padding:0;" onclick="abrirPanelVentaInfo('${p.id}', false)">+ datos de la venta (cliente, email, forma de pago — opcional)</button>` : ""}
       ${(window.OCAuth && window.OCAuth.rolActual() === "dueno") ? `<div class="acciones-rapidas" style="margin-top:8px;">
         <button onclick="mostrarFormEditarProducto('${p.id}')">${icoOC("lapiz", "currentColor", 14)} Editar ficha</button>
         <button style="border-color:var(--rojo);color:var(--rojo);" onclick="eliminarProductoUI('${p.id}', this)">Eliminar</button>
@@ -3593,6 +3578,7 @@ async function confirmarVentaConInfo(id, esTicket){
     // Escanear) si había una abierta, y el grid táctil de Vender si está activo.
     if (document.getElementById(fichaTargetActual)) pintarFicha(data.producto);
     if (document.getElementById("gridVender")) cargarGridVender();
+    if (document.getElementById("cierreDia") && document.getElementById("cierreDia").open) cargarCierreLista();
     if (data.ventaId) mostrarToastAnular(data.ventaId, id);
   } finally {
     _ventasEnCurso.delete(id);
