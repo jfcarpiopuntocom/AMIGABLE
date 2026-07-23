@@ -71,12 +71,20 @@
     const paso = PASOS[idx];
     const el = objetivoDe(paso);
     if (!el) return;
+    // El texto de la tarjeta se actualiza SIEMPRE de inmediato — nunca se
+    // queda mostrando el paso anterior mientras el foco reintenta medir.
+    tarjeta.querySelector(".paso").textContent = "Paso " + (idx + 1) + " de " + PASOS.length;
+    tarjeta.querySelector("h3").textContent = paso.titulo;
+    tarjeta.querySelector(".cuerpo").textContent = paso.texto;
+    document.getElementById("oc-tut-atras").style.display = idx === 0 ? "none" : "";
+    document.getElementById("oc-tut-sig").textContent = idx === PASOS.length - 1 ? "Crear mi primer producto" : "Siguiente";
     try { el.scrollIntoView({ block: "center", behavior: "instant" }); } catch (_) {}
     const r = el.getBoundingClientRect();
     // Blindaje (2026-07-23): en vistas que pintan su contenido async (Perchas,
     // Clientes) o en equipos lentos, el elemento a veces mide 0x0 justo cuando
     // este timeout dispara — el foco quedaba clavado en la esquina (0,0) en vez
-    // de rodear el boton real. Reintentamos con backoff en vez de rendirnos.
+    // de rodear el boton real. Reintentamos SOLO el posicionamiento del foco
+    // (el texto de arriba ya quedo correcto) con backoff en vez de rendirnos.
     if (r.width === 0 && r.height === 0 && intento < 10) {
       setTimeout(() => { if (idx >= 0) pintar(intento + 1); }, 150);
       return;
@@ -86,11 +94,6 @@
     foco.style.top = Math.max(4, r.top - pad) + "px";
     foco.style.width = Math.min(window.innerWidth - 8, r.width + pad * 2) + "px";
     foco.style.height = Math.min(window.innerHeight - 8, r.height + pad * 2) + "px";
-    tarjeta.querySelector(".paso").textContent = "Paso " + (idx + 1) + " de " + PASOS.length;
-    tarjeta.querySelector("h3").textContent = paso.titulo;
-    tarjeta.querySelector(".cuerpo").textContent = paso.texto;
-    document.getElementById("oc-tut-atras").style.display = idx === 0 ? "none" : "";
-    document.getElementById("oc-tut-sig").textContent = idx === PASOS.length - 1 ? "Crear mi primer producto" : "Siguiente";
     // Tarjeta debajo del foco si cabe; si no, encima; siempre dentro de pantalla.
     const ch = tarjeta.offsetHeight || 190;
     let top = r.bottom + pad + 12;
