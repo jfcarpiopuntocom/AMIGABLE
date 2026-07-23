@@ -2897,10 +2897,15 @@ async function mostrarFormEditarProducto(id){
   // Blindaje (2026-07-22): las perchas son OPCIONALES para editar — si su
   // fetch falla, el editor abre igual con el select en "Sin percha asignada".
   // Antes un solo fallo aqui tumbaba todo el formulario de edicion.
+  let hermanos = [];
   try {
     perchas = await (await fetch(`${API}/ubicaciones`)).json();
     if (!Array.isArray(perchas)) perchas = [];
   } catch (_) { perchas = []; }
+  try {
+    hermanos = await (await fetch(`${API}/productos/${id}/hermanos`)).json();
+    if (!Array.isArray(hermanos)) hermanos = [];
+  } catch (_) { hermanos = []; }
   // Usa fichaTargetActual (igual que pintarFicha) para que el form aparezca en el
   // mismo contenedor donde estaba la ficha — modal de Inventario O panel de Escanear.
   const contenedor = document.getElementById(fichaTargetActual) || document.getElementById("fichaResultado");
@@ -2934,11 +2939,19 @@ async function mostrarFormEditarProducto(id){
         <label style="display:block;font-size:14px;">Comisión al artista (%)<br>
           <input id="ed-comision-pct" type="number" min="0" max="100" step="1" value="${p.comisionProveedorPct || 0}" ${inp}></label>
       </div>
-      <label style="display:block;margin-top:10px;font-size:14px;">Percha<br>
+      <label style="display:block;margin-top:10px;font-size:14px;">Percha principal<br>
         <select id="ed-ubicacion" ${inp}>
           <option value="todas"${!p.ubicacionId || p.ubicacionId === "todas" ? " selected" : ""}>Sin percha asignada</option>
           ${optsPerchas}
         </select></label>
+      ${hermanos.length ? `<div style="margin-top:8px;font-size:13px;color:var(--ink-soft);">También en: ${hermanos.map(h => `${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)`).join(" · ")}</div>` : ""}
+      ${(() => { const ocupadas = new Set([p.ubicacionId, ...hermanos.map(h => h.ubicacionId)]); const disponibles = perchas.filter(u => !ocupadas.has(u.id)); return disponibles.length ? `
+      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="ed-nueva-percha" style="padding:8px;border:2px solid var(--azul-medio);border-radius:5px;font-size:14px;">
+          ${disponibles.map(u => `<option value="${escHtml(u.id)}">${escHtml(u.nombre)}</option>`).join("")}
+        </select>
+        <button type="button" id="ed-agregar-percha" style="font-size:13px;padding:8px 12px;">+ Agregar a esa percha</button>
+      </div>` : ""; })()}
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Umbral alerta roja<br><input id="ed-umbral-rojo" type="number" min="0" step="1" value="${p.umbralRojo || 0}" ${inp}></label>
         <label style="flex:1;font-size:14px;">Umbral alerta amarilla<br><input id="ed-umbral-amarillo" type="number" min="0" step="1" value="${p.umbralAmarillo || 0}" ${inp}></label>
@@ -2957,6 +2970,27 @@ async function mostrarFormEditarProducto(id){
   document.getElementById("ed-tipo-proveedor").addEventListener("change", (e) => {
     document.getElementById("ed-comision-wrap").style.display = e.target.value === "consignacion" ? "block" : "none";
   });
+  // Multi-percha real (2026-07-22): clona este producto (mismo SKU) en otra
+  // percha con stock 0, listo para recibir transferencia o venta directa.
+  const btnAgregarPercha = document.getElementById("ed-agregar-percha");
+  if (btnAgregarPercha) {
+    btnAgregarPercha.addEventListener("click", async () => {
+      const ubicacionId = document.getElementById("ed-nueva-percha").value;
+      btnAgregarPercha.disabled = true;
+      try {
+        const res = await fetch(`${API}/productos/${p.id}/clonar-percha`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ubicacionId }),
+        });
+        const data = await res.json();
+        if (!res.ok) { await ocAlert(data.error); btnAgregarPercha.disabled = false; return; }
+        await mostrarFormEditarProducto(p.id); // re-render: la nueva percha ya aparece en "También en:"
+      } catch (_) {
+        await ocAlert("No se pudo conectar con el servidor. Intenta de nuevo.");
+        btnAgregarPercha.disabled = false;
+      }
+    });
+  }
 }
 
 // Redimensiona la foto en el navegador (lado mayor 320px, JPEG 82%) a dataURL.
@@ -3126,6 +3160,7 @@ function pintarFicha(p){
       <div class="linea"><strong>Proveedor:</strong> ${escHtml(p.proveedor)}</div>
       ${p.tipoProveedor === "consignacion" ? `<div class="linea"><strong>Relación:</strong> Consignación · ${p.comisionProveedorPct || 0}% al artista</div>` : ""}
       ${p.ubicacionNombre && p.ubicacionNombre !== "todas" ? `<div class="linea"><strong>Percha:</strong> ${escHtml(p.ubicacionNombre)}</div>` : ""}
+      ${(p.otrasPerchas && p.otrasPerchas.length) ? `<div class="linea"><strong>${icoOC("percha", "currentColor", 12)} También en:</strong> ${p.otrasPerchas.map(h => `<span data-ver-hermano="${h.id}" style="cursor:pointer;text-decoration:underline;">${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)</span>`).join(" · ")}</div>` : ""}
       ${(window.OCAuth && window.OCAuth.rolActual() === "dueno") ? `<div class="linea"><strong>Costo:</strong> ${fmtMoney(p.costo||0)} · Margen: ${fmtMoney((p.precio||0)-(p.costo||0))} (${p.precio > 0 ? Math.round(((p.precio-(p.costo||0))/p.precio)*100) : 0}%)</div>` : ""}
       <div class="linea"><strong>Stock actual:</strong> ${p.stockActual} unidades</div>
       ${p.perecible ? `<div class="linea"><strong>Vence:</strong> ${escHtml(p.fechaCaducidad || "sin fecha")}${p.metodoCosteo ? ` · ${escHtml(p.metodoCosteo)}` : ""}</div>` : ""}
@@ -3143,6 +3178,10 @@ function pintarFicha(p){
     </div>
     <div id="oc-transfer-banner"></div>
   `;
+  // "También en:" (2026-07-22): salta a la ficha de la fila hermana en otra percha.
+  contenedor.querySelectorAll("[data-ver-hermano]").forEach(el => {
+    el.addEventListener("click", () => abrirFichaDesdeInventario(el.dataset.verHermano));
+  });
   if (p.estado === "rojo" || p.estado === "amarillo") cargarSugerenciaTransferencia(p.id);
 }
 
