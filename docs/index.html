@@ -2715,6 +2715,9 @@ async function abrirEdicionDesdeInventario(id){
     modal.classList.remove("activo");
     fichaTargetActual = "fichaResultado"; // el buscador de Vender vuelve a ser el destino
     cargarInventario(); // reflejar ediciones/ventas hechas dentro del modal
+    // TODO LLEVA A TODO (2026-07-22): si el modal se abrio desde Perchas,
+    // refrescar tambien esa vista (ej. producto movido de percha en la edicion).
+    if (vistaActivaId() === "perchas" && window.VPerchas && window.VPerchas.cargar) window.VPerchas.cargar();
   };
   const btn = document.getElementById("cerrarModalFicha");
   if (btn) btn.addEventListener("click", cerrar);
