@@ -3381,14 +3381,14 @@ function pintarFicha(p){
       ${p.perecible ? `<div class="linea"><strong>Vence:</strong> ${escHtml(p.fechaCaducidad || "sin fecha")}${p.metodoCosteo ? ` · ${escHtml(p.metodoCosteo)}` : ""}</div>` : ""}
       <span class="badge-estado ${escHtml(p.estado)}">${escHtml(p.mensaje)}</span>
       <div class="acciones-rapidas">
-        ${requierePanel
-          ? `<button class="vender" onclick="abrirPanelVentaInfo('${p.id}', ${p.tipoProducto === "ticket" ? "true" : "false"})" ${p.stockActual === 0 ? "disabled" : ""}>${p.tipoProducto === "ticket" ? "Vender ticket/evento" : "Vender 1 (datos de evento)"}</button>`
+        ${(requierePanel || fichaTargetActual === "fichaModalBody")
+          ? `<button class="vender" onclick="abrirPanelVentaInfo('${p.id}', ${p.tipoProducto === "ticket" ? "true" : "false"})" ${p.stockActual === 0 ? "disabled" : ""}>${p.tipoProducto === "ticket" ? "Vender ticket/evento" : "Vender 1"}</button>`
           : `<button class="vender" onclick="venderUno('${p.id}')" ${p.stockActual === 0 ? "disabled" : ""}>Vender 1</button>`}
         <button onclick="ajustar('${p.id}', 1)">+1 stock</button>
         <button onclick="ajustar('${p.id}', -1)">-1 stock</button>
         <button class="etiqueta" onclick="abrirEtiqueta('${p.id}')">Ver etiqueta</button>
       </div>
-      ${!requierePanel ? `<button style="margin-top:8px;font-size:13px;background:transparent;border:none;color:var(--azul-medio);text-decoration:underline;cursor:pointer;padding:0;" onclick="abrirPanelVentaInfo('${p.id}', false)">+ datos de la venta (cliente, email, forma de pago — opcional)</button>` : ""}
+      ${(!requierePanel && fichaTargetActual !== "fichaModalBody") ? `<button style="margin-top:8px;font-size:13px;background:transparent;border:none;color:var(--azul-medio);text-decoration:underline;cursor:pointer;padding:0;" onclick="abrirPanelVentaInfo('${p.id}', false)">+ datos de la venta (cliente, email, forma de pago — opcional)</button>` : ""}
       ${(window.OCAuth && window.OCAuth.rolActual() === "dueno") ? `<div class="acciones-rapidas" style="margin-top:8px;">
         <button onclick="mostrarFormEditarProducto('${p.id}')">${icoOC("lapiz", "currentColor", 14)} Editar ficha</button>
         <button style="border-color:var(--rojo);color:var(--rojo);" onclick="eliminarProductoUI('${p.id}', this)">Eliminar</button>
