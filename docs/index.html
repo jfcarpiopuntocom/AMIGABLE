@@ -167,6 +167,9 @@
   body{
     margin:0;
     font-family:var(--font-body);
+    /* Blocky (JFC 2026-07-22): base 600 — nada de trazo delgado en pantalla.
+       Source Sans 3 en 600 esta cargada desde Google Fonts, no es sintetica. */
+    font-weight:600;
     background-color:#FFFFFF;
     color:var(--ink);
     -webkit-font-smoothing:antialiased;
@@ -191,17 +194,14 @@
     pointer-events:none;
   }
   .tag-card::after{
-    /* Triángulo azul marino apuntando arriba (JFC 2026-07-02): serio y
-       permanente. Reemplaza la bolita dorada. Para volver atrás: border-radius
-       50% + background var(--brass) + box-shadow del anillo. */
-    content:"";
-    position:absolute;
-    top:6px; right:8px;
-    width:0; height:0;
-    border-left:5px solid transparent;
-    border-right:5px solid transparent;
-    border-bottom:9px solid #152840;
-    filter:drop-shadow(0 1px 0 var(--blanco-calido));
+    /* TRIANGULO DE ESQUINA — DORMANT (retirado por JFC, 2026-07-22).
+       Se confundia con un indicador o un desplegable. NO BORRAR este bloque.
+       Para re-activar: quitar content:none y restaurar:
+         content:""; position:absolute; top:6px; right:8px; width:0; height:0;
+         border-left:5px solid transparent; border-right:5px solid transparent;
+         border-bottom:9px solid #152840;
+         filter:drop-shadow(0 1px 0 var(--blanco-calido)); */
+    content:none;
   }
   @media (hover:hover){
     .caja.tag-card:hover, .etiqueta-card.tag-card:hover{
@@ -264,7 +264,7 @@
     justify-content:center;
     font-family:var(--font-serif);
     font-style:italic;
-    font-weight:400;
+    font-weight:700;
     font-size:20px;
     color:var(--brass);
     flex-shrink:0;
@@ -315,7 +315,7 @@
   header h1{
     margin:0;
     font-family:var(--font-serif);
-    font-weight:400;
+    font-weight:700;
     font-size:26px;
     letter-spacing:0.01em;
   }
@@ -327,7 +327,7 @@
     color:#CCCCCC;
     letter-spacing:0.02em;
     margin:2px 0 3px;
-    font-weight:400;
+    font-weight:700;
   }
   header .sub{
     font-family:var(--font-mono);
@@ -463,7 +463,7 @@
   .hero-semaforo h2{
     margin:0 0 4px 0;
     font-family:var(--font-serif);
-    font-weight:400;
+    font-weight:700;
     font-size:20px;
     line-height:1.12;
   }
@@ -493,7 +493,7 @@
   .tarjeta .valor{
     font-family:var(--font-serif);
     font-size:30px;
-    font-weight:400;
+    font-weight:700;
     color:var(--ink);
     margin-top:5px;
   }
@@ -736,14 +736,14 @@
   .ficha-producto .titulo{
     font-family:var(--font-serif);
     font-size:26px;
-    font-weight:400;
+    font-weight:700;
     color:var(--ink);
   }
   .ficha-producto .precio{
     font-family:var(--font-serif);
     font-size:32px;
     color:var(--ambar);
-    font-weight:400;
+    font-weight:700;
     font-style:italic;
     margin:4px 0 8px;
   }
@@ -824,7 +824,7 @@
   .etiqueta-card .precio-prod{
     color:var(--ambar);
     font-family:var(--font-serif);
-    font-weight:400;
+    font-weight:700;
     font-style:italic;
     font-size:24px;
     margin:4px 0;
@@ -1308,7 +1308,7 @@
     <!-- CIERRE DEL DIA: conciliacion en un solo paso, cero trabajo en horario
          de venta. Genera ventas reales de hoy (split de comisiones incluido). -->
     <details id="cierreDia" class="tag-card" style="margin-top:18px;padding:14px 16px;">
-      <summary style="font-size:17px;font-weight:700;cursor:pointer;color:var(--ink);">🌙 Cierre del día — cuadra todo de una sola vez</summary>
+      <summary style="font-size:17px;font-weight:700;cursor:pointer;color:var(--ink);">Cierre del día — cuadra todo de una sola vez</summary>
       <p style="font-size:15px;color:var(--ink-soft);">Los toques del grid de arriba ya están incluidos en el día. Apunta SOLO lo adicional que no registraste en vivo: cuántas unidades salieron de cada producto. Aplica todo junto al cerrar.</p>
       <div id="cierreLista"></div>
       <button class="ir" id="btnAplicarCierre" style="margin-top:12px;">Aplicar cierre del día</button>
@@ -1353,7 +1353,7 @@
        matriz de estaciones son SOLO del dueno (cargarClientes aplica el rol). -->
   <section id="vista-clientes" class="vista">
     <h3 class="seccion" style="margin-top:0;">Tus clientes</h3>
-    <p style="font-size:16px;color:var(--ink-soft);margin-top:0;">Cada cliente vive una estación, como tus siembras: 🌱 primavera crece, ☀️ verano cosecha, 🍂 otoño se enfría, ❄️ invierno duerme. El color te dice a quién cuidar y a quién despertar.</p>
+    <p style="font-size:16px;color:var(--ink-soft);margin-top:0;">Cada cliente vive una estación, como tus siembras: primavera crece, verano cosecha, otoño se enfría, invierno duerme. El color te dice a quién cuidar y a quién despertar.</p>
     <details style="margin:-4px 0 12px;font-size:14px;">
       <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
       <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
@@ -1705,11 +1705,54 @@ if (elBtnCierre) elBtnCierre.addEventListener("click", async () => {
 // - Estaciones RFM: colores Simon reutilizados (verde/amarillo/naranja/azul).
 // - Matriz de estaciones (clientes) y matriz BCG (inventario): SOLO dueno.
 // ============================================================================
+
+// ============================================================================
+// ICONOS SVG BLOCKY (JFC 2026-07-22) — reemplazan a los emojis de sistema en
+// reportes, matrices y botones. Estetica ochentera japonesa: trazo grueso
+// (stroke 2+), esquinas rectas (miter), formas geometricas, color solido.
+// Uso: icoOC("estrella", "#B8760A")  →  string <svg> inline.
+// El token #COL# se sustituye por el color pedido ("currentColor" tambien vale).
+// Para agregar un icono nuevo: sumar una entrada al diccionario ICONOS_OC.
+// NO usar opacity ni rgba — regla visual absoluta del proyecto.
+// ============================================================================
+const ICONOS_OC = {
+  sol:      '<circle cx="8" cy="8" r="3.2" fill="#COL#"/><path d="M8 0.8v2.6M8 12.6v2.6M0.8 8h2.6M12.6 8h2.6M2.9 2.9l1.9 1.9M11.2 11.2l1.9 1.9M13.1 2.9l-1.9 1.9M4.8 11.2l-1.9 1.9" stroke="#COL#" stroke-width="2"/>',
+  brote:    '<path d="M8 15V7.5" stroke="#COL#" stroke-width="2.2"/><path d="M8 8.5C8 4.5 5.5 3 2 3c0 4 2.8 5.5 6 5.5Z" fill="#COL#"/><path d="M8 8.5c0-3 2.2-4.5 6-4.5 0 3.2-2.5 4.5-6 4.5Z" fill="#COL#"/>',
+  hoja:     '<path d="M8 1L14.5 8L8 15L1.5 8Z" fill="#COL#"/><path d="M8 4.2v7.6" stroke="#FFFFFF" stroke-width="1.6"/>',
+  copo:     '<path d="M8 1v14M1 8h14M3.2 3.2l9.6 9.6M12.8 3.2L3.2 12.8" stroke="#COL#" stroke-width="2"/>',
+  estrella: '<polygon points="8,0.8 10,5.7 15.2,6.2 11.4,9.6 12.5,14.8 8,12.1 3.5,14.8 4.6,9.6 0.8,6.2 6,5.7" fill="#COL#"/>',
+  ojo:      '<path d="M0.8 8C2.8 4.3 5.3 2.8 8 2.8s5.2 1.5 7.2 5.2c-2 3.7-4.5 5.2-7.2 5.2S2.8 11.7 0.8 8Z" fill="none" stroke="#COL#" stroke-width="2"/><circle cx="8" cy="8" r="2.3" fill="#COL#"/>',
+  maletin:  '<rect x="1.5" y="4.8" width="13" height="9.4" fill="none" stroke="#COL#" stroke-width="2"/><path d="M5.5 4.8V2.2h5v2.6M1.5 9h13" fill="none" stroke="#COL#" stroke-width="2"/>',
+  bandera:  '<path d="M3 1v14" stroke="#COL#" stroke-width="2.2"/><path d="M4.6 2h9.2L11 5.5l2.8 3.5H4.6Z" fill="#COL#"/>',
+  lingotes: '<rect x="2" y="11.2" width="12" height="3.2" fill="#COL#"/><rect x="2" y="6.4" width="12" height="3.2" fill="#COL#"/><rect x="2" y="1.6" width="12" height="3.2" fill="#COL#"/>',
+  promesa:  '<rect x="1.5" y="1.5" width="13" height="13" fill="none" stroke="#COL#" stroke-width="2"/><path d="M5.6 5.8c0-1.5 1-2.4 2.4-2.4s2.4 0.9 2.4 2.2c0 1.9-2.4 2-2.4 3.8" fill="none" stroke="#COL#" stroke-width="2"/><rect x="7.1" y="11.2" width="1.8" height="1.8" fill="#COL#"/>',
+  zeta:     '<path d="M3 3.2h10L3 12.8h10" fill="none" stroke="#COL#" stroke-width="2.4"/>',
+  caja:     '<rect x="2" y="5" width="12" height="9" fill="none" stroke="#COL#" stroke-width="2"/><path d="M2 5l2.2-3h7.6L14 5M8 5v9" fill="none" stroke="#COL#" stroke-width="2"/>',
+  yen:      '<circle cx="8" cy="8" r="6.6" fill="none" stroke="#COL#" stroke-width="2"/><path d="M5.4 4.2L8 7.8l2.6-3.6M8 7.8v4M6 9.2h4M6 11.2h4" fill="none" stroke="#COL#" stroke-width="1.7"/>',
+  ciclo:    '<path d="M13.2 8A5.2 5.2 0 1 1 11.6 4.3" fill="none" stroke="#COL#" stroke-width="2.2"/><path d="M13.4 1.4v3.4H10" fill="none" stroke="#COL#" stroke-width="2.2"/>',
+  plus:     '<rect x="1.5" y="1.5" width="13" height="13" fill="none" stroke="#COL#" stroke-width="2"/><path d="M8 4.6v6.8M4.6 8h6.8" stroke="#COL#" stroke-width="2.2"/>',
+  lista:    '<path d="M2 3.4h12M2 8h12M2 12.6h8" stroke="#COL#" stroke-width="2.2"/>',
+  lapiz:    '<path d="M2 14l1.2-4.2L11.5 1.5 14.5 4.5 6.2 12.8Z" fill="#COL#"/>',
+  reloj:    '<circle cx="8" cy="8" r="6.6" fill="none" stroke="#COL#" stroke-width="2"/><path d="M8 4.4V8l2.7 2" fill="none" stroke="#COL#" stroke-width="2"/>',
+  percha:   '<path d="M1.5 3h13M4 3v11M12 3v11M4 8.5h8" stroke="#COL#" stroke-width="2"/>'
+};
+function icoOC(nombre, color, size){
+  size = size || 15;
+  const cuerpo = (ICONOS_OC[nombre] || ICONOS_OC.lista).split("#COL#").join(color || "currentColor");
+  return `<svg width="${size}" height="${size}" viewBox="0 0 16 16" style="vertical-align:-2px;" aria-hidden="true">${cuerpo}</svg>`;
+}
+// Medalla blocky de ranking: cuadrado 1/2/3 en oro/plata/bronce.
+function medallaOC(i){
+  const c = ["#E8A020", "#B9C4CE", "#C05000"][i];
+  if (!c) return `${i + 1}.`;
+  return `<span style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;background:${c};border:2px solid #211C14;font-family:var(--font-display);font-weight:700;font-size:13px;color:#211C14;">${i + 1}</span>`;
+}
+
 const ESTACIONES = {
-  verano:    { icono: "☀️", titulo: "Verano — en plena cosecha",  bg: "var(--sim-amarillo-bg)", borde: "var(--sim-amarillo)", tinta: "#B8860B", frase: "Compran seguido y fuerte. Cuídalos como oro." },
-  primavera: { icono: "🌱", titulo: "Primavera — creciendo",       bg: "var(--sim-verde-bg)",    borde: "var(--sim-verde)",    tinta: "#009A5A", frase: "Recién germinan. Riégalos: una atención y vuelven." },
-  otono:     { icono: "🍂", titulo: "Otoño — enfriándose",         bg: "var(--sim-naranja-bg)",  borde: "var(--sim-naranja)",  tinta: "#C05000", frase: "Eran de tus mejores y hace rato no vienen. Búscalos hoy." },
-  invierno:  { icono: "❄️", titulo: "Invierno — dormidos",         bg: "var(--sim-azul-bg)",     borde: "var(--sim-azul)",     tinta: "#2E6278", frase: "Sin señales de vida. Un mensaje puede despertarlos." },
+  verano:    { icono: icoOC("sol", "#B8860B"), titulo: "Verano — en plena cosecha",  bg: "var(--sim-amarillo-bg)", borde: "var(--sim-amarillo)", tinta: "#B8860B", frase: "Compran seguido y fuerte. Cuídalos como oro." },
+  primavera: { icono: icoOC("brote", "#009A5A"), titulo: "Primavera — creciendo",       bg: "var(--sim-verde-bg)",    borde: "var(--sim-verde)",    tinta: "#009A5A", frase: "Recién germinan. Riégalos: una atención y vuelven." },
+  otono:     { icono: icoOC("hoja", "#C05000"), titulo: "Otoño — enfriándose",         bg: "var(--sim-naranja-bg)",  borde: "var(--sim-naranja)",  tinta: "#C05000", frase: "Eran de tus mejores y hace rato no vienen. Búscalos hoy." },
+  invierno:  { icono: icoOC("copo", "#2E6278"), titulo: "Invierno — dormidos",         bg: "var(--sim-azul-bg)",     borde: "var(--sim-azul)",     tinta: "#2E6278", frase: "Sin señales de vida. Un mensaje puede despertarlos." },
 };
 // Etiqueta de comportamiento según trato × confiabilidad.
 // Calificador de clientes 1-5: ⭐ Cumplimiento (confiabilidad) + ❤️ Actitud (trato).
@@ -1820,7 +1863,7 @@ function tarjetaCliente(c, esDueno, ctx) {
     </div>` : "";
   const btnDespedir = (esDueno && nivelEv(ev.trato) === -1 && nivelEv(ev.confiabilidad) === -1)
     ? `<button style="margin-top:8px;font-size:13px;padding:4px 12px;background:#FDECEA;border:1.5px solid #C0392B;border-radius:6px;color:#C0392B !important;-webkit-text-fill-color:#C0392B !important;cursor:pointer;"
-        onclick="despedirCliente('${c.id}','${escHtml(c.nombre)}')">Despedir cliente 🚪</button>` : "";
+        onclick="despedirCliente('${c.id}','${escHtml(c.nombre)}')">Despedir cliente</button>` : "";
   return `<div style="background:#FFFFFF;border:2px solid var(--linea,#D7E0E8);border-radius:10px;padding:10px 12px;margin:6px 0;">
     <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
       <strong style="font-size:16px;color:#0F1923;">${escHtml(c.nombre)}</strong>
@@ -1857,7 +1900,7 @@ async function cargarClientes(){
       <div style="font-weight:700;font-size:15px;color:${e.tinta};">${e.icono} ${e.titulo.split(" — ")[0]}</div>
       <div style="font-size:14px;color:#0F1923;margin-top:6px;">${l.length ? l.map((c) => escHtml(c.nombre.split(" ")[0])).join(", ") : "—"}</div></div>`; };
     mc.innerHTML = `<h3 class="seccion">Matriz de estaciones</h3>
-      <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">Derecha: compran hace poco. Arriba: dejan más dinero. La esquina 🍂 es donde se recupera plata perdida.</p>
+      <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">Derecha: compran hace poco. Arriba: dejan más dinero. La esquina naranja es donde se recupera plata perdida.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         ${celda("otono")}${celda("verano")}
         ${celda("invierno")}${celda("primavera")}
@@ -1869,10 +1912,10 @@ async function cargarClientes(){
     try { comp = await (await fetch(`${API}/clientes/comportamiento`)).json(); } catch(_) { comp = null; }
     if (comp) {
       const CUAD = [
-        { key:"estrella",  emoji:"⭐", titulo:"Estrellas",      sub:"Agradables y confiables. Cuídalos como oro.",      bg:"#FFFBEA", borde:"#E8A020", tinta:"#B8760A" },
-        { key:"ojo",       emoji:"👀", titulo:"Ojo con estos",  sub:"Simpáticos pero con historial de problemas.",      bg:"#FFF4E8", borde:"#E86040", tinta:"#C04020" },
-        { key:"tolerable", emoji:"💼", titulo:"Tolerables",     sub:"Difíciles de trato, pero cumplen y pagan bien.",   bg:"#EBF4FF", borde:"#2E6278", tinta:"#1E4258" },
-        { key:"bandera",   emoji:"🚩", titulo:"Bandera roja",   sub:"Problema de trato y confiabilidad. Evalúa si vale la pena.", bg:"#FDECEA", borde:"#C0392B", tinta:"#8B0000" },
+        { key:"estrella",  emoji: icoOC("estrella", "#B8760A"), titulo:"Estrellas",      sub:"Agradables y confiables. Cuídalos como oro.",      bg:"#FFFBEA", borde:"#E8A020", tinta:"#B8760A" },
+        { key:"ojo",       emoji: icoOC("ojo", "#C04020"), titulo:"Ojo con estos",  sub:"Simpáticos pero con historial de problemas.",      bg:"#FFF4E8", borde:"#E86040", tinta:"#C04020" },
+        { key:"tolerable", emoji: icoOC("maletin", "#1E4258"), titulo:"Tolerables",     sub:"Difíciles de trato, pero cumplen y pagan bien.",   bg:"#EBF4FF", borde:"#2E6278", tinta:"#1E4258" },
+        { key:"bandera",   emoji: icoOC("bandera", "#8B0000"), titulo:"Bandera roja",   sub:"Problema de trato y confiabilidad. Evalúa si vale la pena.", bg:"#FDECEA", borde:"#C0392B", tinta:"#8B0000" },
       ];
       const celdaComp = (q) => {
         const lista = comp[q.key] || [];
@@ -1887,7 +1930,7 @@ async function cargarClientes(){
       const despedidos = comp.despedidos || [];
       mc.innerHTML += `
         <h3 class="seccion" style="margin-top:24px;">Matriz de comportamiento</h3>
-        <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">El negocio evalúa al cliente. Toca "Calificar" en cada tarjeta y asigna ⭐ Cumplimiento y ❤️ Actitud del 1 al 5.</p>
+        <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">El negocio evalúa al cliente. Toca "Calificar" en cada tarjeta y asigna Cumplimiento y Actitud del 1 al 5.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           ${celdaComp(CUAD[0])}${celdaComp(CUAD[1])}
           ${celdaComp(CUAD[2])}${celdaComp(CUAD[3])}
@@ -2013,10 +2056,10 @@ async function cargarBCG(){
   try { q = await (await fetch(`${API}/inventario/bcg?ubicacionId=${ubicacionActual}`)).json(); }
   catch (_) { cont.innerHTML = '<p style="font-size:14px;color:var(--ink-soft);">No se pudo cargar el análisis BCG. Recarga la vista.</p>'; return; }
   const CUAD = {
-    estrellas:    { icono: "⭐", titulo: "Estrellas",      sub: "Venden mucho y van subiendo. Protege su stock.",         bg: "var(--sim-verde-bg)",    borde: "var(--sim-verde)",    tinta: "#009A5A" },
-    vacas:        { icono: "🐄", titulo: "Vacas lecheras", sub: "Venden mucho, estables. Financian todo lo demás.",       bg: "var(--sim-amarillo-bg)", borde: "var(--sim-amarillo)", tinta: "#B8860B" },
-    promesas:     { icono: "❓", titulo: "Promesas",       sub: "Venden poco pero van subiendo. Dales vitrina.",          bg: "var(--sim-azul-bg)",     borde: "var(--sim-azul)",     tinta: "#2E6278" },
-    pesosMuertos: { icono: "💤", titulo: "Pesos muertos",  sub: "Sin movimiento en 60 días. Libera ese capital.",         bg: "var(--sim-plata-bg)",    borde: "var(--sim-plata-dk)", tinta: "#2C3E50" },
+    estrellas:    { icono: icoOC("estrella", "#009A5A"), titulo: "Estrellas",      sub: "Venden mucho y van subiendo. Protege su stock.",         bg: "var(--sim-verde-bg)",    borde: "var(--sim-verde)",    tinta: "#009A5A" },
+    vacas:        { icono: icoOC("lingotes", "#B8860B"), titulo: "Vacas lecheras", sub: "Venden mucho, estables. Financian todo lo demás.",       bg: "var(--sim-amarillo-bg)", borde: "var(--sim-amarillo)", tinta: "#B8860B" },
+    promesas:     { icono: icoOC("promesa", "#2E6278"), titulo: "Promesas",       sub: "Venden poco pero van subiendo. Dales vitrina.",          bg: "var(--sim-azul-bg)",     borde: "var(--sim-azul)",     tinta: "#2E6278" },
+    pesosMuertos: { icono: icoOC("zeta", "#2C3E50"), titulo: "Pesos muertos",  sub: "Sin movimiento en 60 días. Libera ese capital.",         bg: "var(--sim-plata-bg)",    borde: "var(--sim-plata-dk)", tinta: "#2C3E50" },
   };
   const celda = (k) => {
     const c = CUAD[k], l = q[k] || [];
@@ -2303,7 +2346,7 @@ function renderBloom(estado, nivel){
     }).join("");
   return `<div class="bloom-sinclair" title="Intensidad ${nivel}/3" style="display:flex;flex-direction:column;gap:3px;margin:6px 0 2px;">
     <div style="display:flex;gap:3px;align-items:flex-end;">${barras}</div>
-    ${caption ? `<span style="font-size:11px;opacity:.85;line-height:1.2;">${escHtml(caption)}</span>` : ""}
+    ${caption ? `<span style="font-size:13px;color:#2C3E50;line-height:1.2;">${escHtml(caption)}</span>` : ""}
   </div>`;
 }
 
@@ -2335,11 +2378,11 @@ async function cargarInventario(){
     <div class="caja tag-card ${p.estado} n${calcularNivelBloom(p)}">
       ${p.estrella ? '<span class="estrella-badge">⭐</span>' : ''}
       <div onclick="abrirFichaDesdeInventario('${p.id}')" style="cursor:pointer;">
-        <div class="nombre">${escHtml(p.nombre)}${p.perecible ? ' 🕓' : ''}</div>
+        <div class="nombre">${escHtml(p.nombre)}${p.perecible ? ' ' + icoOC('reloj', '#C05000', 13) : ''}</div>
         <div class="detalle">${escHtml(p.categoria)} · ${escHtml(p.sku)}</div>
         <div class="stock">${p.stockActual}</div>
         <div class="detalle">${escHtml(p.mensaje)}</div>
-        <div class="detalle" style="font-size:12px;">${p.ubicacionNombre && p.ubicacionNombre !== "todas" ? "📍 " + escHtml(p.ubicacionNombre) : "📍 sin percha"}</div>
+        <div class="detalle" style="font-size:12px;">${p.ubicacionNombre && p.ubicacionNombre !== "todas" ? icoOC("percha", "#2C3E50", 12) + " " + escHtml(p.ubicacionNombre) : icoOC("percha", "#8A9AAA", 12) + " sin percha"}</div>
         ${esDuenoInv && p.costo > 0 ? `<div class="detalle" style="font-size:12px;">Margen: ${fmtMoney((p.precio||0)-(p.costo||0))}</div>` : ""}
       </div>
       <!-- Ajuste rápido de stock sin escanear -->
@@ -2347,7 +2390,7 @@ async function cargarInventario(){
         <button data-ajuste-menos="${p.id}" title="Quitar 1" style="width:36px;height:36px;border-radius:50%;border:2px solid currentColor;background:transparent;color:inherit;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
         <button data-ajuste-mas="${p.id}" title="Agregar 1" style="width:36px;height:36px;border-radius:50%;border:2px solid currentColor;background:transparent;color:inherit;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
         ${esDuenoInv ? `<button data-estrella-toggle="${p.id}" title="${p.estrella ? 'Quitar estrella' : 'Marcar para promover'}" style="width:36px;height:36px;border-radius:50%;border:2px solid currentColor;background:transparent;color:inherit;font-size:16px;cursor:pointer;">${p.estrella ? '★' : '☆'}</button>` : ''}
-        ${esDuenoInv ? `<button data-editar-directo="${p.id}" title="Editar ficha" style="width:36px;height:36px;border-radius:50%;border:2px solid currentColor;background:transparent;color:inherit;font-size:15px;cursor:pointer;">✏️</button>` : ''}
+        ${esDuenoInv ? `<button data-editar-directo="${p.id}" title="Editar ficha" style="width:36px;height:36px;border-radius:50%;border:2px solid currentColor;background:transparent;color:inherit;font-size:15px;cursor:pointer;">${icoOC("lapiz", "currentColor", 16)}</button>` : ''}
       </div>
     </div>
   `).join("");
@@ -2429,7 +2472,7 @@ async function cargarLogAjustes(){
   if (!movs.length){ cont.innerHTML = '<p style="color:var(--ink-soft);">Sin movimientos registrados.</p>'; return; }
   cont.innerHTML = movs.slice(0, 20).map(m => {
     const fecha = new Date(m.fecha).toLocaleString('es-EC', { timeZone:'America/Guayaquil', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
-    const icono = m.tipo === 'ajuste' ? '📦' : m.tipo === 'venta' ? '💰' : m.tipo === 'estrella' ? '⭐' : m.tipo === 'anulacion' ? '🔄' : m.tipo === 'alta' ? '🆕' : '📋';
+    const icono = m.tipo === 'ajuste' ? icoOC('caja', '#2C3E50') : m.tipo === 'venta' ? icoOC('yen', '#B8860B') : m.tipo === 'estrella' ? icoOC('estrella', '#B8760A') : m.tipo === 'anulacion' ? icoOC('ciclo', '#C0392B') : m.tipo === 'alta' ? icoOC('plus', '#009A5A') : icoOC('lista', '#2C3E50');
     const detalle = escHtml((m.detalle && m.detalle.producto) || '');
     const extra = m.tipo === 'ajuste' ? ` (${m.detalle.delta > 0 ? '+' : ''}${m.detalle.delta}) — ${escHtml(m.detalle.motivo)}` : m.tipo === 'venta' ? ` × ${m.detalle.cantidad} = $${m.detalle.total}` : m.tipo === 'estrella' ? ` ${escHtml(m.detalle.accion)}` : '';
     // Atribución multi-usuario (2026-07-08): mostrar QUIÉN hizo el movimiento.
@@ -2452,7 +2495,7 @@ function renderPerchaCard(u, sucursalesDisp, promotorasDisp) {
   const optsS = sucursalesDisp.map(s =>
     `<option value="${s.id}"${u.sucursalId === s.id ? ' selected' : ''}>${escHtml(s.nombre)}</option>`
   ).join('');
-  return `<div class="tag-card" style="text-align:left;padding:14px;margin-bottom:8px;${inactiva ? 'opacity:.65;' : ''}">
+  return `<div class="tag-card" style="text-align:left;padding:14px;margin-bottom:8px;${inactiva ? 'background:#E4E8EC;' : ''}">
     <strong style="font-size:16px;color:var(--ink);">${escHtml(u.nombre)}</strong>
     <div style="font-size:13px;color:var(--ink-soft);margin:4px 0 10px;">${tipoLabel}${comLabel}${u.esFeria ? ' · <strong style="color:var(--rust,#E86040);">FERIA</strong>' : ''}${inactiva ? ' · DESACTIVADA' : ''}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
@@ -3088,7 +3131,7 @@ function pintarFicha(p){
         <button class="etiqueta" onclick="abrirEtiqueta('${p.id}')">Ver etiqueta</button>
       </div>
       ${(window.OCAuth && window.OCAuth.rolActual() === "dueno") ? `<div class="acciones-rapidas" style="margin-top:8px;">
-        <button onclick="mostrarFormEditarProducto('${p.id}')">✏️ Editar ficha</button>
+        <button onclick="mostrarFormEditarProducto('${p.id}')">${icoOC("lapiz", "currentColor", 14)} Editar ficha</button>
         <button style="border-color:var(--rojo);color:var(--rojo);" onclick="eliminarProductoUI('${p.id}', this)">Eliminar</button>
       </div>` : ""}
     </div>
@@ -3120,7 +3163,7 @@ async function cargarSugerenciaTransferencia(productoId){
   if (!sugerencias.length) { cont.innerHTML = ""; return; }
   cont.innerHTML = sugerencias.map(s => `
     <div class="tag-card" style="margin-top:10px;background:var(--azul-oscuro,#1c3049);color:#fff;padding:12px 14px;text-align:left;">
-      <div style="font-size:14px;">📦 Hay <strong>${s.stockOrigen} unidades</strong> en <strong>${s.desdeNombre}</strong></div>
+      <div style="font-size:14px;">${icoOC("caja", "#2C3E50", 14)} Hay <strong>${s.stockOrigen} unidades</strong> en <strong>${s.desdeNombre}</strong></div>
       <button class="ir" style="margin-top:8px;background:#fff;color:var(--azul-oscuro,#1c3049);border-color:#fff;" onclick="solicitarTransferencia('${s.productoOrigenId}','${s.productoDestinoId}',${s.cantidadSugerida},this)">Solicitar transferencia de ${s.cantidadSugerida} unidades</button>
     </div>
   `).join("");
@@ -3249,7 +3292,7 @@ async function cargarEtiquetas(){
       <div class="nombre-prod">${escHtml(p.nombre)}</div>
       <div class="precio-prod">${fmtMoney(p.precio)}</div>
       <div class="sku-prod">${escHtml(p.sku)}</div>
-      ${p.perecible ? `<div style="font-size:13px;font-weight:700;color:var(--rust);margin-top:4px;">🕓 Perecible</div>` : ""}
+      ${p.perecible ? `<div style="font-size:13px;font-weight:700;color:var(--rust);margin-top:4px;">${icoOC("reloj", "#C05000", 13)} Perecible</div>` : ""}
     </div>
   `).join("");
 }
@@ -3275,7 +3318,7 @@ async function abrirEtiqueta(id){
     ${p.perecible && p.fechaCaducidad ? `<div style="font-size:13px;font-weight:700;color:var(--rust);">Vence: ${p.fechaCaducidad}</div>` : ""}
     <div class="codigo">${p.barcode}</div>
     <div class="barras" id="barrasClicable" style="cursor:pointer;position:relative;" title="Toca para imprimir o guardar solo el código de barras">${data.barcodeSvg || ""}</div>
-    <div style="font-size:13px;color:var(--azul-medio,#2c4a68);margin-top:-6px;">👆 Toca el código de barras para imprimirlo o guardarlo solo</div>
+    <div style="font-size:13px;color:var(--azul-medio,#2c4a68);margin-top:-6px;">Toca el código de barras para imprimirlo o guardarlo solo</div>
     ${data.qrDataUrl ? `<img src="${data.qrDataUrl}" width="160" height="160" alt="QR del producto">
     <div style="font-size:13px; color:var(--azul-medio);">Escanea para ver la ficha completa</div>` : ""}
   `;
@@ -3296,8 +3339,8 @@ function mostrarMenuBarcode(e, svgBarcode, producto){
   menu.style.left = Math.max(8, rect.left) + "px";
   menu.style.top = (rect.bottom + 8) + "px";
   menu.innerHTML = `
-    <button id="oc-mb-imprimir" style="text-align:left;padding:10px;border:none;background:transparent;border-radius:5px;cursor:pointer;font-size:14px;color:var(--ink,#211c14);">🖨️ Imprimir solo el código</button>
-    <button id="oc-mb-guardar" style="text-align:left;padding:10px;border:none;background:transparent;border-radius:5px;cursor:pointer;font-size:14px;color:var(--ink,#211c14);">💾 Guardar como imagen</button>
+    <button id="oc-mb-imprimir" style="text-align:left;padding:10px;border:none;background:transparent;border-radius:5px;cursor:pointer;font-size:14px;color:var(--ink,#211c14);">Imprimir solo el código</button>
+    <button id="oc-mb-guardar" style="text-align:left;padding:10px;border:none;background:transparent;border-radius:5px;cursor:pointer;font-size:14px;color:var(--ink,#211c14);">Guardar como imagen</button>
   `;
   document.body.appendChild(menu);
   const cerrar = (ev) => { if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener("click", cerrar, true); } };
@@ -3431,7 +3474,7 @@ async function cargarComisiones(){
   const rankHtml = (Array.isArray(ranking) && ranking.length) ? `
     <h3 class="seccion" style="font-size:15px;margin-top:0;">Ranking de promotores/as</h3>
     <div style="margin-bottom:20px;">${ranking.map((r, i) => {
-      const med = ["🥇","🥈","🥉"][i] || `${i + 1}.`;
+      const med = medallaOC(i);
       const dormido = (r.diasSinVenta != null && r.diasSinVenta >= 7)
         ? `<span class="badge-estado rojo" style="margin-left:8px;font-size:11px;">dormido ${r.diasSinVenta}d</span>` : "";
       const top = r.topSku ? ` · mejor SKU: ${escHtml(r.topSku.sku)} (${r.topSku.unidades}u)` : "";
@@ -3593,7 +3636,7 @@ function ofrecerResumenSemanalSiToca(){
   // si el toast falla, la oferta no se quema por 7 dias.
   const toast = document.createElement("div");
   toast.style.cssText = "position:fixed;bottom:16px;left:16px;right:16px;max-width:420px;margin:0 auto;background:#0F1923;border:2px solid #25D366;border-radius:10px;padding:14px 16px;z-index:9500;box-shadow:0 8px 30px #060d14;";
-  toast.innerHTML = `<p style="color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;font-size:14px;margin:0 0 10px;font-weight:700;">📊 ¿Enviarte el resumen de esta semana por WhatsApp?</p>
+  toast.innerHTML = `<p style="color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;font-size:14px;margin:0 0 10px;font-weight:700;">¿Enviarte el resumen de esta semana por WhatsApp?</p>
     <div style="display:flex;gap:8px;">
       <button id="oc-resumen-sem-si" style="flex:1;min-height:44px;border:none;border-radius:7px;background:#25D366;color:#04210f !important;-webkit-text-fill-color:#04210f !important;font-weight:700;cursor:pointer;">Enviar</button>
       <button id="oc-resumen-sem-no" style="min-height:44px;padding:0 14px;border:2px solid #5294AC;border-radius:7px;background:transparent;color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;cursor:pointer;">Ahora no</button>
