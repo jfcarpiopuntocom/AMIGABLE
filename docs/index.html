@@ -1358,13 +1358,13 @@
        matriz de estaciones son SOLO del dueno (cargarClientes aplica el rol). -->
   <section id="vista-clientes" class="vista">
     <h3 class="seccion" style="margin-top:0;">Tus clientes</h3>
-    <p style="font-size:16px;color:var(--ink-soft);margin-top:0;">Cada cliente vive una estación, como tus siembras: primavera crece, verano cosecha, otoño se enfría, invierno duerme. El color te dice a quién cuidar y a quién despertar.</p>
+    <p style="font-size:16px;color:var(--ink-soft);margin-top:0;">Tu cartera completa, viva y buscable al instante. Más abajo, la lectura por estaciones te dice a quién cuidar y a quién despertar.</p>
     <details style="margin:-4px 0 12px;font-size:14px;">
       <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
       <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Agrega un cliente con nombre (y teléfono opcional) — recibe un código único automáticamente.</p>
-        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Elige ese cliente en Vendido para asociar sus compras a su historial.</p>
-        <p style="margin:0;font-size:14px;color:var(--ink);">3. Solo dueño: la matriz de estaciones muestra quién lleva tiempo sin comprar — ahí sabes a quién escribirle.</p>
+        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Busca con la lupa y toca "Vender a este cliente" para ir directo a Vendido con su nombre ya elegido.</p>
+        <p style="margin:0;font-size:14px;color:var(--ink);">3. Solo dueño: más abajo, la matriz de estaciones muestra quién lleva tiempo sin comprar — ahí sabes a quién escribirle.</p>
       </div>
     </details>
     <div class="tag-card" style="padding:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -1373,8 +1373,24 @@
       <button class="ir" id="btnAltaCliente" style="padding:10px 18px;">+ Agregar cliente</button>
     </div>
     <p id="cliMsg" style="font-size:15px;font-weight:700;margin:8px 0 0;"></p>
-    <div id="listaClientes" style="margin-top:14px;"></div>
-    <div id="matrizClientes" style="margin-top:26px;"></div>
+
+    <!-- LISTA VIVA (2026-07-23): lupa gigante, filtra en el momento sin tocar
+         red — filtra sobre la cache ya cargada (_clientesVivosCache), asi que
+         cada tecla es instantanea incluso con cientos de clientes. Va
+         PRIMERO, antes de cualquier lectura de estaciones (mas abajo). -->
+    <div class="tag-card" style="padding:10px 14px;display:flex;align-items:center;gap:12px;margin-top:16px;">
+      <svg width="30" height="30" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;">
+        <circle cx="6.6" cy="6.6" r="4.8" fill="none" stroke="var(--azul-medio,#2E6278)" stroke-width="2.2"/>
+        <path d="M10.2 10.2L15 15" stroke="var(--azul-medio,#2E6278)" stroke-width="2.6" stroke-linecap="round"/>
+      </svg>
+      <input id="cliBuscar" type="search" inputmode="search" autocomplete="off" placeholder="Buscar por nombre, apodo, código o teléfono…"
+        style="flex:1;min-width:0;padding:12px 14px;font-size:16px;border:2px solid var(--azul-medio);border-radius:8px;">
+    </div>
+    <p id="cliBuscarConteo" style="font-size:13px;color:var(--ink-soft);margin:6px 2px 0;"></p>
+    <div id="listaClientes" style="margin-top:10px;"></div>
+    <h3 class="seccion" style="margin-top:30px;">Estaciones y comportamiento</h3>
+    <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Solo dueño — la misma cartera de arriba, leída por qué tan reciente y valioso compra cada quien.</p>
+    <div id="matrizClientes" style="margin-top:10px;"></div>
 
     <!-- Importar CSV de clientes (JFC 2026-07-07): SOLO dueno, al fondo fondo.
          cargarClientes() lo muestra/oculta segun rol. El empleado JAMAS lo ve:
@@ -1775,7 +1791,8 @@ const ICONOS_OC = {
   lista:    '<path d="M2 3.4h12M2 8h12M2 12.6h8" stroke="#COL#" stroke-width="2.2"/>',
   lapiz:    '<path d="M2 14l1.2-4.2L11.5 1.5 14.5 4.5 6.2 12.8Z" fill="#COL#"/>',
   reloj:    '<circle cx="8" cy="8" r="6.6" fill="none" stroke="#COL#" stroke-width="2"/><path d="M8 4.4V8l2.7 2" fill="none" stroke="#COL#" stroke-width="2"/>',
-  percha:   '<path d="M1.5 3h13M4 3v11M12 3v11M4 8.5h8" stroke="#COL#" stroke-width="2"/>'
+  percha:   '<path d="M1.5 3h13M4 3v11M12 3v11M4 8.5h8" stroke="#COL#" stroke-width="2"/>',
+  lupa:     '<circle cx="6.6" cy="6.6" r="4.8" fill="none" stroke="#COL#" stroke-width="2.2"/><path d="M10.2 10.2L15 15" stroke="#COL#" stroke-width="2.6" stroke-linecap="round"/>'
 };
 function icoOC(nombre, color, size){
   size = size || 15;
@@ -1905,33 +1922,104 @@ function tarjetaCliente(c, esDueno, ctx) {
   const btnDespedir = (esDueno && nivelEv(ev.trato) === -1 && nivelEv(ev.confiabilidad) === -1)
     ? `<button style="margin-top:8px;font-size:13px;padding:4px 12px;background:#FDECEA;border:1.5px solid #C0392B;border-radius:6px;color:#C0392B !important;-webkit-text-fill-color:#C0392B !important;cursor:pointer;"
         onclick="despedirCliente('${c.id}','${escHtml(c.nombre)}')">Despedir cliente</button>` : "";
+  // Chip de estación (2026-07-23): la lista viva ya no agrupa por estación con
+  // encabezados — este chip mantiene esa información visible en cada tarjeta,
+  // sin obligar a saltar a la matriz de más abajo para saberlo.
+  const est = c.estacion && ESTACIONES[c.estacion] ? ESTACIONES[c.estacion] : null;
+  const chipEstacion = est
+    ? `<span title="${escHtml(est.titulo)}" style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 8px;border-radius:20px;font-size:13px;font-weight:700;background:${est.bg};color:${est.tinta} !important;-webkit-text-fill-color:${est.tinta} !important;">${est.icono}${est.titulo.split(" — ")[0]}</span>`
+    : "";
+  // CONECTAR TODO (2026-07-23): un toque manda al cajero directo a Vendido
+  // con este cliente ya elegido en el pulldown — sin retipear nombre.
+  const btnVender = `<button class="ir" style="margin-top:8px;font-size:13px;padding:5px 14px;"
+      onclick="irAVenderConCliente('${c.id}')">${icoOC("caja", "currentColor", 13)} Vender a este cliente</button>`;
   return `<div style="background:#FFFFFF;border:2px solid var(--linea,#D7E0E8);border-radius:10px;padding:10px 12px;margin:6px 0;">
     <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
       <strong style="font-size:16px;color:#0F1923;">${escHtml(c.nombre)}</strong>
       <span style="font-family:var(--font-mono);font-size:14px;color:#2E6278;margin-left:6px;">${escHtml(c.codigo)}</span>
-      ${badgeComportamiento(ev)}${chipProm}
+      ${badgeComportamiento(ev)}${chipProm}${chipEstacion}
     </div>
-    ${dato}${controles}${btnDespedir}
+    ${dato}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">${controles}${btnVender}${btnDespedir}</div>
   </div>`;
 }
-async function cargarClientes(){
+// normalizarTexto: minusculas + sin acentos, para que buscar "jose" encuentre
+// "José" y "MARIA" encuentre "maría" — indispensable en nombres en español.
+function normalizarTexto(s) {
+  return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+// irAVenderConCliente: el puente real entre Clientes y Vendido. Cambia de
+// pestaña con el mismo click() que usa el resto de la app (nav real, no un
+// atajo paralelo) y luego repuebla el pulldown de cliente en Vendido con
+// este cliente ya seleccionado. Con reintento corto: si el pulldown aun no
+// tiene la opcion (primera carga lenta), reintenta una vez mas antes de
+// rendirse en silencio — nunca revienta si el elemento no aparece a tiempo.
+async function irAVenderConCliente(id) {
+  const btnNav = document.querySelector('nav button[data-vista="escanear"]');
+  if (btnNav) btnNav.click();
+  try { await poblarSelectClientes(); } catch (_) {}
+  const intentarFijar = () => {
+    const sel = document.getElementById("ventaCliente");
+    if (!sel) return false;
+    const tieneOpcion = [...sel.options].some(o => o.value === id);
+    if (!tieneOpcion) return false;
+    sel.value = id;
+    sel.style.outline = "3px solid var(--sim-verde,#009A5A)";
+    setTimeout(() => { sel.style.outline = ""; }, 1200);
+    return true;
+  };
+  if (!intentarFijar()) {
+    setTimeout(async () => {
+      try { await poblarSelectClientes(); } catch (_) {}
+      intentarFijar();
+    }, 250);
+  }
+}
+// _clientesVivosCache: cache plana (todas las estaciones juntas, orden
+// alfabético) que alimenta la lista viva y su buscador. Se refresca cada vez
+// que cargarClientes() corre; el filtrado en sí (renderListaViva) es 100%
+// local — cero fetch por cada letra que se escribe en la lupa.
+let _clientesVivosCache = [];
+function renderListaViva(query){
+  const cont = document.getElementById("listaClientes");
+  const conteo = document.getElementById("cliBuscarConteo");
+  if (!cont) return;
   const esDueno = window.OCAuth && window.OCAuth.rolActual() === "dueno";
-  let grupos;
-  try { grupos = await (await fetch(`${API}/clientes/matriz`)).json(); } catch (_) { return; }
-  const orden = ["verano", "primavera", "otono", "invierno"];
-  document.getElementById("listaClientes").innerHTML = orden.map((k) => {
-    const e = ESTACIONES[k], lista = grupos[k] || [];
-    if (!lista.length) return "";
-    return `<div style="background:${e.bg};border:2px solid ${e.borde};border-radius:12px;padding:14px;margin:10px 0;">
-      <div style="font-family:var(--font-display);font-size:17px;font-weight:700;color:${e.tinta};">${e.icono} ${e.titulo} (${lista.length})</div>
-      <div style="font-size:15px;color:#2C3E50;margin:2px 0 8px;">${e.frase}</div>
-      ${lista.map((c) => tarjetaCliente(c, esDueno)).join("")}</div>`;
-  }).join("") || '<p style="font-size:16px;">Todavía no hay clientes. Agrega el primero arriba.</p>';
+  const q = normalizarTexto(query || "");
+  const filtrados = !q ? _clientesVivosCache : _clientesVivosCache.filter(c => {
+    const campos = [c.nombre, c.apodo, c.codigo, c.telefono, c.email];
+    return campos.some(v => v && normalizarTexto(v).includes(q));
+  });
+  cont.innerHTML = filtrados.length
+    ? filtrados.map(c => tarjetaCliente(c, esDueno, "viva")).join("")
+    : (_clientesVivosCache.length
+        ? `<p style="font-size:16px;color:var(--ink-soft);">Ningún cliente coincide con "${escHtml(query)}".</p>`
+        : '<p style="font-size:16px;">Todavía no hay clientes. Agrega el primero arriba.</p>');
+  if (conteo) {
+    conteo.textContent = _clientesVivosCache.length
+      ? (q ? `Mostrando ${filtrados.length} de ${_clientesVivosCache.length} cliente(s).` : `${_clientesVivosCache.length} cliente(s) en total.`)
+      : "";
+  }
   // Pruning: elimina claves de OCRateOpen para paneles que ya no existen en el DOM.
   // Evita que el Set crezca indefinidamente con clientes eliminados o renombrados.
   setTimeout(() => {
     window.OCRateOpen.forEach(k => { if (!document.getElementById("oc-rate-" + k)) window.OCRateOpen.delete(k); });
   }, 0);
+}
+async function cargarClientes(){
+  const esDueno = window.OCAuth && window.OCAuth.rolActual() === "dueno";
+  let grupos;
+  try { grupos = await (await fetch(`${API}/clientes/matriz`)).json(); } catch (_) { return; }
+  _clientesVivosCache = [].concat(grupos.verano || [], grupos.primavera || [], grupos.otono || [], grupos.invierno || [])
+    .sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  // Conserva lo que la persona ya había tecleado en la lupa (el input vive en
+  // el mismo DOM aunque la vista esté oculta) antes de repintar la lista.
+  const buscarEl = document.getElementById("cliBuscar");
+  renderListaViva(buscarEl ? buscarEl.value : "");
+  if (buscarEl && !buscarEl.dataset.listo) {
+    buscarEl.dataset.listo = "1";
+    buscarEl.addEventListener("input", () => renderListaViva(buscarEl.value));
+  }
   // Matriz de estaciones 2x2 — solo dueno. Eje horizontal: qué tan reciente
   // compra. Eje vertical: cuánto valor deja. Es la lectura RFM en un vistazo.
   const mc = document.getElementById("matrizClientes");
@@ -1940,7 +2028,7 @@ async function cargarClientes(){
     const celda = (k) => { const e = ESTACIONES[k], l = grupos[k] || []; return `<div style="background:${e.bg};border:2px solid ${e.borde};border-radius:10px;padding:12px;min-height:90px;">
       <div style="font-weight:700;font-size:15px;color:${e.tinta};">${e.icono} ${e.titulo.split(" — ")[0]}</div>
       <div style="font-size:14px;color:#0F1923;margin-top:6px;">${l.length ? l.map((c) => escHtml(c.nombre.split(" ")[0])).join(", ") : "—"}</div></div>`; };
-    mc.innerHTML = `<h3 class="seccion">Matriz de estaciones</h3>
+    mc.innerHTML = `<h4 style="font-family:var(--font-display);font-size:16px;margin:0 0 4px;">Matriz de estaciones</h4>
       <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">Derecha: compran hace poco. Arriba: dejan más dinero. La esquina naranja es donde se recupera plata perdida.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         ${celda("otono")}${celda("verano")}
@@ -1970,7 +2058,7 @@ async function cargarClientes(){
       const neutros = comp.neutro || [];
       const despedidos = comp.despedidos || [];
       mc.innerHTML += `
-        <h3 class="seccion" style="margin-top:24px;">Matriz de comportamiento</h3>
+        <h4 style="font-family:var(--font-display);font-size:16px;margin:24px 0 4px;">Matriz de comportamiento</h4>
         <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">El negocio evalúa al cliente. Toca "Calificar" en cada tarjeta y asigna Cumplimiento y Actitud del 1 al 5.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           ${celdaComp(CUAD[0])}${celdaComp(CUAD[1])}
@@ -3589,6 +3677,10 @@ async function confirmarVentaConInfo(id, esTicket){
 // toast antes de que expire el primero (evita que el interval huérfano borre el
 // toast nuevo cuando llega a 0). Fix del bug detectado en code-review 2026-07-03.
 let toastVentaIntervalo = null;
+// _anulandoEnCurso: lock anti-doble-tap del boton "deshacer", mismo patron que
+// _ventasEnCurso en venderUno/confirmarVentaConInfo — evita 2 anulaciones si
+// se toca el toast dos veces muy rapido.
+let _anulandoEnCurso = false;
 function mostrarToastAnular(ventaId, productoId){
   const cont = document.getElementById("oc-toast-venta");
   if (!cont) return;
@@ -3608,13 +3700,34 @@ function mostrarToastAnular(ventaId, productoId){
     if (restante <= 0) { clearInterval(toastVentaIntervalo); toastVentaIntervalo = null; cont.innerHTML = ""; }
   }, 1000);
   const intervalo = toastVentaIntervalo; // alias local para el click handler
+  // Reforzado (2026-07-23): mismo nivel de blindaje que confirmarVentaConInfo
+  // — antes esto no tenia try/catch (fallo de red = excepcion muda), no tenia
+  // guard anti-doble-tap, llamaba pintarFicha() sin comprobar que el
+  // contenedor existiera (revienta si estas parado en la grilla de Vender
+  // sin ninguna ficha abierta), y nunca refrescaba la grilla ni el cierre
+  // del dia — asi que deshacer desde Vender dejaba la casilla desactualizada.
   el.addEventListener("click", async () => {
+    if (_anulandoEnCurso) return;
+    _anulandoEnCurso = true;
     clearInterval(intervalo);
     cont.innerHTML = "";
-    const res = await fetch(`${API}/ventas/${ventaId}/anular`, { method: "POST" });
-    const data = await res.json();
-    if (!res.ok){ await ocAlert(data.error); return; }
-    pintarFicha(data.producto);
+    try {
+      let res, data;
+      try {
+        res = await fetch(`${API}/ventas/${ventaId}/anular`, { method: "POST" });
+        data = await res.json();
+      } catch (err) {
+        console.error("[anular]", err);
+        await ocAlert("No se pudo conectar con el servidor. La venta NO se deshizo. Revisa tu conexión e intenta de nuevo.");
+        return;
+      }
+      if (!res.ok){ await ocAlert(data.error); return; }
+      if (document.getElementById(fichaTargetActual)) pintarFicha(data.producto);
+      if (document.getElementById("gridVender")) cargarGridVender();
+      if (document.getElementById("cierreDia") && document.getElementById("cierreDia").open) cargarCierreLista();
+    } finally {
+      _anulandoEnCurso = false;
+    }
   });
 }
 
