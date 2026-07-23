@@ -2347,6 +2347,7 @@ async function cargarInventario(){
         <button data-ajuste-menos="${p.id}" title="Quitar 1" style="width:36px;height:36px;border-radius:50%;border:2px solid currentColor;background:transparent;color:inherit;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
         <button data-ajuste-mas="${p.id}" title="Agregar 1" style="width:36px;height:36px;border-radius:50%;border:2px solid currentColor;background:transparent;color:inherit;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
         ${esDuenoInv ? `<button data-estrella-toggle="${p.id}" title="${p.estrella ? 'Quitar estrella' : 'Marcar para promover'}" style="width:36px;height:36px;border-radius:50%;border:2px solid currentColor;background:transparent;color:inherit;font-size:16px;cursor:pointer;">${p.estrella ? '★' : '☆'}</button>` : ''}
+        ${esDuenoInv ? `<button data-editar-directo="${p.id}" title="Editar ficha" style="width:36px;height:36px;border-radius:50%;border:2px solid currentColor;background:transparent;color:inherit;font-size:15px;cursor:pointer;">✏️</button>` : ''}
       </div>
     </div>
   `).join("");
@@ -2371,6 +2372,11 @@ async function cargarInventario(){
       if (!res8.ok){ await ocAlert(r8.error); return; }
       cargarInventario();
     });
+  });
+
+  // Lapiz: edicion directa desde la tarjeta, sin abrir la ficha primero
+  grid.querySelectorAll("[data-editar-directo]").forEach(btn => {
+    btn.addEventListener("click", (ev) => { ev.stopPropagation(); abrirEdicionDesdeInventario(btn.dataset.editarDirecto); });
   });
 
   // Estrella: dueño marca/desmarca productos para que el empleado los promueva
@@ -2646,6 +2652,16 @@ async function abrirFichaDesdeInventario(id){
   const modal = document.getElementById("modalFicha");
   if (modal) modal.classList.add("activo");
 }
+
+// Acceso directo #2 a la edicion (2026-07-22, "todo lleva a todo"): el lapiz
+// de la tarjeta del inventario abre el modal YA en el formulario de editar,
+// sin pasar por la ficha. La ruta clasica (ficha -> Editar) sigue intacta.
+async function abrirEdicionDesdeInventario(id){
+  fichaTargetActual = "fichaModalBody";
+  const modal = document.getElementById("modalFicha");
+  if (modal) modal.classList.add("activo");
+  await mostrarFormEditarProducto(id);
+}
 (function () {
   const modal = document.getElementById("modalFicha");
   const cerrar = () => {
@@ -2757,6 +2773,8 @@ function mostrarFormNuevoProducto(codigoEscaneado){
         <input id="np-stock" type="number" min="0" step="1" value="0" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Proveedor<br>
         <input id="np-proveedor" type="text" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
+      <label style="display:block;margin-top:10px;font-size:14px;">Foto (opcional — el equipo la ve en la ficha y no se confunde)<br>
+        <input id="np-foto" type="file" accept="image/*" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
       <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:15px;font-weight:700;">
         <input id="np-perecible" type="checkbox" style="width:20px;height:20px;"> ¿Este producto expira?</label>
       <div id="np-fecha-wrap" style="display:none;margin-top:8px;">
@@ -2792,6 +2810,9 @@ async function crearProductoNuevo(codigoEscaneado){
   const msg = document.getElementById("np-msg");
   if (!body.nombre){ msg.style.color = "var(--rojo)"; msg.textContent = "El nombre es obligatorio."; return; }
   if (!body.barcode){ msg.style.color = "var(--rojo)"; msg.textContent = "El código es obligatorio."; return; }
+  // Foto por producto en alta (2026-07-22): mismo pipeline que editar ficha.
+  const fotoNueva = await leerFotoRedimensionada(document.getElementById("np-foto"));
+  if (fotoNueva) body.foto = fotoNueva;
   let res, data;
   try {
     res = await fetch(`${API}/productos`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body) });
@@ -2816,15 +2837,21 @@ async function mostrarFormEditarProducto(id){
   // una excepcion no atrapada y "Editar" no hacia nada visible.
   let p, perchas = [];
   try {
-    const [rP, rU] = await Promise.all([fetch(`${API}/productos/${id}`), fetch(`${API}/ubicaciones`)]);
-    p = await rP.json();
-    perchas = await rU.json();
-    if (!Array.isArray(perchas)) perchas = [];
+    const res = await fetch(`${API}/productos/${id}`);
+    p = await res.json();
+    if (!res.ok || !p || !p.id) throw new Error(p && p.error ? p.error : "producto no encontrado");
   } catch (err) {
     console.error("[mostrarFormEditarProducto]", err);
-    await ocAlert("No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.");
+    await ocAlert("No se pudo abrir la ficha para editar. Revisa tu conexión e intenta de nuevo.");
     return;
   }
+  // Blindaje (2026-07-22): las perchas son OPCIONALES para editar — si su
+  // fetch falla, el editor abre igual con el select en "Sin percha asignada".
+  // Antes un solo fallo aqui tumbaba todo el formulario de edicion.
+  try {
+    perchas = await (await fetch(`${API}/ubicaciones`)).json();
+    if (!Array.isArray(perchas)) perchas = [];
+  } catch (_) { perchas = []; }
   // Usa fichaTargetActual (igual que pintarFicha) para que el form aparezca en el
   // mismo contenedor donde estaba la ficha — modal de Inventario O panel de Escanear.
   const contenedor = document.getElementById(fichaTargetActual) || document.getElementById("fichaResultado");
@@ -2906,9 +2933,14 @@ function leerFotoRedimensionada(fileInput){
 }
 
 async function guardarEdicionProducto(id){
-  const v = (x) => document.getElementById(x).value.trim();
+  // Blindaje (2026-07-22): lectura null-safe — si un campo no existe en el DOM
+  // (form viejo en cache, id renombrado en el futuro), se OMITE del PATCH en
+  // vez de reventar todo el guardado con un TypeError. El backend ignora los
+  // campos undefined, asi que omitir = "no tocar ese campo".
+  const v = (x) => { const el = document.getElementById(x); return el ? el.value.trim() : undefined; };
   // OJO: el SKU no se toca aqui — solo el barcode si el dueno lo digito.
   const body = { nombre: v("ed-nombre"), precio: v("ed-precio"), costo: v("ed-costo"), proveedor: v("ed-proveedor"), categoria: v("ed-categoria"), barcode: v("ed-barcode"), ubicacionId: v("ed-ubicacion"), umbralRojo: v("ed-umbral-rojo"), umbralAmarillo: v("ed-umbral-amarillo"), tipoProveedor: v("ed-tipo-proveedor"), comisionProveedorPct: v("ed-comision-pct") };
+  Object.keys(body).forEach(k => { if (body[k] === undefined) delete body[k]; });
   const foto = await leerFotoRedimensionada(document.getElementById("ed-foto"));
   if (foto) body.foto = foto;
   const msg = document.getElementById("ed-msg");
@@ -2982,6 +3014,8 @@ async function abrirAltaProducto(){
         <input id="np-stock" type="number" min="0" step="1" value="0" ${inp}></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Proveedor<br>
         <input id="np-proveedor" type="text" ${inp}></label>
+      <label style="display:block;margin-top:10px;font-size:14px;">Foto (opcional — el equipo la ve en la ficha y no se confunde)<br>
+        <input id="np-foto" type="file" accept="image/*" ${inp}></label>
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Tipo relación<br>
           <select id="np-tipo-proveedor" ${inp}>
