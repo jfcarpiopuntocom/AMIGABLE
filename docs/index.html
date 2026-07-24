@@ -900,7 +900,7 @@
     overflow:auto;
     padding:20px;
   }
-  .modal-fondo.activo{display:flex; align-items:flex-start; justify-content:center; padding-top:40px;}
+  .modal-fondo.activo{display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:40px;}
   .etiqueta-imprimible{
     background:var(--blanco-calido);
     padding:30px;
@@ -5123,7 +5123,7 @@ window.dialogosBloqueados = function () {
   <div id="oc-ventainfo-caja" style="max-width:460px;width:100%;margin:16px auto;"></div>
 </div>
 <div id="oc-modal-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:#0F141E;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;">
-  <div id="oc-modal-caja" class="tag-card" style="max-width:380px;width:100%;text-align:left;background:var(--blanco-calido,#fbf5e8);padding:22px 20px;border-radius:4px;">
+  <div id="oc-modal-caja" class="tag-card" style="max-width:380px;width:100%;margin:16px auto;text-align:left;background:var(--blanco-calido,#fbf5e8);padding:22px 20px;border-radius:4px;">
     <div id="oc-modal-msg" style="font-size:15px;color:var(--ink,#211c14);white-space:pre-line;margin-bottom:18px;"></div>
     <div id="oc-modal-botones" style="display:flex;gap:10px;justify-content:flex-end;"></div>
   </div>
