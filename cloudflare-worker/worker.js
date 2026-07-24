@@ -173,10 +173,93 @@ async function handleRecoverPin(req, env) {
   return json({ ok: true, enviado: true });
 }
 
+// ===========================================================================
+// EPIC "La Licencia Manda" (JFC 2026-07-24) — recuperación por licencia.
+// Sigue el manifiesto NO CLOUD: NO se guardan datos de negocio. Solo un código
+// efímero de liberación (TTL 1h, un solo uso) atado al instanceId, para que
+// JFC pueda re-habilitar a un dueño que olvidó su PIN y su password.
+// ===========================================================================
+
+// Código legible, sin caracteres ambiguos (0/O/1/I/L). Formato XXXX-XXXX.
+function codigoLiberacion() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  let s = "";
+  for (let i = 0; i < 8; i++) s += chars[bytes[i] % chars.length];
+  return s.slice(0, 4) + "-" + s.slice(4);
+}
+
+// POST /liberar — master-only. JFC lo dispara desde el panel tras verificar
+// identidad por WhatsApp. Genera el código de un solo uso y lo devuelve para
+// que JFC se lo mande al dueño. NO toca datos de negocio.
+async function handleLiberar(req, env) {
+  let body; try { body = await req.json(); } catch (_) { return json({ error: "Invalid JSON" }, 400); }
+  const instanceId = String(body.instanceId || "").slice(0, 120).trim();
+  if (!instanceId) return json({ error: "Falta instanceId" }, 400);
+  const raw = await env.LICENCIAS.get(`inst:${instanceId}`);
+  if (!raw) return json({ error: "Instancia no encontrada" }, 404);
+  const code = codigoLiberacion();
+  await env.LICENCIAS.put(`release:${instanceId}`, code, { expirationTtl: 3600 });
+  return json({ ok: true, code, instanceId });
+}
+
+// POST /verificar-liberacion — público. El dueño teclea el código que JFC le
+// envió por WhatsApp. Verificación contra KV, UN SOLO USO (se borra al validar),
+// con rate-limit por instancia (fail-open) para frenar fuerza bruta.
+async function handleVerificarLiberacion(req, env) {
+  const raw0 = await req.text();
+  if (raw0.length > 512) return json({ error: "Payload too large" }, 413);
+  let body; try { body = JSON.parse(raw0); } catch (_) { return json({ error: "Invalid JSON" }, 400); }
+  const instanceId = String(body.instanceId || "").slice(0, 120).trim();
+  const code = String(body.code || "").slice(0, 20).trim().toUpperCase();
+  if (!instanceId || !code) return json({ ok: false, error: "Faltan datos." }, 400);
+  try {
+    const rlKey = `rl:release:${instanceId}`;
+    const n = parseInt((await env.LICENCIAS.get(rlKey)) || "0", 10) || 0;
+    if (n >= 10) return json({ ok: false, error: "Demasiados intentos. Espera una hora." }, 429);
+    await env.LICENCIAS.put(rlKey, String(n + 1), { expirationTtl: 3600 });
+  } catch (_) { /* fail-open */ }
+  const guardado = await env.LICENCIAS.get(`release:${instanceId}`);
+  if (!guardado) return json({ ok: false, error: "No hay liberación activa. Pídela a soporte." }, 404);
+  if (guardado !== code) return json({ ok: false, error: "Código inválido o expirado." }, 400);
+  await env.LICENCIAS.delete(`release:${instanceId}`);
+  return json({ ok: true });
+}
+
+// POST /editar-correo — master-only. JFC corrige el correo de un dueño desde
+// el panel (lápiz en la lista). Solo toca el campo email del registro.
+async function handleEditarCorreo(req, env) {
+  let body; try { body = await req.json(); } catch (_) { return json({ error: "Invalid JSON" }, 400); }
+  const instanceId = String(body.instanceId || "").slice(0, 120).trim();
+  const email = String(body.email || "").slice(0, 240).trim();
+  if (!instanceId) return json({ error: "Falta instanceId" }, 400);
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: "Correo inválido" }, 400);
+  const raw = await env.LICENCIAS.get(`inst:${instanceId}`);
+  if (!raw) return json({ error: "Instancia no encontrada" }, 404);
+  const reg = JSON.parse(raw);
+  reg.email = email;
+  await env.LICENCIAS.put(`inst:${instanceId}`, JSON.stringify(reg));
+  return json({ ok: true, email });
+}
+
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     if (req.method === "OPTIONS") return cors(new Response(null, { status: 204 }));
+
+    // Liberación por licencia (master genera / público verifica)
+    if (url.pathname === "/liberar" && req.method === "POST") {
+      if (!requireMasterKey(req, env)) return json({ error: "Master Key incorrecta" }, 401);
+      return handleLiberar(req, env);
+    }
+    if (url.pathname === "/verificar-liberacion" && req.method === "POST") {
+      return handleVerificarLiberacion(req, env);
+    }
+    // Editar correo del dueño desde el panel (master)
+    if (url.pathname === "/editar-correo" && req.method === "POST") {
+      if (!requireMasterKey(req, env)) return json({ error: "Master Key incorrecta" }, 401);
+      return handleEditarCorreo(req, env);
+    }
 
     // Recuperación de PIN — público pero con validación de instanceId en KV
     if (url.pathname === "/recover-pin" && req.method === "POST") {
