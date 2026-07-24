@@ -1026,6 +1026,7 @@
 
   /* ================= TABLET (≥768px): riel lateral ================= */
   @media (min-width:768px){
+    :root{ --nav-h:0px; } /* FIX: en tablet/desktop nav es riel lateral, no barra inferior — sin esto, main/toast/banner seguian reservando 58px de hueco muerto abajo para una barra que ya no existe */
     nav{
       flex-direction:column;
       left:0; top:0; bottom:0; right:auto;
