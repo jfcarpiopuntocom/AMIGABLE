@@ -1580,13 +1580,34 @@
 
     <h3 class="seccion">Inventario valorizado</h3>
     <div class="tabla-wrap"><table class="reporte" id="tablaValorizado"></table></div>
+
+    <!-- SOPORTE TECNICO (2026-07-24): el codigo ya prometia este panel en un
+         comentario ("mandame lo que dice AVANZADO > soporte") pero nunca se
+         habia construido. Muestra version + checksum (para confirmar que tu
+         y el dueño corren exactamente el mismo archivo, sin comparar linea
+         por linea) y los ultimos errores que ya se guardaban en
+         localStorage["oc_errores"] pero que antes no se veian en ningun lado. -->
+    <h3 class="seccion">Soporte técnico</h3>
+    <div class="panel-escaner tag-card" style="text-align:left;">
+      <p style="margin:0 0 10px;">
+        Si algo falla, copia este resumen y mándalo por WhatsApp para diagnosticar rápido — nada de esto sale del dispositivo hasta que tú lo copies y envíes.
+      </p>
+      <div id="soporteInfo" style="font-family:var(--font-mono);font-size:13px;line-height:1.6;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);padding:10px 14px;">
+        Calculando checksum…
+      </div>
+      <h4 style="margin:14px 0 6px;font-size:14px;">Últimos errores registrados</h4>
+      <div id="soporteErrores" class="tabla-wrap" style="max-height:220px;overflow-y:auto;"></div>
+      <button class="ir" id="btnCopiarSoporte" style="margin-top:12px;">Copiar para WhatsApp</button>
+      <button class="ir" id="btnLimpiarErroresSoporte" style="margin-top:12px;margin-left:8px;background:transparent;color:var(--rojo);border:2px solid var(--rojo);">Borrar historial de errores</button>
+      <p id="msgSoporte" style="font-size:14px;margin-top:10px;font-weight:700;"></p>
+    </div>
   </section>
 
 </main>
 
 <footer>
-  <em>Amigable-123: control de inventario, clientes y perchas</em>
-  <br><a href="https://jfcarpio.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">jfcarpio.com</a> — 2026
+  <em>amigable-123: control de inventario, perchas, clientes y comisiones</em>
+  <br>powered by <a href="https://jfcarpio.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">jfcarpio.com</a> - 2026 Licencia MIT Open
 </footer>
 
 <!-- MODAL ETIQUETA -->
@@ -3253,7 +3274,15 @@ document.getElementById("inputEscaner").addEventListener("blur", () => {
 });
 
 function mostrarFormNuevoProducto(codigoEscaneado){
-  const contenedor = document.getElementById("fichaResultado");
+  // FIX (bug IDs duplicados np-*): antes esto pintaba SIEMPRE en fichaResultado
+  // sin fijar fichaTargetActual, mientras que abrirAltaProducto() SÍ lo fija a
+  // fichaModalBody. Como ambos contenedores conviven en el DOM y comparten los
+  // mismos id="np-*", si un cajero usaba primero este flujo (Vender) y luego el
+  // de Inventario ("+"), crearProductoNuevo() podía leer los valores VIEJOS de
+  // este formulario en vez de los recién tecleados en el modal — sin error
+  // visible. Fijamos el target aquí también, igual que hace pintarFicha().
+  fichaTargetActual = "fichaResultado";
+  const contenedor = document.getElementById(fichaTargetActual);
   contenedor.innerHTML = `
     <div class="ficha-producto tag-card" style="text-align:left;">
       <div class="titulo">Nuevo producto</div>
@@ -3298,29 +3327,43 @@ function mostrarFormNuevoProducto(codigoEscaneado){
       <button class="ir" style="margin-top:12px;" onclick="crearProductoNuevo('${escHtml(codigoEscaneado).replace(/'/g, "\\'")}')">Guardar producto</button>
     </div>
   `;
-  document.getElementById("np-perecible").addEventListener("change", (e) => {
-    document.getElementById("np-fecha-wrap").style.display = e.target.checked ? "block" : "none";
+  // FIX (bug IDs duplicados np-*): enganchar dentro de "contenedor" (el que
+  // recién se pintó), no en document, para no capturar por error el checkbox
+  // del OTRO formulario np-* que pueda seguir vivo en el otro contenedor.
+  contenedor.querySelector("#np-perecible").addEventListener("change", (e) => {
+    contenedor.querySelector("#np-fecha-wrap").style.display = e.target.checked ? "block" : "none";
   });
 }
 
 async function crearProductoNuevo(codigoEscaneado){
-  const val = (id) => document.getElementById(id).value.trim();
-  const perecible = document.getElementById("np-perecible").checked;
+  // FIX (bug IDs duplicados np-*): mostrarFormNuevoProducto() y abrirAltaProducto()
+  // pintan formularios con los MISMOS id="np-*" en DOS contenedores que coexisten
+  // siempre en el DOM (fichaResultado y fichaModalBody). Antes esta función leía
+  // con document.getElementById("np-...") a secas, que siempre devuelve el PRIMER
+  // elemento con ese id en el documento (fichaResultado, por orden en el HTML) —
+  // sin importar cuál formulario está realmente activo/visible. Si el cajero había
+  // usado antes el flujo de Escanear y luego usaba "+" en Inventario, se podían
+  // guardar datos viejos/equivocados sin ningún error visible. Ahora escopamos
+  // toda la lectura al contenedor activo (fichaTargetActual).
+  const scope = document.getElementById(fichaTargetActual) || document.getElementById("fichaResultado");
+  const val = (id) => scope.querySelector(`#${id}`).value.trim();
+  const el = (id) => scope.querySelector(`#${id}`);
+  const perecible = el("np-perecible").checked;
   const body = {
     nombre: val("np-nombre"), categoria: val("np-categoria"), barcode: codigoEscaneado || val("np-barcode"),
     precio: val("np-precio"), costo: val("np-costo"), stockInicial: val("np-stock"), proveedor: val("np-proveedor"),
-    ubicacionId: document.getElementById("np-ubicacion") ? val("np-ubicacion") : (ubicacionActual === "todas" ? "todas" : ubicacionActual),
-    tipoProveedor: document.getElementById("np-tipo-proveedor") ? document.getElementById("np-tipo-proveedor").value : "compra",
-    tipoProducto: document.getElementById("np-tipo-producto") ? document.getElementById("np-tipo-producto").value : "normal",
-    comisionProveedorPct: document.getElementById("np-tipo-proveedor") && document.getElementById("np-tipo-proveedor").value === "consignacion" ? Number(val("np-comision-pct")) || 0 : 0,
+    ubicacionId: el("np-ubicacion") ? val("np-ubicacion") : (ubicacionActual === "todas" ? "todas" : ubicacionActual),
+    tipoProveedor: el("np-tipo-proveedor") ? el("np-tipo-proveedor").value : "compra",
+    tipoProducto: el("np-tipo-producto") ? el("np-tipo-producto").value : "normal",
+    comisionProveedorPct: el("np-tipo-proveedor") && el("np-tipo-proveedor").value === "consignacion" ? Number(val("np-comision-pct")) || 0 : 0,
     perecible, fechaCaducidad: perecible ? val("np-fecha") : null,
-    metodoCosteo: perecible ? document.getElementById("np-metodo").value : "FIFO",
+    metodoCosteo: perecible ? el("np-metodo").value : "FIFO",
   };
-  const msg = document.getElementById("np-msg");
+  const msg = el("np-msg");
   if (!body.nombre){ msg.style.color = "var(--rojo)"; msg.textContent = "El nombre es obligatorio."; return; }
   if (!body.barcode){ msg.style.color = "var(--rojo)"; msg.textContent = "El código es obligatorio."; return; }
   // Foto por producto en alta (2026-07-22): mismo pipeline que editar ficha.
-  const fotoNueva = await leerFotoRedimensionada(document.getElementById("np-foto"));
+  const fotoNueva = await leerFotoRedimensionada(el("np-foto"));
   if (fotoNueva) body.foto = fotoNueva;
   let res, data;
   try {
@@ -3598,14 +3641,17 @@ async function abrirAltaProducto(){
       <div id="np-msg" style="font-size:14px;margin-top:10px;font-weight:700;"></div>
       <button class="ir" style="margin-top:12px;" onclick="crearProductoNuevo('')">Guardar producto</button>
     </div>`;
-  document.getElementById("np-perecible").addEventListener("change", (e) => {
-    document.getElementById("np-fecha-wrap").style.display = e.target.checked ? "block" : "none";
+  // FIX (bug IDs duplicados np-*): enganchar dentro de "body" (el modal recién
+  // pintado), no en document, para no capturar por error los elementos del
+  // formulario de Vender/Escanear si ese también sigue vivo en el DOM.
+  body.querySelector("#np-perecible").addEventListener("change", (e) => {
+    body.querySelector("#np-fecha-wrap").style.display = e.target.checked ? "block" : "none";
   });
   // Tipo proveedor toggle (M6): comision visible solo para consignacion
-  document.getElementById("np-tipo-proveedor").addEventListener("change", (e) => {
-    document.getElementById("np-comision-wrap").style.display = e.target.value === "consignacion" ? "block" : "none";
+  body.querySelector("#np-tipo-proveedor").addEventListener("change", (e) => {
+    body.querySelector("#np-comision-wrap").style.display = e.target.value === "consignacion" ? "block" : "none";
   });
-  attachPerchaInlineCreate(document.getElementById("np-ubicacion"));
+  attachPerchaInlineCreate(body.querySelector("#np-ubicacion"));
   modal.classList.add("activo");
 }
 
@@ -4874,6 +4920,7 @@ async function cargarAvanzado(){
   await cargarGastosMensuales();
   await cargarActividad();
   cargarReservasEventos();
+  cargarSoporteTecnico();
   // Reforzado (JFC 2026-07-18): cargarAvanzado() se llama fire-and-forget (nav
   // click, sin await) — sin este try/catch, un fallo de red aqui tiraba una
   // excepcion no atrapada y el panel Avanzado se quedaba congelado en blanco,
@@ -5067,6 +5114,102 @@ window.addEventListener("oc-datos-importados", async () => {
     } catch (_) {}
   });
 })();
+
+// ============================================================================
+// SOPORTE TECNICO (2026-07-24): panel AVANZADO > Soporte técnico. Calcula un
+// checksum SHA-256 en vivo sobre el HTML tal como quedó cargado en el
+// navegador, para que tú y el dueño puedan confirmar en segundos que ambos
+// corren la MISMA versión, sin comparar el código línea por línea. También
+// muestra los últimos errores guardados por cajaNegraErrores() en
+// localStorage["oc_errores"], que antes se guardaban pero nunca se
+// mostraban en ningún lado del programa (bug real, no solo mejora).
+// ============================================================================
+const APP_VERSION = "2026-07-24";
+
+async function calcularChecksumHtml(){
+  try {
+    const html = document.documentElement.outerHTML;
+    const bytes = new TextEncoder().encode(html);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  } catch (err) {
+    console.error("[calcularChecksumHtml]", err);
+    return null;
+  }
+}
+
+function leerErroresGuardados(){
+  try {
+    const lista = JSON.parse(localStorage.getItem("oc_errores") || "[]");
+    return Array.isArray(lista) ? lista : [];
+  } catch (_) { return []; }
+}
+
+async function cargarSoporteTecnico(){
+  const info = document.getElementById("soporteInfo");
+  const cont = document.getElementById("soporteErrores");
+  const msg = document.getElementById("msgSoporte");
+  if (!info || !cont) return;
+  msg.textContent = "";
+
+  const checksumCompleto = await calcularChecksumHtml();
+  const checksumCorto = checksumCompleto ? checksumCompleto.slice(0, 12) : "no disponible";
+  const errores = leerErroresGuardados();
+
+  info.innerHTML = `
+    <div>Versión: <strong>${escHtml(APP_VERSION)}</strong></div>
+    <div>Checksum: <strong>${escHtml(checksumCorto)}</strong></div>
+    <div>Errores guardados: <strong>${errores.length}</strong></div>
+  `;
+
+  if (!errores.length){
+    cont.innerHTML = `<p style="font-size:14px;color:var(--ink-soft);margin:0;">Sin errores registrados en este dispositivo.</p>`;
+  } else {
+    const filas = errores.slice().reverse().map(e => {
+      let fecha = e.fecha;
+      try { fecha = new Date(e.fecha).toLocaleString("es-EC"); } catch (_) {}
+      return `<tr><td style="white-space:nowrap;">${escHtml(fecha)}</td><td>${escHtml(e.msg || "")}</td><td style="white-space:nowrap;">${escHtml(e.src || "")}</td></tr>`;
+    }).join("");
+    cont.innerHTML = `<table class="reporte"><tr><th>Fecha</th><th>Error</th><th>Origen</th></tr>${filas}</table>`;
+  }
+
+  const btnCopiar = document.getElementById("btnCopiarSoporte");
+  if (btnCopiar && !btnCopiar.dataset.ocBound){
+    btnCopiar.dataset.ocBound = "1";
+    btnCopiar.addEventListener("click", async () => {
+      const erroresActuales = leerErroresGuardados();
+      const texto = [
+        `Amigable-123 — Soporte técnico`,
+        `Versión: ${APP_VERSION}`,
+        `Checksum: ${checksumCorto}`,
+        `Errores (${erroresActuales.length}):`,
+        ...erroresActuales.slice(-10).map(e => {
+          let fecha = e.fecha;
+          try { fecha = new Date(e.fecha).toLocaleString("es-EC"); } catch (_) {}
+          return `- ${fecha} | ${e.msg || ""} | ${e.src || ""}`;
+        }),
+      ].join("\n");
+      try {
+        await navigator.clipboard.writeText(texto);
+        msg.style.color = "var(--verde, #2c7a4b)"; msg.textContent = "Copiado. Ya puedes pegarlo en WhatsApp.";
+      } catch (err) {
+        console.error("[btnCopiarSoporte]", err);
+        msg.style.color = "var(--rojo)"; msg.textContent = "No se pudo copiar automáticamente. Selecciona el texto de arriba a mano.";
+      }
+    });
+  }
+
+  const btnLimpiar = document.getElementById("btnLimpiarErroresSoporte");
+  if (btnLimpiar && !btnLimpiar.dataset.ocBound){
+    btnLimpiar.dataset.ocBound = "1";
+    btnLimpiar.addEventListener("click", async () => {
+      if (!(await ocConfirm("¿Borrar el historial de errores guardado en este dispositivo?"))) return;
+      try { localStorage.removeItem("oc_errores"); } catch (_) {}
+      cargarSoporteTecnico();
+    });
+  }
+}
 
 // Microcirugia 7 (2026-07-07): el navegador interno de WhatsApp/Instagram a
 // veces bloquea prompt()/confirm() (devuelven null/false al instante, sin
