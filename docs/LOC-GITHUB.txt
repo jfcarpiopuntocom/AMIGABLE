@@ -1,0 +1,15 @@
+   5145 index.html
+      6 sw.js
+   1530 manual-maestro.html
+    207 audit-store.js
+    213 event-bus.js
+    114 identity-context.js
+    187 logger.js
+    140 percha-reposicion.js
+    249 simon-config.js
+      6 sw.js
+    180 sync-queue.js
+    240 telemetry.js
+    184 ui-actions.js
+     74 integrar-amg.mjs
+  13356 total

@@ -56,7 +56,7 @@
     --sidebar-w:266px;
   }
   *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:smooth; color-scheme:light only;}
   body{
     margin:0;
     background:var(--papel);
@@ -372,6 +372,12 @@
     nav.toc, nav.tocMovil, #barraProgreso, header.top{display:none;}
     main{margin-left:0;}
   }
+
+  /* FORZAR LIGHT MODE (regla del proyecto - sin excepciones) */
+  @media (prefers-color-scheme: dark){
+    html, body{ background-color:var(--papel) !important; color:var(--ink) !important; }
+    html{ color-scheme:light only !important; }
+  }
 </style>
 </head>
 <body>
@@ -641,6 +647,7 @@
 
   <h3>La regla de oro: nunca memorices, solo mira el color</h3>
   <p>Todo el diseño de amigable-123 parte de una convicción de Juan Fernando Carpio: un dueño de negocio en Ecuador no tiene tiempo de leer reportes de 12 columnas cada mañana. Sí tiene tiempo de mirar una pantalla 8 segundos y saber, sin pensar, qué hacer primero. Por eso cada color tiene siempre la misma pregunta implícita:</p>
+<p><strong>Colores a tu medida:</strong> el semáforo es una herramienta, no una imposición. El dueño puede fijar, por producto y por percha, cuántos días sin venta marcan un producto como NEGRO (dormido) y con cuántos días de anticipación se enciende el ROJO o NARANJA de caducidad — porque un cuadro de galería rota en meses y una funda de café en días. Los campos viven en la ficha de edición del producto y en la gestión de cada percha; vacío = estándar de la app.</p>
   <ul class="lista">
     <li><strong>🔴 Rojo</strong> pregunta: "¿qué se me acaba o se me vence HOY?"</li>
     <li><strong>🟠 Naranja</strong> pregunta: "¿qué debo vender primero esta semana?"</li>
@@ -967,7 +974,7 @@
 
   <div class="oportunidad"><strong>Esto es lo que antes te tomaba una noche de domingo con una calculadora y una hoja de Excel a medio llenar.</strong> Nadie abre un negocio pequeño porque le apasiona cuadrar números — se abre porque hay un producto o un oficio que se ama. Cada minuto que Avanzado calcula solo es un minuto que vuelve al negocio, o a tu casa.</div>
 
-  <h3>Reporte trimestral $100 (opcional)</h3>
+  <h3>Reporte trimestral $100 (opcional, próximamente)</h3>
   <p>Al fondo de Avanzado hay un botón opcional para pedir, <strong>máximo una vez por trimestre</strong>, un reporte donde JFC revisa tus números a fondo y los compara contra los ratios saludables de tu sector, actividad y ciudad — los mismos indicadores tipo "Valle de la Muerte" que usan los inversionistas para detectar problemas a tiempo: financieros, de marketing y de los canales que te traen clientes. <strong>Tú apruebas exactamente qué datos se envían</strong> antes de que salga nada — un checklist te deja desmarcar cualquier categoría. Es orientación, no dependencia: la meta es que lo necesites cada vez menos, no más.</p>
 </section>
 

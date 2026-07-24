@@ -5123,4 +5123,23 @@ function ocAlert(mensaje) {
 }
 </script>
 
+<!-- AMG-BLOQUE-INICIO ==============================================
+  amigable-123 — Infraestructura de estabilidad (Fases 1+2+4 + identidad + reposicion + colores)
+  Bloque APARTE y fail-safe: si alguno de estos .js falta o falla, la app
+  sigue funcionando EXACTAMENTE igual (cada módulo se auto-desactiva solo).
+  ORDEN OBLIGATORIO: bus -> logger -> telemetry -> identity -> audit ->
+  sync-queue -> ui-actions (ui-actions SIEMPRE al final: envuelve funciones
+  que ya deben existir en window). Namespace window.AMG — no toca window.OC*.
+  Rollback: borrar este bloque completo. Nada más del archivo fue modificado.
+  Regenerable con: node integrar-amg.mjs index.html
+  AMG-BLOQUE-FIN -->
+<script src="./event-bus.js"></script>
+<script src="./logger.js"></script>
+<script src="./telemetry.js"></script>
+<script src="./identity-context.js"></script>
+<script src="./audit-store.js"></script>
+<script src="./sync-queue.js"></script>
+<script src="./simon-config.js"></script>
+<script src="./percha-reposicion.js"></script>
+<script src="./ui-actions.js"></script>
 </body></html>
