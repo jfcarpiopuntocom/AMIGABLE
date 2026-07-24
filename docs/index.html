@@ -2472,7 +2472,7 @@ async function cargarHoy(){
   // Plata del negocio (ganancia/entra/sale/inventario): SOLO dueño. El titular
   // tampoco le revela la ganancia al empleado — solo el conteo de ventas.
   const esDuenoHoy = window.OCAuth && window.OCAuth.rolActual() === "dueno";
-  document.getElementById("heroSubtitulo").textContent = esDuenoHoy
+  document.getElementById("heroSubtitulo").innerHTML = esDuenoHoy
     ? `Ganaste ${fmtMoney(data.resumenDia.gananciaHoy)} hoy, con ${data.resumenDia.ventasCount} ventas registradas.`
     : `${data.resumenDia.ventasCount} ventas registradas hoy.`;
   document.querySelectorAll(".fin-dueno").forEach(el => el.style.display = esDuenoHoy ? "" : "none");
@@ -4738,7 +4738,7 @@ async function cargarGastosMensuales(){
   if (ubicacionActual === "todas"){
     input.disabled = true;
     btn.disabled = true;
-    msg.textContent = `Este número es la suma de ${fmtMoney(data.gastosMensuales)} entre todas tus ubicaciones. Elige una abajo para editarla.`;
+    msg.innerHTML = `Este número es la suma de ${fmtMoney(data.gastosMensuales)} entre todas tus ubicaciones. Elige una abajo para editarla.`;
     // Antes esto solo mostraba un mensaje y el dueño tenía que acordarse de
     // subir hasta el selector del header — muchos pensaban que la caja
     // estaba rota. Ahora el selector vive aquí mismo, al lado del problema.
