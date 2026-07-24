@@ -159,11 +159,38 @@
 
   *{box-sizing:border-box;}
   html{-webkit-tap-highlight-color:transparent;}
+  /* ANTI-ZOOM-FANTASMA EN MOBIL (JFC 2026-07-23): el viewport NO tiene
+     user-scalable=no (a proposito — bloquear el pinch-zoom es mal accesibilidad
+     y Apple/Google lo desaconsejan). El problema real no era el pinch: era el
+     DOBLE-TAP nativo. Sin touch-action, dos toques rapidos sobre el mismo boton
+     (exactamente lo que hace un cajero tocando "vender" o los tiles de venta
+     rapido) el navegador movil los interpreta como gesto de zoom, la pagina
+     salta de escala a medio-render y el layout con position:fixed (banners de
+     aviso, header) se rompe visualmente — eso es el "crash" que se reportaba.
+     touch-action:manipulation en todo lo clickeable mata el delay de 300ms Y
+     el double-tap-zoom en ESE elemento puntual, sin tocar el pinch-zoom global. */
+  button, [role="button"], a, input, select, textarea, label,
+  .ir, .vender, .caja, .tag-card, summary, nav button,
+  [onclick], [data-vender-tile], [data-percha-evento]{
+    touch-action:manipulation;
+  }
+  /* Doble seguro: si algun click-handler llega a disparar dos veces por un
+     doble-tap que sí se coló (dedo lento, navegador viejo), al menos que no
+     se pueda seleccionar texto sin querer mientras se toca repetido. */
+  button, .ir, .vender, [data-vender-tile]{ -webkit-user-select:none; user-select:none; }
   ::selection{ background:var(--brass); color:var(--blanco-calido); }
   :focus-visible{ outline:2.5px solid var(--rust); outline-offset:2px; border-radius:3px; }
   ::-webkit-scrollbar{ width:10px; height:10px; }
   ::-webkit-scrollbar-track{ background:var(--paper-deep); }
   ::-webkit-scrollbar-thumb{ background:var(--brass); border-radius:6px; border:2px solid var(--paper-deep); }
+  /* ANTI-ZOOM #2 (JFC 2026-07-23): iOS Safari hace auto-zoom al enfocar
+     cualquier input/select/textarea con font-size menor a 16px — es OTRA
+     causa de "la pantalla se zoomea sola" (esta vez al escribir, no al tocar).
+     !important a proposito: en mobil, legibilidad y no-zoom-fantasma ganan
+     sobre el tamaño de fuente puntual que se haya puesto en cada control. */
+  @media (max-width:820px){
+    input, select, textarea{ font-size:16px !important; }
+  }
   body{
     margin:0;
     font-family:var(--font-body);
@@ -1952,9 +1979,9 @@ function tarjetaCliente(c, esDueno, ctx) {
   const panelEditAbierto = window.OCClienteEditOpen && window.OCClienteEditOpen.has(editKey);
   const btnEditar = `<button onclick="toggleEditarContacto('${editKey}')" style="margin-top:8px;font-size:13px;padding:4px 12px;background:#F4F7FA;border:1.5px solid var(--azul-medio,#2E6278);border-radius:6px;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;cursor:pointer;">Editar contacto ✎</button>`;
   const panelEditar = `<div id="oc-${editKey}" style="display:${panelEditAbierto ? "flex" : "none"};gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:8px 10px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;">
-      <input id="oc-edit-tel-${c.id}" type="text" value="${escHtml(c.telefono || "")}" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:120px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:13px;">
-      <input id="oc-edit-email-${c.id}" type="email" value="${escHtml(c.email || "")}" placeholder="Correo" style="flex:1;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:13px;">
-      <input id="oc-edit-notas-${c.id}" type="text" value="${escHtml(c.notas || "")}" placeholder="Notas" style="flex:2;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:13px;">
+      <input id="oc-edit-tel-${c.id}" type="text" value="${escHtml(c.telefono || "")}" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:120px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:16px;">
+      <input id="oc-edit-email-${c.id}" type="email" value="${escHtml(c.email || "")}" placeholder="Correo" style="flex:1;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:16px;">
+      <input id="oc-edit-notas-${c.id}" type="text" value="${escHtml(c.notas || "")}" placeholder="Notas" style="flex:2;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:16px;">
       <button onclick="guardarContactoCliente('${c.id}')" class="ir" style="font-size:13px;padding:6px 12px;">Guardar</button>
     </div>`;
   const puedeEvaluar = window.OCAuth && window.OCAuth.rolActual && (window.OCAuth.rolActual() === "dueno" || window.OCAuth.rolActual() === "empleado" || window.OCAuth.rolActual() === "admin");
