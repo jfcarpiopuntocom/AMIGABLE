@@ -162,4 +162,12 @@
   }
 
   window.OCFotos = { guardarFoto, leerFoto, leerTodas, borrarFoto, migrarSiHaceFalta, soportado: () => SOPORTADO };
+
+  // Fix 2026-07-23 (JFC): esta función existía pero nadie la llamaba en todo
+  // el proyecto (ni index.html, ni auth-ui.js, ni vista-perchas.js) — las
+  // fotos guardadas en localStorage antes de este archivo se quedaban ahí
+  // para siempre, sin migrar nunca a IndexedDB. Se dispara sola al cargar,
+  // sin bloquear: es idempotente (su propio FLAG evita repetirla) y no
+  // depende del orden de carga de otros scripts.
+  migrarSiHaceFalta().catch(() => {});
 })();
