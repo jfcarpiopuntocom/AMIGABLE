@@ -1411,10 +1411,22 @@
         <p style="margin:0;font-size:14px;color:var(--ink);">3. Solo dueño: más abajo, la matriz de estaciones muestra quién lleva tiempo sin comprar — ahí sabes a quién escribirle.</p>
       </div>
     </details>
-    <div class="tag-card" style="padding:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <input id="cliNombre" type="text" placeholder="Nombre del cliente" style="flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
-      <input id="cliTelefono" type="text" placeholder="Teléfono (opcional)" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
-      <button class="ir" id="btnAltaCliente" style="padding:10px 18px;">+ Agregar cliente</button>
+    <div class="tag-card" style="padding:14px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <input id="cliNombre" type="text" placeholder="Nombre del cliente" style="flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
+        <input id="cliApodo" type="text" placeholder="Apodo (opcional)" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+        <input id="cliTelefono" type="text" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:150px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
+        <input id="cliCorreo" type="email" placeholder="Correo electrónico (opcional)" style="flex:1;min-width:180px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
+      </div>
+      <div style="margin-top:10px;">
+        <input id="cliNotas" type="text" placeholder="Notas (ej: talla, preferencias, cómo lo conociste...)" style="width:100%;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
+      </div>
+      <div style="margin-top:10px;">
+        <button class="ir" id="btnAltaCliente" style="padding:10px 18px;">+ Agregar cliente</button>
+      </div>
+      <p style="font-size:12px;color:var(--ink-soft);margin:8px 0 0;">Tip: si el cliente ya reservó un evento/clase o compró un ticket con su correo/WhatsApp, no hace falta re-teclear nada — su ficha se arma sola con esos datos.</p>
     </div>
     <p id="cliMsg" style="font-size:15px;font-weight:700;margin:8px 0 0;"></p>
 
@@ -1439,12 +1451,14 @@
     <!-- Importar CSV de clientes (JFC 2026-07-07): SOLO dueno, al fondo fondo.
          cargarClientes() lo muestra/oculta segun rol. El empleado JAMAS lo ve:
          para el empleado solo existe el alta manual de arriba. -->
-    <div id="cliImportarBloque" style="display:none;margin-top:34px;padding-top:20px;border-top:2px solid var(--linea,#D7E0E8);">
-      <h3 class="seccion" style="margin-top:0;">Importar tu cartera desde un archivo</h3>
-      <p style="font-size:16px;color:var(--ink-soft);margin-top:0;">Si ya tienes tus clientes en Excel o en el telefono, guarda el archivo como <strong>CSV</strong> con dos columnas, <strong>nombre</strong> y <strong>telefono</strong>, y subelo aqui. Cada uno recibe su codigo unico automaticamente; los repetidos (mismo nombre) se saltan.</p>
-      <input type="file" id="cliCsvFile" accept=".csv,text/csv" style="font-size:16px;">
-      <p id="cliCsvMsg" style="font-size:15px;font-weight:700;margin:10px 0 0;"></p>
-    </div>
+    <details id="cliImportarBloque" style="display:none;margin-top:34px;padding-top:16px;border-top:2px solid var(--linea,#D7E0E8);">
+      <summary style="cursor:pointer;font-size:14px;font-weight:700;color:var(--ink-soft);list-style:none;">▸ Importar cartera desde un archivo (opcional)</summary>
+      <div style="margin-top:10px;">
+        <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">Si ya tienes tus clientes en Excel o en el telefono, guarda el archivo como <strong>CSV</strong> con dos columnas, <strong>nombre</strong> y <strong>telefono</strong>, y subelo aqui. Cada uno recibe su codigo unico automaticamente; los repetidos (mismo nombre) se saltan.</p>
+        <input type="file" id="cliCsvFile" accept=".csv,text/csv" style="font-size:16px;">
+        <p id="cliCsvMsg" style="font-size:15px;font-weight:700;margin:10px 0 0;"></p>
+      </div>
+    </details>
   </section>
 
   <section id="vista-comisiones" class="vista">
@@ -1912,9 +1926,38 @@ function tarjetaCliente(c, esDueno, ctx) {
   const key = ctx + "-" + c.id;
   const ev = c.evaluacion || { trato: 0, confiabilidad: 0, historial: [] };
   const dato = esDueno
-    ? `<div style="font-size:15px;color:#2C3E50;margin-top:3px;">${c.frecuencia} compra(s) en 90 días · ${fmtMoney(c.monto)}${c.recencia != null ? ` · última hace ${c.recencia} día(s)` : " · sin compras aún"}${c.email ? ` · ${escHtml(c.email)}` : ""}</div>`
+    ? `<div style="font-size:15px;color:#2C3E50;margin-top:3px;">${c.frecuencia} compra(s) en 90 días · ${fmtMoney(c.monto)}${c.recencia != null ? ` · última hace ${c.recencia} día(s)` : " · sin compras aún"}</div>`
     : "";
-  const puedeEvaluar = window.OCAuth && window.OCAuth.rolActual && (window.OCAuth.rolActual() === "dueno" || window.OCAuth.rolActual() === "empleado");
+  // FICHA COMPLETA (2026-07-23): contacto + notas + historial de eventos/tickets
+  // ya capturados en Reservas de evento/clase y en la venta de tickets — la
+  // idea es que el cliente nunca vuelva a re-teclear lo que ya escribió antes.
+  const contactoPartes = [];
+  if (c.telefono) contactoPartes.push(`${icoOC("telefono", "currentColor", 13) || "☎"} ${escHtml(c.telefono)}`);
+  if (c.email) contactoPartes.push(`✉ ${escHtml(c.email)}`);
+  const lineaContacto = contactoPartes.length
+    ? `<div style="font-size:14px;color:var(--ink-soft);margin-top:2px;">${contactoPartes.join(" · ")}</div>` : "";
+  const lineaNotas = c.notas
+    ? `<div style="font-size:13px;color:var(--ink-soft);margin-top:2px;font-style:italic;">"${escHtml(c.notas)}"</div>` : "";
+  const eventos = Array.isArray(c.eventos) ? c.eventos : [];
+  const historialEventos = eventos.length
+    ? `<details style="margin-top:6px;">
+        <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--azul-medio,#2c4a68);list-style:none;">▸ ${eventos.length} evento(s)/ticket(s) registrados</summary>
+        <div style="margin-top:4px;padding-left:4px;border-left:2px solid var(--linea,#D7E0E8);">
+          ${eventos.slice(0, 8).map(ev => `<div style="font-size:13px;color:var(--ink);margin:4px 0;">
+            <strong>${escHtml(ev.nombreEvento || (ev.tipo === "ticket" ? "Ticket" : "Evento"))}</strong>${ev.fecha ? ` · ${escHtml(String(ev.fecha).slice(0, 10))}` : ""}${ev.monto != null ? ` · ${fmtMoney(ev.monto)}` : ""}${ev.quienRecibio ? ` · recibió: ${escHtml(ev.quienRecibio)}` : ""}${ev.notas ? `<br><span style="color:var(--ink-soft);font-style:italic;">"${escHtml(ev.notas)}"</span>` : ""}
+          </div>`).join("")}
+        </div>
+      </details>` : "";
+  const editKey = "cliedit-" + c.id;
+  const panelEditAbierto = window.OCClienteEditOpen && window.OCClienteEditOpen.has(editKey);
+  const btnEditar = `<button onclick="toggleEditarContacto('${editKey}')" style="margin-top:8px;font-size:13px;padding:4px 12px;background:#F4F7FA;border:1.5px solid var(--azul-medio,#2E6278);border-radius:6px;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;cursor:pointer;">Editar contacto ✎</button>`;
+  const panelEditar = `<div id="oc-${editKey}" style="display:${panelEditAbierto ? "flex" : "none"};gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:8px 10px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;">
+      <input id="oc-edit-tel-${c.id}" type="text" value="${escHtml(c.telefono || "")}" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:120px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:13px;">
+      <input id="oc-edit-email-${c.id}" type="email" value="${escHtml(c.email || "")}" placeholder="Correo" style="flex:1;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:13px;">
+      <input id="oc-edit-notas-${c.id}" type="text" value="${escHtml(c.notas || "")}" placeholder="Notas" style="flex:2;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:13px;">
+      <button onclick="guardarContactoCliente('${c.id}')" class="ir" style="font-size:13px;padding:6px 12px;">Guardar</button>
+    </div>`;
+  const puedeEvaluar = window.OCAuth && window.OCAuth.rolActual && (window.OCAuth.rolActual() === "dueno" || window.OCAuth.rolActual() === "empleado" || window.OCAuth.rolActual() === "admin");
   // filaRate: 5 botones on/off en un .oc-rate-row con data-valor para que
   // evaluarCliente() detecte el valor actual sin depender del atributo SVG fill.
   const filaRate = (campo, valor, iconoFn, titulo) => {
@@ -1983,9 +2026,25 @@ function tarjetaCliente(c, esDueno, ctx) {
       <span style="font-family:var(--font-mono);font-size:14px;color:#2E6278;margin-left:6px;">${escHtml(c.codigo)}</span>
       ${badgeComportamiento(ev)}${chipProm}${chipEstacion}
     </div>
-    ${dato}
-    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">${controles}${btnVender}${btnDespedir}</div>
+    ${dato}${lineaContacto}${lineaNotas}${historialEventos}
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">${controles}${btnVender}${btnEditar}${btnDespedir}</div>
+    ${panelEditar}
   </div>`;
+}
+window.OCClienteEditOpen = window.OCClienteEditOpen || new Set();
+function toggleEditarContacto(key) {
+  if (window.OCClienteEditOpen.has(key)) window.OCClienteEditOpen.delete(key);
+  else window.OCClienteEditOpen.add(key);
+  const buscarEl = document.getElementById("cliBuscar");
+  renderListaViva(buscarEl ? buscarEl.value : "");
+}
+async function guardarContactoCliente(id) {
+  const telefono = document.getElementById(`oc-edit-tel-${id}`).value;
+  const email = document.getElementById(`oc-edit-email-${id}`).value;
+  const notas = document.getElementById(`oc-edit-notas-${id}`).value;
+  const res = await fetch(`${API}/clientes/${id}/contacto`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telefono, email, notas }) });
+  if (!res.ok) { const r = await res.json().catch(() => ({})); alert(r.error || "No se pudo guardar el contacto."); return; }
+  cargarClientes();
 }
 // normalizarTexto: minusculas + sin acentos, para que buscar "jose" encuentre
 // "José" y "MARIA" encuentre "maría" — indispensable en nombres en español.
@@ -2028,7 +2087,8 @@ function renderListaViva(query){
   const cont = document.getElementById("listaClientes");
   const conteo = document.getElementById("cliBuscarConteo");
   if (!cont) return;
-  const esDueno = window.OCAuth && window.OCAuth.rolActual() === "dueno";
+  const rolCli = window.OCAuth && window.OCAuth.rolActual && window.OCAuth.rolActual();
+  const esDueno = rolCli === "dueno" || rolCli === "admin";
   const q = normalizarTexto(query || "");
   const filtrados = !q ? _clientesVivosCache : _clientesVivosCache.filter(c => {
     const campos = [c.nombre, c.apodo, c.codigo, c.telefono, c.email];
@@ -2051,7 +2111,8 @@ function renderListaViva(query){
   }, 0);
 }
 async function cargarClientes(){
-  const esDueno = window.OCAuth && window.OCAuth.rolActual() === "dueno";
+  const rolCliV = window.OCAuth && window.OCAuth.rolActual && window.OCAuth.rolActual();
+  const esDueno = rolCliV === "dueno" || rolCliV === "admin";
   let grupos;
   try { grupos = await (await fetch(`${API}/clientes/matriz`)).json(); } catch (_) { return; }
   _clientesVivosCache = [].concat(grupos.verano || [], grupos.primavera || [], grupos.otono || [], grupos.invierno || [])
@@ -2136,13 +2197,16 @@ async function cargarClientes(){
     btn.addEventListener("click", async () => {
       const nombre = document.getElementById("cliNombre").value;
       const telefono = document.getElementById("cliTelefono").value;
-      const res = await fetch(`${API}/clientes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre, telefono }) });
+      const apodo = document.getElementById("cliApodo").value;
+      const email = document.getElementById("cliCorreo").value;
+      const notas = document.getElementById("cliNotas").value;
+      const res = await fetch(`${API}/clientes`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre, telefono, apodo, email, notas }) });
       const r = await res.json();
       const msgEl = document.getElementById("cliMsg");
       if (!res.ok) { msgEl.textContent = r.error; msgEl.style.color = "var(--sim-rojo-dk)"; return; }
       msgEl.textContent = `Cliente registrado con código ${r.codigo}.`;
       msgEl.style.color = "var(--sim-verde-dk)";
-      document.getElementById("cliNombre").value = ""; document.getElementById("cliTelefono").value = "";
+      ["cliNombre", "cliTelefono", "cliApodo", "cliCorreo", "cliNotas"].forEach(id => { document.getElementById(id).value = ""; });
       cargarClientes();
     });
   }
