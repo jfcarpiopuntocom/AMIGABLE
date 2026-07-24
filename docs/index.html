@@ -97,10 +97,10 @@
     --rust:#E86040;
     --rust-deep:#C05000;
     --brass:#5294AC;
-    --font-display:"Space Grotesk", "Avenir Next Condensed", sans-serif;
+    --font-display:"Space Grotesk", "Arial Black", "Arial Bold", sans-serif;
     --font-body:"Source Sans 3", "Segoe UI", sans-serif;
     --font-mono:"JetBrains Mono", monospace;
-    --font-serif:"Space Grotesk", "Avenir Next Condensed", sans-serif;
+    --font-serif:"Space Grotesk", "Arial Black", "Arial Bold", sans-serif;
     --nav-h:58px;
     --sidebar-w:248px;
     --header-h:104px;
@@ -207,12 +207,12 @@
   .tag-card{
     position:relative;
     background:var(--blanco-calido);
-    border:1.5px solid rgba(33,28,20,0.22);
+    border:1.5px solid #C9C8C8;
     /* ESQUINA CORTADA — DORMANT (JFC 2026-07-22): el corte + la diagonal se
        leian como triangulito punta arriba en cada card de producto. Tarjetas
        rectangulares blocky ahora. Para re-activar el corte de etiqueta:
        clip-path:polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%); */
-    box-shadow:0 1px 2px rgba(33,28,20,0.06), 0 6px 16px -8px rgba(33,28,20,0.28);
+    box-shadow:0 1px 2px #EBECED, 0 6px 16px -8px #BCBBBA;
     transition:box-shadow .2s ease, transform .2s ease;
   }
   .tag-card::before{
@@ -236,32 +236,36 @@
   @media (hover:hover){
     .caja.tag-card:hover, .etiqueta-card.tag-card:hover{
       transform:translateY(-3px);
-      box-shadow:0 2px 3px rgba(33,28,20,0.08), 0 14px 26px -10px rgba(33,28,20,0.34);
+      box-shadow:0 2px 3px #E7E7E9, 0 14px 26px -10px #AFAEAC;
     }
   }
 
   /* ---------- botones tipo sello ---------- */
+  /* JFC 2026-07-23: sello usa --font-display sin font-weight -> caia al peso
+     400 (no cargado por Google Fonts, solo 500/600/700) y se veia flaco.
+     Fix mas abajo: font-weight:700 explicito. */
   button{
     font-family:var(--font-display);
+    font-weight:700;
     text-transform:uppercase;
     letter-spacing:0.04em;
     border:2px solid var(--ink);
     border-radius:5px;
     background:var(--blanco-calido);
     color:var(--ink);
-    box-shadow:3px 3px 0 rgba(33,28,20,0.18);
+    box-shadow:3px 3px 0 #D1D1D1;
     cursor:pointer;
     transition:transform .1s ease, box-shadow .1s ease, background-color .15s ease;
   }
   @media (hover:hover){
     button:not(:disabled):hover{
       transform:translate(-1px,-1px);
-      box-shadow:4px 4px 0 rgba(33,28,20,0.2);
+      box-shadow:4px 4px 0 #CDCDCD;
     }
   }
   button:active:not(:disabled){
     transform:translate(2px,2px);
-    box-shadow:0 0 0 rgba(33,28,20,0);
+    box-shadow:none;
   }
 
   /* ================= HEADER ================= */
@@ -354,7 +358,7 @@
     font-family:Verdana,"Helvetica Neue",Helvetica,Arial,sans-serif;
     font-style:italic;
     font-size:13px;
-    color:#CCCCCC;
+    color:#C4CDD8;
     letter-spacing:0.02em;
     margin:2px 0 3px;
     font-weight:700;
@@ -380,8 +384,8 @@
     font-weight:600;
     letter-spacing:0.07em;
     text-transform:uppercase;
-    color:#CCCCCC;
-    -webkit-text-fill-color:#CCCCCC;
+    color:#C4CDD8;
+    -webkit-text-fill-color:#C4CDD8;
   }
   .selector-ubicacion select{
     font-family:var(--font-display);
@@ -445,7 +449,7 @@
   nav button svg{ width:18px; height:18px; transition:transform .15s ease; }
   nav button span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
   @media (hover:hover){
-    nav button:not(.activo):hover{ background:rgba(15,25,35,0.06); color:var(--ink); }
+    nav button:not(.activo):hover{ background:#EAECEE; color:var(--ink); }
   }
   nav button svg{ width:18px; height:18px; }
   nav button[data-vista="hoy"].activo{background:var(--sim-verde);color:#fff;}
@@ -482,14 +486,17 @@
     padding:14px 24px;
     margin-bottom:10px;
     color:var(--blanco-calido);
-    border-color:rgba(255,255,255,0.35);
-    box-shadow:0 1px 2px rgba(0,0,0,0.1), 0 14px 30px -14px rgba(33,28,20,0.5);
-    background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,0.09) 1px, transparent 0);
+    border-color:#D9D9D9;
+    box-shadow:0 1px 2px #DFE0E2, 0 14px 30px -14px #8D8B88;
     background-size:14px 14px, auto;
   }
-  .hero-semaforo.verde{background-color:var(--sim-verde); --tc-bg:var(--sim-verde);}
-  .hero-semaforo.amarillo{background-color:var(--sim-amarillo); --tc-bg:var(--sim-amarillo);}
-  .hero-semaforo.rojo{background-color:var(--sim-rojo); --tc-bg:var(--sim-rojo);}
+  /* Borde y textura de puntos por estado: antes eran blancos con alpha (Ley 1),
+     ahora son el blend solido real de blanco sobre el color de fondo de cada
+     estado, calculado a mano. Si se agrega un estado nuevo, calcular su blend
+     y sumarlo aca (no volver a usar rgba con alpha). */
+  .hero-semaforo.verde{background-color:var(--sim-verde); --tc-bg:var(--sim-verde); border-color:#59DBA9; background-image:radial-gradient(circle at 1px 1px, #17CD86 1px, transparent 0);}
+  .hero-semaforo.amarillo{background-color:var(--sim-amarillo); --tc-bg:var(--sim-amarillo); border-color:#FFDB59; background-image:radial-gradient(circle at 1px 1px, #FFCC17 1px, transparent 0);}
+  .hero-semaforo.rojo{background-color:var(--sim-rojo); --tc-bg:var(--sim-rojo); border-color:#F07C96; background-image:radial-gradient(circle at 1px 1px, #EA486C 1px, transparent 0);}
   .hero-semaforo h2{
     margin:0 0 4px 0;
     font-family:var(--font-serif);
@@ -582,7 +589,7 @@
     position:relative;
     transition:transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .caja:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,0.18);}
+  .caja:hover{transform:translateY(-2px); box-shadow:0 6px 18px #CBCCCE;}
   .caja:active{transform:translateY(0); box-shadow:none;}
   /* Intensidad/degradé por color (JFC 2026-07-04): el color base y el
      estado que dispara cada uno NO cambian (eso sigue siendo el canon
@@ -639,8 +646,8 @@
   .caja.amarillo.n3 .nombre,.caja.amarillo.n3 .stock{color:#FFFFFF !important;}
   .caja.amarillo.n3 .detalle{color:rgba(255,255,255,1) !important;}
   @keyframes pulsoEmergencia{
-    0%, 100%{box-shadow:0 0 0 0 rgba(232,54,93,0.55), 0 4px 8px rgba(0,0,0,0.18);}
-    50%{box-shadow:0 0 0 8px rgba(232,54,93,0), 0 4px 8px rgba(0,0,0,0.18);}
+    0%, 100%{box-shadow:0 0 0 0 #EF8EA4, 0 4px 8px #CBCCCE;}
+    50%{box-shadow:0 0 0 8px #EF8EA4, 0 4px 8px #CBCCCE;}
   }
   /* Fondos oscuros: texto blanco */
   .caja.verde .nombre,.caja.rojo .nombre,.caja.azul .nombre,.caja.naranja .nombre,.caja.negro .nombre{color:#FFFFFF !important;}
@@ -665,7 +672,7 @@
   .caja .estrella-badge{
     position:absolute; top:8px; right:8px;
     font-size:20px; line-height:1;
-    filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    filter:drop-shadow(0 1px 2px #AEAEB0);
   }
   .caja .nombre{
     font-family:var(--font-display);
@@ -870,7 +877,7 @@
     display:none;
     position:fixed;
     top:0;left:0;right:0;bottom:0;
-    background:rgba(28,48,73,0.82);
+    background:#1C3049;
     z-index:50;
     overflow:auto;
     padding:20px;
@@ -898,6 +905,7 @@
   }
   .etiqueta-imprimible h4{
     font-family:var(--font-display);
+    font-weight:700;
     font-size:20px;
     color:var(--ink);
     margin:14px 0 4px 0;
@@ -954,12 +962,12 @@
     min-width:420px;
     border-collapse:collapse;
     background:var(--blanco-calido);
-    border:1.5px solid rgba(33,28,20,0.22);
+    border:1.5px solid #C9C8C8;
   }
   table.reporte th, table.reporte td{
     text-align:left;
     padding:12px 14px;
-    border-bottom:1px solid rgba(33,28,20,0.13);
+    border-bottom:1px solid #DCDCDD;
     font-size:14px;
   }
   table.reporte th{
@@ -975,7 +983,7 @@
   /* ================= ACTIVIDAD ================= */
   .actividad-item{
     background:var(--blanco-calido);
-    border:1.5px solid rgba(33,28,20,0.22);
+    border:1.5px solid #C9C8C8;
     padding:12px 15px;
     border-radius:5px;
     margin-bottom:9px;
@@ -1051,15 +1059,15 @@
   }
 
   /* ---------- SPLASH breve de arranque (marca "Amigable-123" ~0.8s) ---------- */
-  #oc-splash{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--azul-oscuro);display:flex;align-items:center;justify-content:center;z-index:999;transition:opacity .45s ease;
+  #oc-splash{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--azul-oscuro);display:flex;align-items:center;justify-content:center;z-index:999;transition:transform .45s ease;
     /* pointer-events:none SIEMPRE: es decorativo, jamas debe bloquear taps.
        La animacion CSS con forwards lo oculta AUNQUE el JS falle (red de
        seguridad para Safari/iOS): no depende de nadie para quitarse. */
     pointer-events:none;
     animation:ocSplashOut .45s ease 1.15s forwards;}
-  @keyframes ocSplashOut{ to{ opacity:0; visibility:hidden; } }
+  @keyframes ocSplashOut{ to{ transform:scale(.92); visibility:hidden; } }
   #oc-splash{flex-direction:column;gap:16px;}#oc-splash img{width:min(72vw,340px);height:auto;display:block;}#oc-splash .oc-splash-tag{font-family:var(--font-display,sans-serif);font-size:17px;font-weight:700;color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;margin:0;text-align:center;letter-spacing:.01em;}
-  #oc-splash.fuera{opacity:0;pointer-events:none;}
+  #oc-splash.fuera{transform:scale(.92);pointer-events:none;visibility:hidden;}
   /* ---------- Landscape en telefonos: compactar header/hero ---------- */
   @media (orientation:landscape) and (max-height:520px){
     header{min-height:64px;padding:10px 20px;}
@@ -1146,7 +1154,7 @@
       <h2 id="heroTitulo">Cargando tu negocio...</h2>
       <p id="heroSubtitulo"></p>
       <!-- Reloj (sin clima: soberanía, cero llamadas externas). Actualiza cada 20s. -->
-      <div id="heroReloj" style="position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,.5);color:#fff;-webkit-text-fill-color:#fff;font-family:var(--font-mono,monospace);font-size:13px;font-weight:700;padding:4px 10px;border-radius:20px;"></div>
+      <div id="heroReloj" style="position:absolute;bottom:10px;right:12px;background:#0F1923;color:#fff;-webkit-text-fill-color:#fff;font-family:var(--font-mono,monospace);font-size:13px;font-weight:700;padding:4px 10px;border-radius:20px;"></div>
     </div>
 
     <details style="margin:-4px 0 12px;font-size:14px;">
@@ -1690,7 +1698,7 @@ async function cargarGridVender(){
     const visual = p.foto
       ? `<img src="${p.foto}" alt="" style="width:100%;height:64px;object-fit:cover;border-radius:6px;">`
       : `<div style="width:100%;height:64px;border-radius:6px;background:var(--sim-${p.estado}-bg,#E8ECF2);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--sim-${p.estado}-dk,#2C3E50);">${escHtml(p.nombre.charAt(0).toUpperCase())}</div>`;
-    return `<button data-vender-tile="${p.id}" ${sinStock ? "disabled" : ""} style="text-align:left;padding:8px;border:2px solid var(--sim-${p.estado},#C4CDD8);border-radius:10px;background:#FFFFFF;cursor:${sinStock ? "not-allowed" : "pointer"};touch-action:manipulation;${sinStock ? "filter:grayscale(1);" : ""}">
+    return `<button data-vender-tile="${p.id}" ${sinStock ? "disabled" : ""} style="text-align:left;padding:8px;border:2px solid ${sinStock ? "#B0183E" : `var(--sim-${p.estado},#C4CDD8)`};border-radius:10px;background:#FFFFFF;cursor:${sinStock ? "not-allowed" : "pointer"};touch-action:manipulation;">
       ${visual}
       <div style="font-size:15px;font-weight:700;color:#0F1923;margin-top:6px;line-height:1.25;">${p.estrella ? "⭐ " : ""}${escHtml(p.nombre)}</div>
       <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px;">
@@ -1760,7 +1768,7 @@ if (elCierreDia) elCierreDia.addEventListener("toggle", function(){ if (this.ope
   // Crear el modal una sola vez y adjuntarlo al body.
   const overlay = document.createElement("div");
   overlay.id = "oc-nuevo-cli-modal";
-  overlay.style.cssText = "position:fixed;inset:0;z-index:9995;background:rgba(21,40,64,.82);display:none;align-items:flex-end;justify-content:center;";
+  overlay.style.cssText = "position:fixed;inset:0;z-index:9995;background:#152840;display:none;align-items:flex-end;justify-content:center;";
   overlay.innerHTML = `
     <div style="background:var(--blanco-calido,#fbf5e8);width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:20px 18px 28px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
@@ -2016,7 +2024,7 @@ function tarjetaCliente(c, esDueno, ctx) {
       <label style="font-size:13px;font-weight:700;color:#C0392B !important;-webkit-text-fill-color:#C0392B !important;">Hora del incidente:</label>
       <input type="time" id="oc-inc-${c.id}" value="${ahoraHora}"
         style="padding:3px 8px;border:1.5px solid #E0B0AD;border-radius:5px;font-size:13px;color:#0F1923 !important;-webkit-text-fill-color:#0F1923 !important;background:#fff;">
-      <span style="font-size:13px;color:#999999 !important;-webkit-text-fill-color:#999999 !important;">(para conciliación con cámaras / audios)</span>
+      <span style="font-size:13px;color:#9D7B79 !important;-webkit-text-fill-color:#9D7B79 !important;">(para conciliación con cámaras / audios)</span>
     </div>` : "";
   const panelAbierto = window.OCRateOpen.has(key);
   const controles = puedeEvaluar ? `
@@ -2160,7 +2168,7 @@ async function cargarClientes(){
     const celda = (k) => { const e = ESTACIONES[k], l = grupos[k] || []; return `<div style="background:${e.bg};border:2px solid ${e.borde};border-radius:10px;padding:12px;min-height:90px;">
       <div style="font-weight:700;font-size:15px;color:${e.tinta};">${e.icono} ${e.titulo.split(" — ")[0]}</div>
       <div style="font-size:14px;color:#0F1923;margin-top:6px;">${l.length ? l.map((c) => escHtml(c.nombre.split(" ")[0])).join(", ") : "—"}</div></div>`; };
-    mc.innerHTML = `<h4 style="font-family:var(--font-display);font-size:16px;margin:0 0 4px;">Matriz de estaciones</h4>
+    mc.innerHTML = `<h4 style="font-family:var(--font-display);font-weight:700;font-size:16px;margin:0 0 4px;">Matriz de estaciones</h4>
       <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">Derecha: compran hace poco. Arriba: dejan más dinero. La esquina naranja es donde se recupera plata perdida.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         ${celda("otono")}${celda("verano")}
@@ -2190,7 +2198,7 @@ async function cargarClientes(){
       const neutros = comp.neutro || [];
       const despedidos = comp.despedidos || [];
       mc.innerHTML += `
-        <h4 style="font-family:var(--font-display);font-size:16px;margin:24px 0 4px;">Matriz de comportamiento</h4>
+        <h4 style="font-family:var(--font-display);font-weight:700;font-size:16px;margin:24px 0 4px;">Matriz de comportamiento</h4>
         <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">El negocio evalúa al cliente. Toca "Calificar" en cada tarjeta y asigna Cumplimiento y Actitud del 1 al 5.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           ${celdaComp(CUAD[0])}${celdaComp(CUAD[1])}
@@ -2500,7 +2508,7 @@ async function cargarHoy(){
     const dia = Math.floor((ahora - new Date(ahora.getFullYear(), 0, 0)) / 86400000);
     mood.innerHTML = `<div class="tag-card" style="margin-top:16px;padding:16px;border-left:5px solid var(--sim-azul);">
       <div style="font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">El apunte de hoy</div>
-      <div style="font-family:var(--font-display);font-size:17px;color:var(--ink);line-height:1.35;">${MOODS[dia % MOODS.length]}</div>
+      <div style="font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--ink);line-height:1.35;">${MOODS[dia % MOODS.length]}</div>
     </div>`;
   }
 
@@ -2606,7 +2614,7 @@ function renderBloom(estado, nivel){
       const varName = stop ? `--sim-${estado}-${stop}` : `--sim-${estado}`;
       const lit = i < nivel;
       const h = 6 + i * 4;
-      return `<span style="width:16px;height:${h}px;border-radius:2px;background:var(${varName});opacity:${lit ? 1 : 0.25};border:1px solid rgba(0,0,0,0.18);display:block;"></span>`;
+      return `<span style="width:16px;height:${h}px;border-radius:2px;background:${lit ? `var(${varName})` : "transparent"};border:1px solid #CBCCCE;display:block;"></span>`;
     }).join("");
   return `<div class="bloom-sinclair" title="Intensidad ${nivel}/3" style="display:flex;flex-direction:column;gap:3px;margin:6px 0 2px;">
     <div style="display:flex;gap:3px;align-items:flex-end;">${barras}</div>
@@ -2981,7 +2989,7 @@ async function abrirEditorComision(id, u){
       <div class="titulo">💰 Comisión — ${escHtml(u.nombre)}</div>
       <p style="font-size:13px;color:var(--ink-soft);">Comisión base y meta mensual. Si agregas tramos, la comisión sube según cuánto se acerque a la meta (ej: 25% hasta el 80% de la meta, 30% de ahí en adelante).</p>
       ${toggleHtml}
-      <div id="oc-com-camposPropios" style="${(u.promotoraId && !u.usarComisionPropia) ? "opacity:.45;" : ""}">
+      <div id="oc-com-camposPropios" style="${(u.promotoraId && !u.usarComisionPropia) ? "pointer-events:none;background:var(--azul-suave,#dde5ec);border-radius:8px;padding:8px;" : ""}">
         <div style="display:flex;gap:10px;margin-top:10px;">
           <label style="flex:1;font-size:14px;">Comisión base %<br><input id="oc-com-base" type="number" min="0" max="100" step="1" value="${Number(u.comisionSocio)||0}" ${inp}></label>
           <label style="flex:1;font-size:14px;">Meta mensual $<br><input id="oc-com-meta" type="number" min="0" step="1" value="${Number(u.metaMensual)||0}" ${inp}></label>
@@ -3952,7 +3960,7 @@ function mostrarMenuBarcode(e, svgBarcode, producto){
   document.getElementById("oc-menu-barcode")?.remove();
   const menu = document.createElement("div");
   menu.id = "oc-menu-barcode";
-  menu.style.cssText = "position:fixed;z-index:10000;background:var(--blanco-calido,#F8F9FB);border:2px solid var(--sim-plata-dk,#8A9AAA);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.35);padding:8px;display:flex;flex-direction:column;gap:4px;min-width:220px;";
+  menu.style.cssText = "position:fixed;z-index:10000;background:var(--blanco-calido,#F8F9FB);border:2px solid var(--sim-plata-dk,#8A9AAA);border-radius:8px;box-shadow:0 6px 18px #A1A2A3;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:220px;";
   const rect = e.target.closest("#barrasClicable").getBoundingClientRect();
   menu.style.left = Math.max(8, rect.left) + "px";
   menu.style.top = (rect.bottom + 8) + "px";
@@ -5073,13 +5081,13 @@ window.dialogosBloqueados = function () {
      lenguaje visual del resto de la app.
      Uso: if (!(await ocConfirm("¿Seguro?"))) return;   await ocAlert("Error X");
      ===================================================================== -->
-<div id="oc-comision-overlay" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(15,20,30,0.6);align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
+<div id="oc-comision-overlay" style="display:none;position:fixed;inset:0;z-index:10001;background:#0F141E;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
   <div id="oc-comision-caja" style="max-width:460px;width:100%;margin:16px auto;"></div>
 </div>
-<div id="oc-ventainfo-overlay" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(15,20,30,0.6);align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
+<div id="oc-ventainfo-overlay" style="display:none;position:fixed;inset:0;z-index:10001;background:#0F141E;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
   <div id="oc-ventainfo-caja" style="max-width:460px;width:100%;margin:16px auto;"></div>
 </div>
-<div id="oc-modal-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(15,20,30,0.55);align-items:center;justify-content:center;padding:20px;">
+<div id="oc-modal-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:#0F141E;align-items:center;justify-content:center;padding:20px;">
   <div id="oc-modal-caja" class="tag-card" style="max-width:380px;width:100%;text-align:left;background:var(--blanco-calido,#fbf5e8);padding:22px 20px;border-radius:12px;">
     <div id="oc-modal-msg" style="font-size:15px;color:var(--ink,#211c14);white-space:pre-line;margin-bottom:18px;"></div>
     <div id="oc-modal-botones" style="display:flex;gap:10px;justify-content:flex-end;"></div>
