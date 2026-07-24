@@ -900,7 +900,7 @@
     overflow:auto;
     padding:20px;
   }
-  .modal-fondo.activo{display:flex; align-items:center; justify-content:center;}
+  .modal-fondo.activo{display:flex; align-items:flex-start; justify-content:center; padding-top:40px;}
   .etiqueta-imprimible{
     background:var(--blanco-calido);
     padding:30px;
@@ -1803,7 +1803,7 @@ if (elCierreDia) elCierreDia.addEventListener("toggle", function(){ if (this.ope
   overlay.id = "oc-nuevo-cli-modal";
   overlay.style.cssText = "position:fixed;inset:0;z-index:9995;background:#152840;display:none;align-items:flex-end;justify-content:center;";
   overlay.innerHTML = `
-    <div style="background:var(--blanco-calido,#fbf5e8);width:100%;max-width:480px;border-radius:4px 4px 0 0;padding:20px 18px 28px;">
+    <div style="background:var(--blanco-calido,#fbf5e8);width:100%;max-width:480px;border-radius:4px 4px 0 0;padding:20px 18px 28px;max-height:90vh;overflow-y:auto;box-sizing:border-box;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
         <strong style="font-family:var(--font-display);font-size:17px;color:var(--ink);flex:1;">Nuevo cliente</strong>
         <button id="oc-ncli-cerrar" style="font-size:14px;padding:6px 12px;border:2px solid var(--azul-medio,#2c4a68);border-radius:4px;background:var(--azul-medio,#2c4a68);color:#fbf5e8;cursor:pointer;">Cerrar</button>
@@ -3995,7 +3995,9 @@ function mostrarMenuBarcode(e, svgBarcode, producto){
   menu.id = "oc-menu-barcode";
   menu.style.cssText = "position:fixed;z-index:10000;background:var(--blanco-calido,#F8F9FB);border:2px solid var(--sim-plata-dk,#8A9AAA);border-radius:4px;box-shadow:0 6px 18px #A1A2A3;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:220px;";
   const rect = e.target.closest("#barrasClicable").getBoundingClientRect();
-  menu.style.left = Math.max(8, rect.left) + "px";
+  const anchoMenu = 220;
+  const izqMax = Math.max(8, window.innerWidth - anchoMenu - 8);
+  menu.style.left = Math.min(Math.max(8, rect.left), izqMax) + "px";
   menu.style.top = (rect.bottom + 8) + "px";
   menu.innerHTML = `
     <button id="oc-mb-imprimir" style="text-align:left;padding:10px;border:none;background:transparent;border-radius:4px;cursor:pointer;font-size:14px;color:var(--ink,#211c14);">Imprimir solo el código</button>
@@ -4599,7 +4601,7 @@ function ofrecerResumenSemanalSiToca(){
   // (2026-07-17) el sello de 'ya ofrecido' se guarda al RESPONDER, no al pintar —
   // si el toast falla, la oferta no se quema por 7 dias.
   const toast = document.createElement("div");
-  toast.style.cssText = "position:fixed;bottom:16px;left:16px;right:16px;max-width:420px;margin:0 auto;background:#0F1923;border:2px solid #25D366;border-radius:4px;padding:14px 16px;z-index:9500;box-shadow:0 8px 30px #060d14;";
+  toast.style.cssText = "position:fixed;bottom:calc(var(--nav-h,64px) + 16px + env(safe-area-inset-bottom,0px));left:16px;right:16px;max-width:420px;margin:0 auto;background:#0F1923;border:2px solid #25D366;border-radius:4px;padding:14px 16px;z-index:9500;box-shadow:0 8px 30px #060d14;";
   toast.innerHTML = `<p style="color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;font-size:14px;margin:0 0 10px;font-weight:700;">¿Enviarte el resumen de esta semana por WhatsApp?</p>
     <div style="display:flex;gap:8px;">
       <button id="oc-resumen-sem-si" style="flex:1;min-height:44px;border:none;border-radius:4px;background:#25D366;color:#04210f !important;-webkit-text-fill-color:#04210f !important;font-weight:700;cursor:pointer;">Enviar</button>
@@ -5056,7 +5058,7 @@ window.addEventListener("oc-datos-importados", async () => {
     try {
       const d = document.createElement("div");
       d.setAttribute("role", "status");
-      d.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:10004;background:#0F1923;border-top:3px solid #E86040;padding:10px 14px;text-align:center;";
+      d.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:10004;background:#0F1923;border-top:3px solid #E86040;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));text-align:center;";
       d.innerHTML = '<span style="color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:15px;font-weight:700;">Algo falló en esta pantalla. Recarga la página; si se repite, avísanos por WhatsApp.</span>' +
         ' <button style="margin-left:10px;min-height:40px;padding:8px 14px;border-radius:4px;border:2px solid #5294AC;background:transparent;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:14px;font-weight:700;cursor:pointer;" onclick="location.reload()">Recargar</button>';
       (document.body || document.documentElement).appendChild(d);
@@ -5120,7 +5122,7 @@ window.dialogosBloqueados = function () {
 <div id="oc-ventainfo-overlay" style="display:none;position:fixed;inset:0;z-index:10001;background:#0F141E;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;">
   <div id="oc-ventainfo-caja" style="max-width:460px;width:100%;margin:16px auto;"></div>
 </div>
-<div id="oc-modal-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:#0F141E;align-items:center;justify-content:center;padding:20px;">
+<div id="oc-modal-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:#0F141E;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;">
   <div id="oc-modal-caja" class="tag-card" style="max-width:380px;width:100%;text-align:left;background:var(--blanco-calido,#fbf5e8);padding:22px 20px;border-radius:4px;">
     <div id="oc-modal-msg" style="font-size:15px;color:var(--ink,#211c14);white-space:pre-line;margin-bottom:18px;"></div>
     <div id="oc-modal-botones" style="display:flex;gap:10px;justify-content:flex-end;"></div>
