@@ -1592,6 +1592,15 @@ function fmtMoney(n){
   return `<span style="font-family:var(--font-mono);font-weight:700;">$${Number(n).toFixed(2)}</span>`;
 }
 
+// Fix (2026-07-24): al iniciar sesion, refrescar la seccion "Hoy" para que las
+// tarjetas exclusivas del dueno (fin-dueno: Entro/Salio/Ganancia/Inventario/mood)
+// se muestren segun el rol RECIEN conocido. Antes, cargarHoy() corria una sola
+// vez al cargar (rol aun null -> se ocultaban) y para el dueno nunca se repetia,
+// asi que el dueno veia lo mismo que un empleado. Idempotente y barato.
+window.addEventListener("oc-login", function () {
+  try { if (typeof cargarHoy === "function") cargarHoy(); } catch (_) {}
+});
+
 async function cargarUbicaciones(){
   // Reforzado (JFC 2026-07-18): sin este try/catch, un fallo de red aqui
   // (offline, servidor caido) tiraba una excepcion no atrapada que dejaba el
