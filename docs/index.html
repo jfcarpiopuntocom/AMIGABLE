@@ -2468,13 +2468,13 @@ async function cargarHoy(){
     : `${data.resumenDia.ventasCount} ventas registradas hoy.`;
   document.querySelectorAll(".fin-dueno").forEach(el => el.style.display = esDuenoHoy ? "" : "none");
 
-  document.getElementById("resEntra").textContent = fmtMoney(data.resumenDia.entra);
-  document.getElementById("resSale").textContent = fmtMoney(data.resumenDia.sale);
-  document.getElementById("resGanancia").textContent = fmtMoney(data.resumenDia.gananciaHoy);
-  document.getElementById("resInventario").textContent = fmtMoney(data.resumenDia.inventarioValorizado);
+  document.getElementById("resEntra").innerHTML = fmtMoney(data.resumenDia.entra);
+  document.getElementById("resSale").innerHTML = fmtMoney(data.resumenDia.sale);
+  document.getElementById("resGanancia").innerHTML = fmtMoney(data.resumenDia.gananciaHoy);
+  document.getElementById("resInventario").innerHTML = fmtMoney(data.resumenDia.inventarioValorizado);
   document.getElementById("resVentasCount").textContent = data.resumenDia.ventasCount;
   const ticketProm = data.resumenDia.ventasCount > 0 ? data.resumenDia.entra / data.resumenDia.ventasCount : 0;
-  document.getElementById("resTicketProm").textContent = fmtMoney(ticketProm);
+  document.getElementById("resTicketProm").innerHTML = fmtMoney(ticketProm);
 
   const puntito = (color) => `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:currentColor;margin-right:9px;flex-shrink:0;"></span>`;
   const lista = document.getElementById("listaAlertas");
@@ -4458,9 +4458,9 @@ async function cargarComisiones(){
             oninput="(function(v){
               var com=(v*${pctReal.toFixed(4)});
               var neto=v-com;
-              document.getElementById('sim-lbl-${uid}').textContent=fmtMoney(v);
-              document.getElementById('sim-com-${uid}').textContent=fmtMoney(com);
-              document.getElementById('sim-net-${uid}').textContent=fmtMoney(neto);
+              document.getElementById('sim-lbl-${uid}').innerHTML=fmtMoney(v);
+              document.getElementById('sim-com-${uid}').innerHTML=fmtMoney(com);
+              document.getElementById('sim-net-${uid}').innerHTML=fmtMoney(neto);
             })(+this.value)">
           <div style="display:flex;gap:16px;font-size:14px;margin-top:4px;">
             <span>Comisión promotor/a: <strong id="sim-com-${uid}" style="color:#C0392B;">${fmtMoney(f.comisionSocio)}</strong></span>
