@@ -36,16 +36,16 @@
     // Colores solidos siempre (regla visual JFC): texto blanco puro sobre
     // tarjeta oscura, acentos de marca. Botones min 44px.
     st.textContent =
-      "#oc-tut-foco{position:fixed;z-index:10060;pointer-events:none;border:3px solid #E86040;border-radius:10px;box-shadow:0 0 0 9999px rgba(15,25,35,.78);transition:all .28s ease;}" +
+      "#oc-tut-foco{position:fixed;z-index:10060;pointer-events:none;border:3px solid #E86040;border-radius:10px;box-shadow:0 0 0 9999px #0F1923;transition:all .28s ease;}" +
       "#oc-tut-card{position:fixed;z-index:10061;width:min(340px,calc(100vw - 24px));background:#0F1923;border:2px solid #E86040;border-radius:12px;padding:16px;box-shadow:0 10px 34px #060d14;}" +
-      "#oc-tut-card .paso{font-family:var(--font-mono,monospace);font-size:13px;font-weight:700;letter-spacing:.06em;color:#28ECAA !important;-webkit-text-fill-color:#28ECAA !important;margin:0 0 4px;}" +
+      "#oc-tut-card .paso{font-family:var(--font-mono,monospace);font-size:14px;font-weight:700;letter-spacing:.06em;color:#28ECAA !important;-webkit-text-fill-color:#28ECAA !important;margin:0 0 4px;}" +
       "#oc-tut-card h3{font-family:var(--font-display,sans-serif);font-size:19px;font-weight:700;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;margin:0 0 6px;line-height:1.2;}" +
-      "#oc-tut-card p{font-size:15px;line-height:1.45;color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;margin:0 0 12px;}" +
+      "#oc-tut-card p{font-size:16px;line-height:1.45;color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;margin:0 0 12px;}" +
       "#oc-tut-card .fila{display:flex;gap:8px;}" +
       "#oc-tut-card button{min-height:44px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;}" +
       "#oc-tut-atras{flex:0 0 auto;padding:0 14px;border:2px solid #5294AC;background:transparent;color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;}" +
       "#oc-tut-sig{flex:1;border:2px solid #E86040;background:#E86040;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;}" +
-      "#oc-tut-salir{width:100%;margin-top:8px;min-height:44px;border:none;background:transparent;color:#CCCCCC !important;-webkit-text-fill-color:#CCCCCC !important;font-size:13px;text-decoration:underline;cursor:pointer;}" +
+      "#oc-tut-salir{width:100%;margin-top:8px;min-height:44px;border:none;background:transparent;color:#5294AC !important;-webkit-text-fill-color:#5294AC !important;font-size:14px;text-decoration:underline;cursor:pointer;}" +
       "@media (prefers-color-scheme: dark){#oc-tut-card h3{color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;}#oc-tut-card p{color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;}}";
     document.head.appendChild(st);
   }
