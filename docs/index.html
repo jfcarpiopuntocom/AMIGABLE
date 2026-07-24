@@ -182,7 +182,7 @@
   :focus-visible{ outline:2.5px solid var(--rust); outline-offset:2px; border-radius:3px; }
   ::-webkit-scrollbar{ width:10px; height:10px; }
   ::-webkit-scrollbar-track{ background:var(--paper-deep); }
-  ::-webkit-scrollbar-thumb{ background:var(--brass); border-radius:6px; border:2px solid var(--paper-deep); }
+  ::-webkit-scrollbar-thumb{ background:var(--brass); border-radius:4px; border:2px solid var(--paper-deep); }
   /* ANTI-ZOOM #2 (JFC 2026-07-23): iOS Safari hace auto-zoom al enfocar
      cualquier input/select/textarea con font-size menor a 16px — es OTRA
      causa de "la pantalla se zoomea sola" (esta vez al escribir, no al tocar).
@@ -248,9 +248,9 @@
     font-family:var(--font-display);
     font-weight:700;
     text-transform:uppercase;
-    letter-spacing:0.04em;
+    letter-spacing:0.08em;
     border:2px solid var(--ink);
-    border-radius:5px;
+    border-radius:4px;
     background:var(--blanco-calido);
     color:var(--ink);
     box-shadow:3px 3px 0 #D1D1D1;
@@ -357,7 +357,7 @@
     display:block;
     font-family:Verdana,"Helvetica Neue",Helvetica,Arial,sans-serif;
     font-style:italic;
-    font-size:13px;
+    font-size:14px;
     color:#C4CDD8;
     letter-spacing:0.02em;
     margin:2px 0 3px;
@@ -365,8 +365,8 @@
   }
   header .sub{
     font-family:var(--font-mono);
-    font-size:13px;
-    letter-spacing:0.04em;
+    font-size:14px;
+    letter-spacing:0.08em;
     color:var(--brass);
     margin-top:3px;
     text-transform:uppercase;
@@ -380,9 +380,9 @@
   }
   .selector-ubicacion label{
     font-family:var(--font-body);
-    font-size:13px;
+    font-size:14px;
     font-weight:600;
-    letter-spacing:0.07em;
+    letter-spacing:0.08em;
     text-transform:uppercase;
     color:#C4CDD8;
     -webkit-text-fill-color:#C4CDD8;
@@ -392,7 +392,7 @@
     font-weight:600;
     font-size:14px;
     padding:8px 12px;
-    border-radius:5px;
+    border-radius:4px;
     border:2px solid var(--brass);
     background:var(--blanco-calido);
     color:var(--azul-oscuro);
@@ -434,7 +434,7 @@
     align-items:center;
     justify-content:center;
     gap:3px;
-    font-size:11px;
+    font-size:14px;
     font-weight:600;
     letter-spacing:0.01em;
     padding:4px 2px;
@@ -443,7 +443,7 @@
     border:none;
     box-shadow:none;
     color:var(--ink-soft);
-    border-radius:8px;
+    border-radius:4px;
     transition:background-color .15s ease, color .15s ease;
   }
   nav button svg{ width:18px; height:18px; transition:transform .15s ease; }
@@ -505,7 +505,7 @@
     line-height:1.12;
   }
   .hero-semaforo p{
-    font-size:13px;
+    font-size:14px;
     margin:0;
     color:var(--blanco-calido);
   }
@@ -522,10 +522,10 @@
   }
   .tarjeta .etiqueta{
     font-family:var(--font-mono);
-    font-size:13px;
+    font-size:14px;
     color:var(--ink-soft);
     text-transform:uppercase;
-    letter-spacing:0.07em;
+    letter-spacing:0.08em;
   }
   .tarjeta .valor{
     font-family:var(--font-serif);
@@ -554,7 +554,7 @@
   .lista-alertas li{
     font-size:15px;
     padding:13px 14px;
-    border-radius:5px;
+    border-radius:4px;
     margin-bottom:9px;
     font-weight:600;
     display:flex;
@@ -585,7 +585,7 @@
     border:3px solid transparent;
     cursor:pointer;
     min-height:44px;
-    border-radius:12px;
+    border-radius:4px;
     position:relative;
     transition:transform 0.15s ease, box-shadow 0.15s ease;
   }
@@ -681,7 +681,7 @@
     color:var(--ink);
   }
   .caja .detalle{
-    font-size:13px;
+    font-size:14px;
     margin-top:5px;
     color:var(--ink-soft);
   }
@@ -700,12 +700,12 @@
   }
   .filtros-estado button{
     padding:9px 14px 9px 28px;
-    border-radius:20px;
+    border-radius:4px;
     border:2px solid var(--azul-medio);
     background:var(--blanco-calido);
     color:var(--azul-medio);
     font-weight:600;
-    font-size:13px;
+    font-size:14px;
     box-shadow:none;
     min-height:40px;
     position:relative;
@@ -746,7 +746,7 @@
     padding:15px 16px;
     width:100%;
     max-width:420px;
-    border-radius:5px;
+    border-radius:4px;
     border:2px solid var(--azul-medio);
     font-family:var(--font-mono);
     text-align:center;
@@ -793,12 +793,12 @@
   .badge-estado{
     display:inline-block;
     font-family:var(--font-display);
-    font-size:13px;
+    font-size:14px;
     font-weight:700;
     text-transform:uppercase;
-    letter-spacing:0.04em;
+    letter-spacing:0.08em;
     padding:6px 14px;
-    border-radius:20px;
+    border-radius:4px;
     margin-top:10px;
   }
   .badge-estado.verde{background:var(--sim-verde-bg); color:var(--sim-verde-dk);}
@@ -830,7 +830,7 @@
     margin-top:16px;
   }
   .acciones-rapidas button{
-    font-size:13px;
+    font-size:14px;
     padding:11px 15px;
     border-color:var(--azul-medio);
     color:var(--azul-medio);
@@ -868,7 +868,7 @@
   }
   .etiqueta-card .sku-prod{
     font-family:var(--font-mono);
-    font-size:13px;
+    font-size:14px;
     color:var(--ink-soft);
   }
 
@@ -951,12 +951,12 @@
     background:var(--azul-op-claro);
     color:var(--azul-op);
     padding:14px 16px;
-    border-radius:5px;
+    border-radius:4px;
     margin-bottom:18px;
     font-size:14px;
     border-left:none;
   }
-  .tabla-wrap{ overflow-x:auto; border-radius:6px; }
+  .tabla-wrap{ overflow-x:auto; border-radius:4px; }
   table.reporte{
     width:100%;
     min-width:420px;
@@ -976,8 +976,8 @@
     font-family:var(--font-display);
     font-weight:600;
     text-transform:uppercase;
-    font-size:13px;
-    letter-spacing:0.04em;
+    font-size:14px;
+    letter-spacing:0.08em;
   }
 
   /* ================= ACTIVIDAD ================= */
@@ -985,7 +985,7 @@
     background:var(--blanco-calido);
     border:1.5px solid #C9C8C8;
     padding:12px 15px;
-    border-radius:5px;
+    border-radius:4px;
     margin-bottom:9px;
     font-size:14px;
   }
@@ -994,14 +994,14 @@
     font-weight:700;
     color:var(--ink);
     text-transform:uppercase;
-    font-size:13px;
-    letter-spacing:0.05em;
+    font-size:14px;
+    letter-spacing:0.08em;
   }
 
   footer{
     display:none;
     text-align:center;
-    font-size:13px;
+    font-size:14px;
     color:var(--ink-soft);
     padding:26px 16px;
   }
@@ -1055,7 +1055,7 @@
   @media (max-width:380px){
     header h1{font-size:18px;}
     .hero-semaforo h2{font-size:18px;}
-    nav button{font-size:13px;}
+    nav button{font-size:14px;}
   }
 
   /* ---------- SPLASH breve de arranque (marca "Amigable-123" ~0.8s) ---------- */
@@ -1154,12 +1154,12 @@
       <h2 id="heroTitulo">Cargando tu negocio...</h2>
       <p id="heroSubtitulo"></p>
       <!-- Reloj (sin clima: soberanía, cero llamadas externas). Actualiza cada 20s. -->
-      <div id="heroReloj" style="position:absolute;bottom:10px;right:12px;background:#0F1923;color:#fff;-webkit-text-fill-color:#fff;font-family:var(--font-mono,monospace);font-size:13px;font-weight:700;padding:4px 10px;border-radius:20px;"></div>
+      <div id="heroReloj" style="position:absolute;bottom:10px;right:12px;background:#0F1923;color:#fff;-webkit-text-fill-color:#fff;font-family:var(--font-mono,monospace);font-size:14px;font-weight:700;padding:4px 10px;border-radius:4px;"></div>
     </div>
 
     <details style="margin:-4px 0 12px;font-size:14px;">
-      <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
-      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
+      <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
+      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. El banner de color te dice el estado de tu negocio de un vistazo: verde = sano, amarillo = necesita atención, rojo = actúa ya.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. "Alertas de hoy" lista exactamente qué resolver primero — léela de arriba a abajo.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">3. Los productos con estrella (⭐) son los que el dueño quiere que se impulsen hoy — ofrécelos primero.</p>
@@ -1213,8 +1213,8 @@
       <button id="btnAltaProducto" class="ir" style="display:none;padding:10px 16px;flex-shrink:0;" onclick="abrirAltaProducto()">+ Agregar</button>
     </div>
     <details style="margin:-4px 0 12px;font-size:14px;">
-      <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
-      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
+      <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
+      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Toca un producto para abrir su ficha completa: precio, proveedor, y botones rápidos de vender / ajustar / etiqueta.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Usa los botones +/− para corregir stock sin abrir la ficha — elige un motivo de la lista.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">3. Filtra por color (Urgente / Revisar / Oportunidad…) para enfocarte en un solo tipo de problema a la vez.</p>
@@ -1248,8 +1248,8 @@
       <div class="tag-card" style="text-align:left;margin-top:14px;">
         <h3 class="seccion" style="margin-top:0;font-size:15px;">Agregar sucursal</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
-          <label style="font-size:13px;">Nombre<br>
-            <input id="sucursalNombre" type="text" placeholder="Ej: Centro, Feria de Navidad" style="padding:8px;border:2px solid var(--azul-medio);border-radius:5px;font-family:var(--font-mono);width:220px;"></label>
+          <label style="font-size:14px;">Nombre<br>
+            <input id="sucursalNombre" type="text" placeholder="Ej: Centro, Feria de Navidad" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;font-family:var(--font-mono);width:220px;"></label>
           <button id="sucursalCrear" class="ir" style="padding:10px 16px;background:var(--ink-soft,#5d5340);border-color:var(--ink,#211c14);">+ Agregar sucursal</button>
         </div>
         <p id="sucursalMsg" style="font-size:14px;margin-top:8px;"></p>
@@ -1258,22 +1258,22 @@
       <div class="tag-card" style="text-align:left;margin-top:14px;">
         <h3 class="seccion" style="margin-top:0;font-size:15px;">Agregar percha</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
-          <label style="font-size:13px;">Nombre<br>
-            <input id="perchaNombre" type="text" placeholder="Ej: Percha Feria Artesanal" style="padding:8px;border:2px solid var(--azul-medio);border-radius:5px;font-family:var(--font-mono);width:220px;"></label>
-          <label style="font-size:13px;">Sucursal<br>
-            <select id="perchaSucursal" style="padding:8px;border:2px solid var(--azul-medio);border-radius:5px;"></select></label>
-          <label style="font-size:13px;">Tipo<br>
-            <select id="perchaTipo" style="padding:8px;border:2px solid var(--azul-medio);border-radius:5px;">
+          <label style="font-size:14px;">Nombre<br>
+            <input id="perchaNombre" type="text" placeholder="Ej: Percha Feria Artesanal" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;font-family:var(--font-mono);width:220px;"></label>
+          <label style="font-size:14px;">Sucursal<br>
+            <select id="perchaSucursal" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;"></select></label>
+          <label style="font-size:14px;">Tipo<br>
+            <select id="perchaTipo" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;">
               <option value="propio">Propio</option>
               <option value="socio">Socio</option>
               <option value="franquicia">Franquicia</option>
               <option value="consignacion">Consignación</option>
             </select></label>
-          <label style="font-size:13px;">Comisión %<br>
-            <input id="perchaComision" type="number" min="0" max="100" placeholder="Ej: 25" style="padding:8px;border:2px solid var(--azul-medio);border-radius:5px;width:90px;"></label>
-          <label style="font-size:13px;">Meta mensual $<br>
-            <input id="perchaMeta" type="number" min="0" placeholder="Ej: 300" style="padding:8px;border:2px solid var(--azul-medio);border-radius:5px;width:110px;"></label>
-          <label style="font-size:13px;display:flex;align-items:center;gap:6px;padding-bottom:9px;">
+          <label style="font-size:14px;">Comisión %<br>
+            <input id="perchaComision" type="number" min="0" max="100" placeholder="Ej: 25" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;width:90px;"></label>
+          <label style="font-size:14px;">Meta mensual $<br>
+            <input id="perchaMeta" type="number" min="0" placeholder="Ej: 300" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;width:110px;"></label>
+          <label style="font-size:14px;display:flex;align-items:center;gap:6px;padding-bottom:9px;">
             <input id="perchaEsEvento" type="checkbox"> Es percha de evento</label>
           <button id="perchaCrear" class="ir" style="padding:10px 16px;">+ Agregar percha</button>
         </div>
@@ -1285,10 +1285,10 @@
         <h3 class="seccion" style="margin-top:0;font-size:15px;">Feria de fin de semana</h3>
         <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Crea una percha temporal para un evento de 2-3 días. Al cerrarla queda archivada con su historial y ves su liquidación al instante.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
-          <label style="font-size:13px;">Nombre del evento<br>
-            <input id="feriaNombre" type="text" placeholder="Ej: Feria de Otavalo" style="padding:8px;border:2px solid var(--rust);border-radius:5px;font-family:var(--font-mono);width:220px;"></label>
-          <label style="font-size:13px;">Comisión %<br>
-            <input id="feriaComision" type="number" min="0" max="100" placeholder="Ej: 30" style="padding:8px;border:2px solid var(--rust);border-radius:5px;width:90px;"></label>
+          <label style="font-size:14px;">Nombre del evento<br>
+            <input id="feriaNombre" type="text" placeholder="Ej: Feria de Otavalo" style="padding:8px;border:2px solid var(--rust);border-radius:4px;font-family:var(--font-mono);width:220px;"></label>
+          <label style="font-size:14px;">Comisión %<br>
+            <input id="feriaComision" type="number" min="0" max="100" placeholder="Ej: 30" style="padding:8px;border:2px solid var(--rust);border-radius:4px;width:90px;"></label>
           <button id="feriaAbrir" class="ir" style="padding:10px 16px;background:var(--rust,#E86040);color:#fff;border-color:var(--rust-deep,#C05000);">Abrir feria</button>
         </div>
         <p id="feriaMsg" style="font-size:14px;margin-top:8px;"></p>
@@ -1303,36 +1303,36 @@
         <h3 class="seccion" style="margin-top:0;font-size:15px;">Reservas de evento/clase</h3>
         <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">La misma hoja de papel que ya llenas en el mostrador, pero digital: queda guardada y buscable.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <label style="flex:1;min-width:180px;font-size:13px;">Nombre del evento/clase<br>
-            <input id="resNombreEvento" type="text" placeholder="Ej: Clase de cerámica" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:5px;"></label>
-          <label style="flex:1;min-width:150px;font-size:13px;">Fecha del evento/clase<br>
-            <input id="resFecha" type="date" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:5px;"></label>
+          <label style="flex:1;min-width:180px;font-size:14px;">Nombre del evento/clase<br>
+            <input id="resNombreEvento" type="text" placeholder="Ej: Clase de cerámica" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
+          <label style="flex:1;min-width:150px;font-size:14px;">Fecha del evento/clase<br>
+            <input id="resFecha" type="date" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-          <label style="flex:1;min-width:160px;font-size:13px;">¿Tiene reservación?<br>
-            <select id="resTieneReserva" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:5px;">
+          <label style="flex:1;min-width:160px;font-size:14px;">¿Tiene reservación?<br>
+            <select id="resTieneReserva" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;">
               <option value="si">Sí</option>
               <option value="no">No</option>
             </select></label>
-          <label style="flex:1;min-width:160px;font-size:13px;">N° de personas en reservación<br>
-            <input id="resNumPersonas" type="number" min="0" step="1" placeholder="Ej: 4" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:5px;"></label>
+          <label style="flex:1;min-width:160px;font-size:14px;">N° de personas en reservación<br>
+            <input id="resNumPersonas" type="number" min="0" step="1" placeholder="Ej: 4" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
         </div>
-        <label style="display:block;margin-top:8px;font-size:13px;">Nombre de la persona pagando<br>
-          <input id="resNombrePaga" type="text" placeholder="Nombre completo" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:5px;"></label>
+        <label style="display:block;margin-top:8px;font-size:14px;">Nombre de la persona pagando<br>
+          <input id="resNombrePaga" type="text" placeholder="Nombre completo" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-          <label style="flex:1;min-width:180px;font-size:13px;">Correo electrónico<br>
-            <input id="resCorreo" type="email" placeholder="correo@ejemplo.com" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:5px;"></label>
-          <label style="flex:1;min-width:150px;font-size:13px;">WhatsApp<br>
-            <input id="resWhatsapp" type="text" placeholder="Teléfono" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:5px;"></label>
+          <label style="flex:1;min-width:180px;font-size:14px;">Correo electrónico<br>
+            <input id="resCorreo" type="email" placeholder="correo@ejemplo.com" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
+          <label style="flex:1;min-width:150px;font-size:14px;">WhatsApp<br>
+            <input id="resWhatsapp" type="text" placeholder="Teléfono" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-          <label style="flex:1;min-width:140px;font-size:13px;">Cantidad pagado<br>
-            <input id="resCantidadPagada" type="number" min="0" step="0.01" placeholder="$" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:5px;"></label>
-          <label style="flex:1;min-width:180px;font-size:13px;">Nombre de quien recibió la plata<br>
-            <input id="resQuienRecibio" type="text" placeholder="Empleado/a" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:5px;"></label>
+          <label style="flex:1;min-width:140px;font-size:14px;">Cantidad pagado<br>
+            <input id="resCantidadPagada" type="number" min="0" step="0.01" placeholder="$" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
+          <label style="flex:1;min-width:180px;font-size:14px;">Nombre de quien recibió la plata<br>
+            <input id="resQuienRecibio" type="text" placeholder="Empleado/a" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
         </div>
-        <label style="display:block;margin-top:8px;font-size:13px;">Notas<br>
-          <textarea id="resNotas" placeholder="Cualquier detalle adicional" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:5px;min-height:44px;font-family:inherit;"></textarea></label>
+        <label style="display:block;margin-top:8px;font-size:14px;">Notas<br>
+          <textarea id="resNotas" placeholder="Cualquier detalle adicional" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;min-height:44px;font-family:inherit;"></textarea></label>
         <button id="resGuardar" class="ir" style="margin-top:10px;padding:10px 16px;background:var(--rust,#E86040);color:#fff;border-color:var(--rust-deep,#C05000);">+ Guardar reserva</button>
         <p id="resMsg" style="font-size:14px;margin-top:8px;"></p>
         <div id="resLista" style="margin-top:14px;"></div>
@@ -1355,8 +1355,8 @@
     <p style="font-size:16px;color:var(--ink-soft);margin-top:0;">Toca un producto y listo: una unidad vendida (puedes deshacer en 5s). Baja para elegir cliente o registrar el cierre del día.</p>
     <!-- ¿Cómo usar Vendido? Guía colapsable para el operador. -->
     <details style="margin:-4px 0 12px;font-size:14px;">
-      <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
-      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
+      <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
+      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Elige el cliente (si aplica) en el selector de abajo.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Toca el producto: se descuenta una unidad del stock.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">3. Aparece un aviso azul abajo: tócalo en 5s si fue error.</p>
@@ -1374,14 +1374,14 @@
       <button class="ir" id="btnEscanear">Buscar</button>
       <div style="margin-top:12px;">
         <label style="font-size:16px;font-weight:700;color:var(--ink);">Cliente:
-          <select id="ventaCliente" style="padding:9px;border:2px solid var(--azul-medio);border-radius:6px;max-width:100%;margin-left:6px;">
+          <select id="ventaCliente" style="padding:9px;border:2px solid var(--azul-medio);border-radius:4px;max-width:100%;margin-left:6px;">
             <option value="">Venta de mostrador (sin cliente)</option>
           </select>
         </label>
         <!-- Nota operativa: el cliente elegido aquí aplica a todos los toques del grid. -->
-        <p style="font-size:13px;color:var(--ink-soft);margin:6px 0 0;">Elige antes de tocar los productos.
+        <p style="font-size:14px;color:var(--ink-soft);margin:6px 0 0;">Elige antes de tocar los productos.
           <button id="btnNuevoCliente" type="button"
-            style="font-size:13px;padding:3px 10px;border:2px solid var(--azul-medio,#2c4a68);border-radius:6px;
+            style="font-size:14px;padding:3px 10px;border:2px solid var(--azul-medio,#2c4a68);border-radius:4px;
                    background:transparent;color:var(--azul-medio,#2c4a68) !important;-webkit-text-fill-color:var(--azul-medio,#2c4a68) !important;
                    cursor:pointer;vertical-align:middle;margin-left:6px;">+ Nuevo cliente</button>
         </p>
@@ -1404,8 +1404,8 @@
   <section id="vista-etiquetas" class="vista">
     <h3 class="seccion" style="margin-top:0;">Etiquetas listas para imprimir</h3>
     <details style="margin:-4px 0 12px;font-size:14px;">
-      <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
-      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
+      <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
+      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Toca cualquier tarjeta de producto para abrir su etiqueta imprimible.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Toca el código de barras para imprimirlo o guardarlo solo, para etiquetas más chicas.</p>
         <p style="margin:0;font-size:14px;color:var(--ink);">3. El código QR lleva directo a la ficha completa del producto para quien lo escanee.</p>
@@ -1421,8 +1421,8 @@
     <h3 class="seccion" style="margin-top:0;">Mis perchas</h3>
     <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Fotos reales de cada percha con su semáforo de meta. Toca una foto para actualizarla.</p>
     <details style="margin:-4px 0 12px;font-size:14px;">
-      <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
-      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
+      <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
+      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Toca la foto de una percha para actualizarla con una nueva — se redimensiona sola, sin archivos pesados.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. El semáforo de meta muestra cuánto le falta a esa percha para llegar a su objetivo mensual.</p>
         <p style="margin:0;font-size:14px;color:var(--ink);">3. Las perchas nuevas se crean desde Inventario, dentro de una sucursal.</p>
@@ -1439,8 +1439,8 @@
     <h3 class="seccion" style="margin-top:0;">Tus clientes</h3>
     <p style="font-size:16px;color:var(--ink-soft);margin-top:0;">Tu cartera completa, viva y buscable al instante. Más abajo, la lectura por estaciones te dice a quién cuidar y a quién despertar.</p>
     <details style="margin:-4px 0 12px;font-size:14px;">
-      <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
-      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
+      <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
+      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Agrega un cliente con nombre (y teléfono opcional) — recibe un código único automáticamente.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Busca con la lupa y toca "Vender a este cliente" para ir directo a Vendido con su nombre ya elegido.</p>
         <p style="margin:0;font-size:14px;color:var(--ink);">3. Solo dueño: más abajo, la matriz de estaciones muestra quién lleva tiempo sin comprar — ahí sabes a quién escribirle.</p>
@@ -1448,20 +1448,20 @@
     </details>
     <div class="tag-card" style="padding:14px;">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <input id="cliNombre" type="text" placeholder="Nombre del cliente" style="flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
-        <input id="cliApodo" type="text" placeholder="Apodo (opcional)" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
+        <input id="cliNombre" type="text" placeholder="Nombre del cliente" style="flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+        <input id="cliApodo" type="text" placeholder="Apodo (opcional)" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;">
-        <input id="cliTelefono" type="text" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:150px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
-        <input id="cliCorreo" type="email" placeholder="Correo electrónico (opcional)" style="flex:1;min-width:180px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
+        <input id="cliTelefono" type="text" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:150px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+        <input id="cliCorreo" type="email" placeholder="Correo electrónico (opcional)" style="flex:1;min-width:180px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
       </div>
       <div style="margin-top:10px;">
-        <input id="cliNotas" type="text" placeholder="Notas (ej: talla, preferencias, cómo lo conociste...)" style="width:100%;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
+        <input id="cliNotas" type="text" placeholder="Notas (ej: talla, preferencias, cómo lo conociste...)" style="width:100%;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
       </div>
       <div style="margin-top:10px;">
         <button class="ir" id="btnAltaCliente" style="padding:10px 18px;">+ Agregar cliente</button>
       </div>
-      <p style="font-size:12px;color:var(--ink-soft);margin:8px 0 0;">Tip: si el cliente ya reservó un evento/clase o compró un ticket con su correo/WhatsApp, no hace falta re-teclear nada — su ficha se arma sola con esos datos.</p>
+      <p style="font-size:14px;color:var(--ink-soft);margin:8px 0 0;">Tip: si el cliente ya reservó un evento/clase o compró un ticket con su correo/WhatsApp, no hace falta re-teclear nada — su ficha se arma sola con esos datos.</p>
     </div>
     <p id="cliMsg" style="font-size:15px;font-weight:700;margin:8px 0 0;"></p>
 
@@ -1475,9 +1475,9 @@
         <path d="M10.2 10.2L15 15" stroke="var(--azul-medio,#2E6278)" stroke-width="2.6" stroke-linecap="round"/>
       </svg>
       <input id="cliBuscar" type="search" inputmode="search" autocomplete="off" placeholder="Buscar por nombre, apodo, código o teléfono…"
-        style="flex:1;min-width:0;padding:12px 14px;font-size:16px;border:2px solid var(--azul-medio);border-radius:8px;">
+        style="flex:1;min-width:0;padding:12px 14px;font-size:16px;border:2px solid var(--azul-medio);border-radius:4px;">
     </div>
-    <p id="cliBuscarConteo" style="font-size:13px;color:var(--ink-soft);margin:6px 2px 0;"></p>
+    <p id="cliBuscarConteo" style="font-size:14px;color:var(--ink-soft);margin:6px 2px 0;"></p>
     <div id="listaClientes" style="margin-top:10px;"></div>
     <h3 class="seccion" style="margin-top:30px;">Estaciones y comportamiento</h3>
     <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Solo dueño — la misma cartera de arriba, leída por qué tan reciente y valioso compra cada quien.</p>
@@ -1500,8 +1500,8 @@
     <h3 class="seccion" style="margin-top:0;">Comisiones</h3>
     <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Lo que le debes a cada promotor/a este mes, calculado venta por venta — sin Excel, sin sorpresas.</p>
     <details style="margin:-4px 0 12px;font-size:14px;">
-      <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
-      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
+      <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
+      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Cada percha con socio/consignación acumula su comisión automáticamente, venta por venta.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Marca "pagado" cuando le entregues el dinero al promotor/a — queda en cero para el próximo mes.</p>
         <p style="margin:0;font-size:14px;color:var(--ink);">3. Puedes enviar el detalle por WhatsApp para que el socio concilie exactamente qué ventas cubre el pago.</p>
@@ -1518,8 +1518,8 @@
       Aquí vive el detalle técnico del negocio: actividad, gastos, y la capa contable (cuentas T, P&amp;G, balance e inventario valorizado). No es para el día a día — es para el contador, el administrador o quien quiera ver los números a fondo. Por eso la parte contable pide una subclave aparte.
     </div>
     <details style="margin:8px 0 12px;font-size:14px;">
-      <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
-      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
+      <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
+      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Configura tus gastos mensuales una sola vez — la app los reparte entre los días reales del mes automáticamente.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. El P&amp;G, balance e inventario valorizado se actualizan en vivo desde tus ventas y stock reales — sin captura manual.</p>
         <p style="margin:0;font-size:14px;color:var(--ink);">3. Esta sección es para el contador o una revisión a fondo — el trabajo diario pasa en Hoy / Inventario / Vendido.</p>
@@ -1539,7 +1539,7 @@
       </p>
       <div id="gastosSelectorWrap" style="display:none;margin-bottom:12px;">
         <label style="font-size:14px;font-weight:700;">Elige una ubicación para editar sus gastos:<br>
-          <select id="gastosUbicSelector" style="margin-top:6px;padding:8px;border:2px solid var(--rust);border-radius:5px;"></select></label>
+          <select id="gastosUbicSelector" style="margin-top:6px;padding:8px;border:2px solid var(--rust);border-radius:4px;"></select></label>
       </div>
       <input id="inputGastosMensuales" type="number" min="0" step="0.01" placeholder="Ej: 350.00" style="text-align:left; max-width:220px;">
       <br>
@@ -1576,7 +1576,7 @@
 <!-- Modal de ficha/edición de producto (JFC 2026-07-07): la tarjeta de
      Inventario abre AQUÍ su editor, sin saltar a Vender. -->
 <div class="modal-fondo" id="modalFicha">
-  <div class="tag-card" style="max-width:560px;width:94%;max-height:86vh;overflow-y:auto;position:relative;padding:18px;background:var(--blanco-calido,#F8F9FB);border-radius:12px;">
+  <div class="tag-card" style="max-width:560px;width:94%;max-height:86vh;overflow-y:auto;position:relative;padding:18px;background:var(--blanco-calido,#F8F9FB);border-radius:4px;">
     <button class="cerrar" id="cerrarModalFicha" style="position:absolute;top:8px;right:10px;">✕</button>
     <div id="fichaModalBody" style="margin-top:14px;"></div>
   </div>
@@ -1589,7 +1589,7 @@ let ubicacionActual = "todas";
 let filtroEstadoActual = "";
 
 function fmtMoney(n){
-  return "$" + Number(n).toFixed(2);
+  return `<span style="font-family:var(--font-mono);font-weight:700;">$${Number(n).toFixed(2)}</span>`;
 }
 
 async function cargarUbicaciones(){
@@ -1696,14 +1696,14 @@ async function cargarGridVender(){
   grid.innerHTML = productos.map(p => {
     const sinStock = p.stockActual <= 0;
     const visual = p.foto
-      ? `<img src="${p.foto}" alt="" style="width:100%;height:64px;object-fit:cover;border-radius:6px;">`
-      : `<div style="width:100%;height:64px;border-radius:6px;background:var(--sim-${p.estado}-bg,#E8ECF2);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--sim-${p.estado}-dk,#2C3E50);">${escHtml(p.nombre.charAt(0).toUpperCase())}</div>`;
-    return `<button data-vender-tile="${p.id}" ${sinStock ? "disabled" : ""} style="text-align:left;padding:8px;border:2px solid ${sinStock ? "#B0183E" : `var(--sim-${p.estado},#C4CDD8)`};border-radius:10px;background:#FFFFFF;cursor:${sinStock ? "not-allowed" : "pointer"};touch-action:manipulation;">
+      ? `<img src="${p.foto}" alt="" style="width:100%;height:64px;object-fit:cover;border-radius:4px;">`
+      : `<div style="width:100%;height:64px;border-radius:4px;background:var(--sim-${p.estado}-bg,#E8ECF2);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--sim-${p.estado}-dk,#2C3E50);">${escHtml(p.nombre.charAt(0).toUpperCase())}</div>`;
+    return `<button data-vender-tile="${p.id}" ${sinStock ? "disabled" : ""} style="text-align:left;padding:8px;border:2px solid ${sinStock ? "#B0183E" : `var(--sim-${p.estado},#C4CDD8)`};border-radius:4px;background:#FFFFFF;cursor:${sinStock ? "not-allowed" : "pointer"};touch-action:manipulation;">
       ${visual}
       <div style="font-size:15px;font-weight:700;color:#0F1923;margin-top:6px;line-height:1.25;">${p.estrella ? "⭐ " : ""}${escHtml(p.nombre)}</div>
       <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px;">
         <span style="font-size:16px;font-weight:700;color:#0F1923;">${fmtMoney(p.precio)}</span>
-        <span style="font-size:13px;color:${sinStock ? "#B0183E" : "#2C3E50"};font-weight:700;">${sinStock ? "SIN STOCK" : p.stockActual + " u."}</span>
+        <span style="font-size:14px;color:${sinStock ? "#B0183E" : "#2C3E50"};font-weight:700;">${sinStock ? "SIN STOCK" : p.stockActual + " u."}</span>
       </div>
     </button>`;
   }).join("");
@@ -1742,7 +1742,7 @@ async function cargarCierreLista(){
   cont.innerHTML = `<p style="font-size:15px;font-weight:700;color:var(--sim-verde-dk);margin:8px 0 4px;">Ya registradas hoy: ${totalHoy} unidad(es). Apunta solo lo que falte.</p>` + conStock.map(p => `
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--linea,#D7E0E8);">
       <span style="font-size:15px;color:#0F1923;flex:1;">${escHtml(p.nombre)} <span style="color:#2C3E50;">(hay ${p.stockActual})</span>${hoyMap[p.id] ? ` <span style="font-size:14px;font-weight:700;color:var(--sim-verde-dk);">· hoy: ${hoyMap[p.id]}</span>` : ""}</span>
-      <input type="number" min="0" max="${p.stockActual}" value="${previos[p.id] || 0}" data-cierre-prod="${p.id}" inputmode="numeric" style="width:76px;padding:8px;border:2px solid var(--azul-medio);border-radius:6px;text-align:center;">
+      <input type="number" min="0" max="${p.stockActual}" value="${previos[p.id] || 0}" data-cierre-prod="${p.id}" inputmode="numeric" style="width:76px;padding:8px;border:2px solid var(--azul-medio);border-radius:4px;text-align:center;">
     </div>`).join("");
   // Anti-dummy: si teclean mas que el stock, se recorta al maximo al salir
   // del campo (el endpoint valida igual, pero mejor avisar aqui mismo).
@@ -1770,23 +1770,23 @@ if (elCierreDia) elCierreDia.addEventListener("toggle", function(){ if (this.ope
   overlay.id = "oc-nuevo-cli-modal";
   overlay.style.cssText = "position:fixed;inset:0;z-index:9995;background:#152840;display:none;align-items:flex-end;justify-content:center;";
   overlay.innerHTML = `
-    <div style="background:var(--blanco-calido,#fbf5e8);width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:20px 18px 28px;">
+    <div style="background:var(--blanco-calido,#fbf5e8);width:100%;max-width:480px;border-radius:4px 4px 0 0;padding:20px 18px 28px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
         <strong style="font-family:var(--font-display);font-size:17px;color:var(--ink);flex:1;">Nuevo cliente</strong>
-        <button id="oc-ncli-cerrar" style="font-size:13px;padding:6px 12px;border:2px solid var(--azul-medio,#2c4a68);border-radius:7px;background:var(--azul-medio,#2c4a68);color:#fbf5e8;cursor:pointer;">Cerrar</button>
+        <button id="oc-ncli-cerrar" style="font-size:14px;padding:6px 12px;border:2px solid var(--azul-medio,#2c4a68);border-radius:4px;background:var(--azul-medio,#2c4a68);color:#fbf5e8;cursor:pointer;">Cerrar</button>
       </div>
       <label style="display:block;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:8px;">Nombre
         <input id="oc-ncli-nombre" type="text" maxlength="80" autocomplete="off"
-          style="display:block;width:100%;margin-top:4px;padding:9px 10px;border:2px solid var(--azul-medio,#2c4a68);border-radius:7px;font-size:15px;box-sizing:border-box;background:#fff;">
+          style="display:block;width:100%;margin-top:4px;padding:9px 10px;border:2px solid var(--azul-medio,#2c4a68);border-radius:4px;font-size:15px;box-sizing:border-box;background:#fff;">
       </label>
       <label style="display:block;font-size:14px;font-weight:700;color:var(--ink);margin-bottom:14px;">Teléfono (opcional)
         <input id="oc-ncli-tel" type="tel" maxlength="20" autocomplete="off"
-          style="display:block;width:100%;margin-top:4px;padding:9px 10px;border:2px solid var(--azul-medio,#2c4a68);border-radius:7px;font-size:15px;box-sizing:border-box;background:#fff;">
+          style="display:block;width:100%;margin-top:4px;padding:9px 10px;border:2px solid var(--azul-medio,#2c4a68);border-radius:4px;font-size:15px;box-sizing:border-box;background:#fff;">
       </label>
-      <button id="oc-ncli-crear" style="width:100%;padding:11px 18px;border:2px solid var(--azul-medio,#2c4a68);border-radius:8px;background:var(--azul-medio,#2c4a68);color:#fbf5e8 !important;-webkit-text-fill-color:#fbf5e8 !important;font-size:15px;font-weight:700;cursor:pointer;">
+      <button id="oc-ncli-crear" style="width:100%;padding:11px 18px;border:2px solid var(--azul-medio,#2c4a68);border-radius:4px;background:var(--azul-medio,#2c4a68);color:#fbf5e8 !important;-webkit-text-fill-color:#fbf5e8 !important;font-size:15px;font-weight:700;cursor:pointer;">
         Guardar y seleccionar
       </button>
-      <p id="oc-ncli-msg" style="font-size:13px;margin:8px 0 0;font-weight:700;"></p>
+      <p id="oc-ncli-msg" style="font-size:14px;margin:8px 0 0;font-weight:700;"></p>
     </div>`;
   document.body.appendChild(overlay);
 
@@ -1896,7 +1896,7 @@ function icoOC(nombre, color, size){
 function medallaOC(i){
   const c = ["#E8A020", "#B9C4CE", "#C05000"][i];
   if (!c) return `${i + 1}.`;
-  return `<span style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;background:${c};border:2px solid #211C14;font-family:var(--font-display);font-weight:700;font-size:13px;color:#211C14;">${i + 1}</span>`;
+  return `<span style="display:inline-flex;width:22px;height:22px;align-items:center;justify-content:center;background:${c};border:2px solid #211C14;font-family:var(--font-display);font-weight:700;font-size:14px;color:#211C14;">${i + 1}</span>`;
 }
 
 const ESTACIONES = {
@@ -1942,7 +1942,7 @@ function badgeComportamiento(ev) {
   const svgShield  = `<svg width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="#009A5A" stroke-width="1.4" style="vertical-align:middle;"><path d="M6.5 1 L12 3.5 V7 C12 10.5 6.5 13 6.5 13 C6.5 13 1 10.5 1 7 V3.5 Z"/><polyline points="4,7 6,9 9.5,5" stroke-width="1.6"/></svg>`;
   const svgWarn    = `<svg width="14" height="13" viewBox="0 0 14 13" fill="none" style="vertical-align:middle;"><polygon points="7,1 13.5,12.5 0.5,12.5" fill="#E8A020"/><text x="7" y="11.2" text-anchor="middle" font-size="8" font-weight="700" fill="#0F1923">!</text></svg>`;
   const chip = (icon, txt, bg, color) =>
-    `<span title="${txt}" style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 7px;border-radius:20px;font-size:13px;font-weight:700;background:${bg};color:${color} !important;-webkit-text-fill-color:${color} !important;">${icon}${txt}</span>`;
+    `<span title="${txt}" style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 7px;border-radius:4px;font-size:14px;font-weight:700;background:${bg};color:${color} !important;-webkit-text-fill-color:${color} !important;">${icon}${txt}</span>`;
   if (t === 1 && cv === 1)   return chip(svgStar,  "VIP",           "#FEF6E0", "#8A5A00");
   if (t === -1 && cv === -1) return chip(svgFlag,  "Alerta",        "#FDECEA", "#C0392B");
   if (t === 1 && cv === -1)  return chip(svgEye,   "Ojo",           "#FFF3EE", "#E86040");
@@ -1972,25 +1972,25 @@ function tarjetaCliente(c, esDueno, ctx) {
   const lineaContacto = contactoPartes.length
     ? `<div style="font-size:14px;color:var(--ink-soft);margin-top:2px;">${contactoPartes.join(" · ")}</div>` : "";
   const lineaNotas = c.notas
-    ? `<div style="font-size:13px;color:var(--ink-soft);margin-top:2px;font-style:italic;">"${escHtml(c.notas)}"</div>` : "";
+    ? `<div style="font-size:14px;color:var(--ink-soft);margin-top:2px;font-style:italic;">"${escHtml(c.notas)}"</div>` : "";
   const eventos = Array.isArray(c.eventos) ? c.eventos : [];
   const historialEventos = eventos.length
     ? `<details style="margin-top:6px;">
-        <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--azul-medio,#2c4a68);list-style:none;">▸ ${eventos.length} evento(s)/ticket(s) registrados</summary>
+        <summary style="cursor:pointer;font-size:14px;font-weight:700;color:var(--azul-medio,#2c4a68);list-style:none;">▸ ${eventos.length} evento(s)/ticket(s) registrados</summary>
         <div style="margin-top:4px;padding-left:4px;border-left:2px solid var(--linea,#D7E0E8);">
-          ${eventos.slice(0, 8).map(ev => `<div style="font-size:13px;color:var(--ink);margin:4px 0;">
+          ${eventos.slice(0, 8).map(ev => `<div style="font-size:14px;color:var(--ink);margin:4px 0;">
             <strong>${escHtml(ev.nombreEvento || (ev.tipo === "ticket" ? "Ticket" : "Evento"))}</strong>${ev.fecha ? ` · ${escHtml(String(ev.fecha).slice(0, 10))}` : ""}${ev.monto != null ? ` · ${fmtMoney(ev.monto)}` : ""}${ev.quienRecibio ? ` · recibió: ${escHtml(ev.quienRecibio)}` : ""}${ev.notas ? `<br><span style="color:var(--ink-soft);font-style:italic;">"${escHtml(ev.notas)}"</span>` : ""}
           </div>`).join("")}
         </div>
       </details>` : "";
   const editKey = "cliedit-" + c.id;
   const panelEditAbierto = window.OCClienteEditOpen && window.OCClienteEditOpen.has(editKey);
-  const btnEditar = `<button onclick="toggleEditarContacto('${editKey}')" style="margin-top:8px;font-size:13px;padding:4px 12px;background:#F4F7FA;border:1.5px solid var(--azul-medio,#2E6278);border-radius:6px;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;cursor:pointer;">Editar contacto ✎</button>`;
-  const panelEditar = `<div id="oc-${editKey}" style="display:${panelEditAbierto ? "flex" : "none"};gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:8px 10px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;">
-      <input id="oc-edit-tel-${c.id}" type="text" value="${escHtml(c.telefono || "")}" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:120px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:16px;">
-      <input id="oc-edit-email-${c.id}" type="email" value="${escHtml(c.email || "")}" placeholder="Correo" style="flex:1;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:16px;">
-      <input id="oc-edit-notas-${c.id}" type="text" value="${escHtml(c.notas || "")}" placeholder="Notas" style="flex:2;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:6px;font-size:16px;">
-      <button onclick="guardarContactoCliente('${c.id}')" class="ir" style="font-size:13px;padding:6px 12px;">Guardar</button>
+  const btnEditar = `<button onclick="toggleEditarContacto('${editKey}')" style="margin-top:8px;font-size:14px;padding:4px 12px;background:#F4F7FA;border:1.5px solid var(--azul-medio,#2E6278);border-radius:4px;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;cursor:pointer;">Editar contacto ✎</button>`;
+  const panelEditar = `<div id="oc-${editKey}" style="display:${panelEditAbierto ? "flex" : "none"};gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:8px 10px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;">
+      <input id="oc-edit-tel-${c.id}" type="text" value="${escHtml(c.telefono || "")}" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:120px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
+      <input id="oc-edit-email-${c.id}" type="email" value="${escHtml(c.email || "")}" placeholder="Correo" style="flex:1;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
+      <input id="oc-edit-notas-${c.id}" type="text" value="${escHtml(c.notas || "")}" placeholder="Notas" style="flex:2;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
+      <button onclick="guardarContactoCliente('${c.id}')" class="ir" style="font-size:14px;padding:6px 12px;">Guardar</button>
     </div>`;
   const puedeEvaluar = window.OCAuth && window.OCAuth.rolActual && (window.OCAuth.rolActual() === "dueno" || window.OCAuth.rolActual() === "empleado" || window.OCAuth.rolActual() === "admin");
   // filaRate: 5 botones on/off en un .oc-rate-row con data-valor para que
@@ -2012,50 +2012,50 @@ function tarjetaCliente(c, esDueno, ctx) {
   };
   const pStar = promEje("confiabilidad"), pHeart = promEje("trato");
   const chipProm = (pStar || pHeart)
-    ? `<span title="Calificación promedio" style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 8px;border-radius:20px;font-size:13px;font-weight:700;background:#F4F7FA;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;">${pStar ? `${svgStarR(true, 13)}${pStar}` : ""}${pHeart ? `${svgHeartR(true, 13)}${pHeart}` : ""}</span>`
+    ? `<span title="Calificación promedio" style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 8px;border-radius:4px;font-size:14px;font-weight:700;background:#F4F7FA;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;">${pStar ? `${svgStarR(true, 13)}${pStar}` : ""}${pHeart ? `${svgHeartR(true, 13)}${pHeart}` : ""}</span>`
     : "";
   const ahoraHora = new Date().toTimeString().slice(0, 5);
   const hayNegativo = nivelEv(ev.trato) === -1 || nivelEv(ev.confiabilidad) === -1;
   // Campo hora del incidente — dentro del panel colapsable. ID usa c.id para que
   // evaluarCliente() lo pueda encontrar por clienteId sin conocer el ctx.
   const campoHora = puedeEvaluar ? `
-    <div id="oc-inc-wrap-${c.id}" style="display:${hayNegativo ? "flex" : "none"};align-items:center;gap:8px;margin-top:6px;padding:6px 10px;background:#FFF8F8;border:1px solid #FDDBD8;border-radius:7px;flex-wrap:wrap;">
+    <div id="oc-inc-wrap-${c.id}" style="display:${hayNegativo ? "flex" : "none"};align-items:center;gap:8px;margin-top:6px;padding:6px 10px;background:#FFF8F8;border:1px solid #FDDBD8;border-radius:4px;flex-wrap:wrap;">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#C0392B" stroke-width="1.4" style="flex-shrink:0;"><circle cx="7" cy="7" r="6"/><path d="M7 4v3l2 1.5"/></svg>
-      <label style="font-size:13px;font-weight:700;color:#C0392B !important;-webkit-text-fill-color:#C0392B !important;">Hora del incidente:</label>
+      <label style="font-size:14px;font-weight:700;color:#C0392B !important;-webkit-text-fill-color:#C0392B !important;">Hora del incidente:</label>
       <input type="time" id="oc-inc-${c.id}" value="${ahoraHora}"
-        style="padding:3px 8px;border:1.5px solid #E0B0AD;border-radius:5px;font-size:13px;color:#0F1923 !important;-webkit-text-fill-color:#0F1923 !important;background:#fff;">
-      <span style="font-size:13px;color:#9D7B79 !important;-webkit-text-fill-color:#9D7B79 !important;">(para conciliación con cámaras / audios)</span>
+        style="padding:3px 8px;border:1.5px solid #E0B0AD;border-radius:4px;font-size:14px;color:#0F1923 !important;-webkit-text-fill-color:#0F1923 !important;background:#fff;">
+      <span style="font-size:14px;color:#9D7B79 !important;-webkit-text-fill-color:#9D7B79 !important;">(para conciliación con cámaras / audios)</span>
     </div>` : "";
   const panelAbierto = window.OCRateOpen.has(key);
   const controles = puedeEvaluar ? `
-    <button onclick="toggleCalificar('${key}')" style="margin-top:8px;font-size:13px;font-weight:700;padding:5px 14px;min-height:34px;background:#F4F7FA;border:1.5px solid var(--azul-medio,#2E6278);border-radius:20px;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;cursor:pointer;">Calificar ▾</button>
+    <button onclick="toggleCalificar('${key}')" style="margin-top:8px;font-size:14px;font-weight:700;padding:5px 14px;min-height:34px;background:#F4F7FA;border:1.5px solid var(--azul-medio,#2E6278);border-radius:4px;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;cursor:pointer;">Calificar ▾</button>
     <div id="oc-rate-${key}" style="display:${panelAbierto ? "block" : "none"};">
       <div style="display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;align-items:center;">
         <span style="display:inline-flex;align-items:center;white-space:nowrap;">
-          <span style="font-size:13px;font-weight:700;color:#2E6278;margin-right:4px;">Cumplimiento:</span>
+          <span style="font-size:14px;font-weight:700;color:#2E6278;margin-right:4px;">Cumplimiento:</span>
           ${filaRate("confiabilidad", ev.confiabilidad, svgStarR, "Cumplimiento")}
         </span>
         <span style="display:inline-flex;align-items:center;white-space:nowrap;">
-          <span style="font-size:13px;font-weight:700;color:#2E6278;margin-right:4px;">Actitud:</span>
+          <span style="font-size:14px;font-weight:700;color:#2E6278;margin-right:4px;">Actitud:</span>
           ${filaRate("trato", ev.trato, svgHeartR, "Actitud")}
         </span>
       </div>${campoHora}
     </div>` : "";
   const btnDespedir = (esDueno && nivelEv(ev.trato) === -1 && nivelEv(ev.confiabilidad) === -1)
-    ? `<button style="margin-top:8px;font-size:13px;padding:4px 12px;background:#FDECEA;border:1.5px solid #C0392B;border-radius:6px;color:#C0392B !important;-webkit-text-fill-color:#C0392B !important;cursor:pointer;"
+    ? `<button style="margin-top:8px;font-size:14px;padding:4px 12px;background:#FDECEA;border:1.5px solid #C0392B;border-radius:4px;color:#C0392B !important;-webkit-text-fill-color:#C0392B !important;cursor:pointer;"
         onclick="despedirCliente('${c.id}','${escHtml(c.nombre)}')">Despedir cliente</button>` : "";
   // Chip de estación (2026-07-23): la lista viva ya no agrupa por estación con
   // encabezados — este chip mantiene esa información visible en cada tarjeta,
   // sin obligar a saltar a la matriz de más abajo para saberlo.
   const est = c.estacion && ESTACIONES[c.estacion] ? ESTACIONES[c.estacion] : null;
   const chipEstacion = est
-    ? `<span title="${escHtml(est.titulo)}" style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 8px;border-radius:20px;font-size:13px;font-weight:700;background:${est.bg};color:${est.tinta} !important;-webkit-text-fill-color:${est.tinta} !important;">${est.icono}${est.titulo.split(" — ")[0]}</span>`
+    ? `<span title="${escHtml(est.titulo)}" style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:2px 8px;border-radius:4px;font-size:14px;font-weight:700;background:${est.bg};color:${est.tinta} !important;-webkit-text-fill-color:${est.tinta} !important;">${est.icono}${est.titulo.split(" — ")[0]}</span>`
     : "";
   // CONECTAR TODO (2026-07-23): un toque manda al cajero directo a Vendido
   // con este cliente ya elegido en el pulldown — sin retipear nombre.
-  const btnVender = `<button class="ir" style="margin-top:8px;font-size:13px;padding:5px 14px;"
+  const btnVender = `<button class="ir" style="margin-top:8px;font-size:14px;padding:5px 14px;"
       onclick="irAVenderConCliente('${c.id}')">${icoOC("caja", "currentColor", 13)} Vender a este cliente</button>`;
-  return `<div style="background:#FFFFFF;border:2px solid var(--linea,#D7E0E8);border-radius:10px;padding:10px 12px;margin:6px 0;">
+  return `<div style="background:#FFFFFF;border:2px solid var(--linea,#D7E0E8);border-radius:4px;padding:10px 12px;margin:6px 0;">
     <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
       <strong style="font-size:16px;color:#0F1923;">${escHtml(c.nombre)}</strong>
       <span style="font-family:var(--font-mono);font-size:14px;color:#2E6278;margin-left:6px;">${escHtml(c.codigo)}</span>
@@ -2165,7 +2165,7 @@ async function cargarClientes(){
   const mc = document.getElementById("matrizClientes");
   if (!esDueno) { mc.innerHTML = ""; }
   else {
-    const celda = (k) => { const e = ESTACIONES[k], l = grupos[k] || []; return `<div style="background:${e.bg};border:2px solid ${e.borde};border-radius:10px;padding:12px;min-height:90px;">
+    const celda = (k) => { const e = ESTACIONES[k], l = grupos[k] || []; return `<div style="background:${e.bg};border:2px solid ${e.borde};border-radius:4px;padding:12px;min-height:90px;">
       <div style="font-weight:700;font-size:15px;color:${e.tinta};">${e.icono} ${e.titulo.split(" — ")[0]}</div>
       <div style="font-size:14px;color:#0F1923;margin-top:6px;">${l.length ? l.map((c) => escHtml(c.nombre.split(" ")[0])).join(", ") : "—"}</div></div>`; };
     mc.innerHTML = `<h4 style="font-family:var(--font-display);font-weight:700;font-size:16px;margin:0 0 4px;">Matriz de estaciones</h4>
@@ -2188,11 +2188,11 @@ async function cargarClientes(){
       ];
       const celdaComp = (q) => {
         const lista = comp[q.key] || [];
-        const chips = lista.slice(0,6).map(c => `<span style="display:inline-block;background:#FFFFFF;border:1.5px solid ${q.borde};border-radius:6px;padding:2px 8px;margin:2px;font-size:13px;color:#0F1923;">${escHtml(c.nombre.split(" ")[0])}</span>`).join("");
-        const extra = lista.length > 6 ? `<span style="font-size:13px;color:${q.tinta};">+${lista.length-6} más</span>` : "";
-        return `<div style="background:${q.bg};border:2px solid ${q.borde};border-radius:10px;padding:12px;min-height:80px;">
+        const chips = lista.slice(0,6).map(c => `<span style="display:inline-block;background:#FFFFFF;border:1.5px solid ${q.borde};border-radius:4px;padding:2px 8px;margin:2px;font-size:14px;color:#0F1923;">${escHtml(c.nombre.split(" ")[0])}</span>`).join("");
+        const extra = lista.length > 6 ? `<span style="font-size:14px;color:${q.tinta};">+${lista.length-6} más</span>` : "";
+        return `<div style="background:${q.bg};border:2px solid ${q.borde};border-radius:4px;padding:12px;min-height:80px;">
           <div style="font-weight:700;font-size:15px;color:${q.tinta};">${q.emoji} ${q.titulo} (${lista.length})</div>
-          <div style="font-size:13px;color:${q.tinta};margin:2px 0 6px;">${q.sub}</div>
+          <div style="font-size:14px;color:${q.tinta};margin:2px 0 6px;">${q.sub}</div>
           ${chips}${extra}</div>`;
       };
       const neutros = comp.neutro || [];
@@ -2209,9 +2209,9 @@ async function cargarClientes(){
         <details style="margin-top:14px;">
           <summary style="font-size:14px;font-weight:700;cursor:pointer;color:#C0392B;">Clientes despedidos (${despedidos.length})</summary>
           <div style="margin-top:8px;">${despedidos.map(c => `
-            <div style="background:#FDECEA;border:1.5px solid #C0392B;border-radius:8px;padding:8px 12px;margin:4px 0;display:flex;justify-content:space-between;align-items:center;">
+            <div style="background:#FDECEA;border:1.5px solid #C0392B;border-radius:4px;padding:8px 12px;margin:4px 0;display:flex;justify-content:space-between;align-items:center;">
               <span style="font-size:15px;color:#0F1923;">${escHtml(c.nombre)}</span>
-              <button style="font-size:13px;padding:3px 10px;background:#E8F8F0;border:1.5px solid #009A5A;border-radius:6px;color:#009A5A !important;-webkit-text-fill-color:#009A5A !important;cursor:pointer;"
+              <button style="font-size:14px;padding:3px 10px;background:#E8F8F0;border:1.5px solid #009A5A;border-radius:4px;color:#009A5A !important;-webkit-text-fill-color:#009A5A !important;cursor:pointer;"
                 onclick="reactivarCliente('${c.id}','${escHtml(c.nombre)}')">Reactivar</button>
             </div>`).join("")}
           </div>
@@ -2335,9 +2335,9 @@ async function cargarBCG(){
   };
   const celda = (k) => {
     const c = CUAD[k], l = q[k] || [];
-    const chips = l.slice(0, 8).map((i) => `<span style="display:inline-block;background:#FFFFFF;border:1.5px solid ${c.borde};border-radius:6px;padding:3px 8px;margin:3px 3px 0 0;font-size:14px;color:#0F1923;">${escHtml(i.nombre)}${i.total > 0 ? ` · ${fmtMoney(i.total)}` : ""}</span>`).join("");
+    const chips = l.slice(0, 8).map((i) => `<span style="display:inline-block;background:#FFFFFF;border:1.5px solid ${c.borde};border-radius:4px;padding:3px 8px;margin:3px 3px 0 0;font-size:14px;color:#0F1923;">${escHtml(i.nombre)}${i.total > 0 ? ` · ${fmtMoney(i.total)}` : ""}</span>`).join("");
     const extra = l.length > 8 ? `<div style="font-size:14px;color:#2C3E50;margin-top:4px;">y ${l.length - 8} más…</div>` : "";
-    return `<div style="background:${c.bg};border:2px solid ${c.borde};border-radius:10px;padding:12px;">
+    return `<div style="background:${c.bg};border:2px solid ${c.borde};border-radius:4px;padding:12px;">
       <div style="font-weight:700;font-size:15px;color:${c.tinta};">${c.icono} ${c.titulo} (${l.length})</div>
       <div style="font-size:14px;color:#2C3E50;margin:2px 0 6px;">${c.sub}</div>${chips}${extra}</div>`;
   };
@@ -2507,7 +2507,7 @@ async function cargarHoy(){
     const ahora = new Date();
     const dia = Math.floor((ahora - new Date(ahora.getFullYear(), 0, 0)) / 86400000);
     mood.innerHTML = `<div class="tag-card" style="margin-top:16px;padding:16px;border-left:5px solid var(--sim-azul);">
-      <div style="font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">El apunte de hoy</div>
+      <div style="font-family:var(--font-mono);font-size:14px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">El apunte de hoy</div>
       <div style="font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--ink);line-height:1.35;">${MOODS[dia % MOODS.length]}</div>
     </div>`;
   }
@@ -2618,7 +2618,7 @@ function renderBloom(estado, nivel){
     }).join("");
   return `<div class="bloom-sinclair" title="Intensidad ${nivel}/3" style="display:flex;flex-direction:column;gap:3px;margin:6px 0 2px;">
     <div style="display:flex;gap:3px;align-items:flex-end;">${barras}</div>
-    ${caption ? `<span style="font-size:13px;color:#2C3E50;line-height:1.2;">${escHtml(caption)}</span>` : ""}
+    ${caption ? `<span style="font-size:14px;color:#2C3E50;line-height:1.2;">${escHtml(caption)}</span>` : ""}
   </div>`;
 }
 
@@ -2654,8 +2654,8 @@ async function cargarInventario(){
         <div class="detalle">${escHtml(p.categoria)} · ${escHtml(p.sku)}</div>
         <div class="stock">${p.stockActual}</div>
         <div class="detalle">${escHtml(p.mensaje)}</div>
-        <div class="detalle" style="font-size:12px;">${p.ubicacionNombre && p.ubicacionNombre !== "todas" ? icoOC("percha", "#2C3E50", 12) + " " + escHtml(p.ubicacionNombre) : icoOC("percha", "#8A9AAA", 12) + " sin percha"}</div>
-        ${esDuenoInv && p.costo > 0 ? `<div class="detalle" style="font-size:12px;">Margen: ${fmtMoney((p.precio||0)-(p.costo||0))}</div>` : ""}
+        <div class="detalle" style="font-size:14px;">${p.ubicacionNombre && p.ubicacionNombre !== "todas" ? icoOC("percha", "#2C3E50", 12) + " " + escHtml(p.ubicacionNombre) : icoOC("percha", "#8A9AAA", 12) + " sin percha"}</div>
+        ${esDuenoInv && p.costo > 0 ? `<div class="detalle" style="font-size:14px;">Margen: ${fmtMoney((p.precio||0)-(p.costo||0))}</div>` : ""}
       </div>
       <!-- Ajuste rápido de stock sin escanear -->
       <div class="ajuste-rapido" onclick="event.stopPropagation()" style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -2738,7 +2738,7 @@ async function cargarLogAjustes(){
     if (!res.ok) throw new Error(res.status);
     movs = await res.json();
   } catch (_) {
-    if (cont) cont.innerHTML = '<p style="color:var(--ink-soft);font-size:13px;">No se pudo cargar el historial.</p>';
+    if (cont) cont.innerHTML = '<p style="color:var(--ink-soft);font-size:14px;">No se pudo cargar el historial.</p>';
     return;
   }
   if (!movs.length){ cont.innerHTML = '<p style="color:var(--ink-soft);">Sin movimientos registrados.</p>'; return; }
@@ -2751,8 +2751,8 @@ async function cargarLogAjustes(){
     // El dato ya viajaba en cada movimiento (mov() lo guarda); antes no se pintaba.
     // "Sistema" (dueño por PIN clásico, sin empleado nombrado) no se muestra.
     const quien = (m.usuarioNombre && m.usuarioNombre !== 'Sistema')
-      ? ` <span style="font-size:12px;font-weight:700;color:var(--azul-medio,#2c4a68);">· ${escHtml(m.usuarioNombre)}</span>` : '';
-    return `<div style="padding:6px 0;border-bottom:1px solid var(--linea,#e0d6c0);font-size:13px;color:var(--ink);"><span>${icono}</span> <strong>${detalle}</strong>${extra}${quien} <span style="color:var(--ink-soft);margin-left:8px;">${fecha}</span></div>`;
+      ? ` <span style="font-size:14px;font-weight:700;color:var(--azul-medio,#2c4a68);">· ${escHtml(m.usuarioNombre)}</span>` : '';
+    return `<div style="padding:6px 0;border-bottom:1px solid var(--linea,#e0d6c0);font-size:14px;color:var(--ink);"><span>${icono}</span> <strong>${detalle}</strong>${extra}${quien} <span style="color:var(--ink-soft);margin-left:8px;">${fecha}</span></div>`;
   }).join('');
 }
 
@@ -2778,18 +2778,18 @@ function renderPerchaCard(u, sucursalesDisp, promotorasDisp) {
       <strong style="font-size:16px;color:var(--ink);">${escHtml(u.nombre)}</strong>
       <button data-percha-renombrar="${u.id}" title="Renombrar esta percha" aria-label="Renombrar esta percha" style="border:none;background:transparent;cursor:pointer;padding:2px 4px;display:inline-flex;align-items:center;color:var(--azul-medio);">${icoOC("lapiz", "currentColor", 15)}</button>
     </div>
-    <div style="font-size:13px;color:var(--ink-soft);margin:4px 0 10px;">${tipoLabel}${comLabel}${u.esFeria ? ' · <strong style="color:var(--rust,#E86040);">FERIA</strong>' : ''}${u.esEvento ? ' · <strong style="color:var(--rust,#E86040);">EVENTO</strong>' : ''}${inactiva ? ' · DESACTIVADA' : ''}</div>
+    <div style="font-size:14px;color:var(--ink-soft);margin:4px 0 10px;">${tipoLabel}${comLabel}${u.esFeria ? ' · <strong style="color:var(--rust,#E86040);">FERIA</strong>' : ''}${u.esEvento ? ' · <strong style="color:var(--rust,#E86040);">EVENTO</strong>' : ''}${inactiva ? ' · DESACTIVADA' : ''}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-      ${tipo !== 'propio' ? `<button data-percha-comision="${u.id}" style="font-size:13px;padding:6px 10px;border:2px solid var(--verde,#2f7a4f);border-radius:5px;background:transparent;color:var(--verde,#2f7a4f);cursor:pointer;">💰 Comisión${escalasEfectivas.length ? ` (${escalasEfectivas.length} escalas)` : ''}</button>` : ''}
-      <button data-percha-evento="${u.id}" data-evento-ahora="${u.esEvento ? '1' : ''}" style="font-size:13px;padding:6px 10px;border:2px solid var(--rust,#E86040);border-radius:5px;background:transparent;color:var(--rust,#E86040);cursor:pointer;">${u.esEvento ? 'Quitar marca evento' : 'Marcar como evento'}</button>
-      <button data-percha-toggle="${u.id}" data-activa="${u.activa !== false}" data-feria="${u.esFeria ? '1' : ''}" style="font-size:13px;padding:6px 10px;border:2px solid var(--rust);border-radius:5px;background:transparent;color:var(--rust);cursor:pointer;">${inactiva ? 'Reactivar' : (u.esFeria ? 'Cerrar y liquidar' : 'Desactivar')}</button>
-      <button data-percha-borrar="${u.id}" data-nombre="${escHtml(u.nombre)}" style="font-size:13px;padding:6px 10px;border:2px solid var(--rojo,#E8365D);border-radius:5px;background:transparent;color:var(--rojo,#E8365D);cursor:pointer;">Borrar</button>
-      <label style="font-size:12px;color:var(--ink-soft);">Mover a:
-        <select data-percha-mover="${u.id}" style="font-size:12px;padding:4px 6px;border:1px solid var(--azul-medio);border-radius:4px;margin-left:4px;">
+      ${tipo !== 'propio' ? `<button data-percha-comision="${u.id}" style="font-size:14px;padding:6px 10px;border:2px solid var(--verde,#2f7a4f);border-radius:4px;background:transparent;color:var(--verde,#2f7a4f);cursor:pointer;">💰 Comisión${escalasEfectivas.length ? ` (${escalasEfectivas.length} escalas)` : ''}</button>` : ''}
+      <button data-percha-evento="${u.id}" data-evento-ahora="${u.esEvento ? '1' : ''}" style="font-size:14px;padding:6px 10px;border:2px solid var(--rust,#E86040);border-radius:4px;background:transparent;color:var(--rust,#E86040);cursor:pointer;">${u.esEvento ? 'Quitar marca evento' : 'Marcar como evento'}</button>
+      <button data-percha-toggle="${u.id}" data-activa="${u.activa !== false}" data-feria="${u.esFeria ? '1' : ''}" style="font-size:14px;padding:6px 10px;border:2px solid var(--rust);border-radius:4px;background:transparent;color:var(--rust);cursor:pointer;">${inactiva ? 'Reactivar' : (u.esFeria ? 'Cerrar y liquidar' : 'Desactivar')}</button>
+      <button data-percha-borrar="${u.id}" data-nombre="${escHtml(u.nombre)}" style="font-size:14px;padding:6px 10px;border:2px solid var(--rojo,#E8365D);border-radius:4px;background:transparent;color:var(--rojo,#E8365D);cursor:pointer;">Borrar</button>
+      <label style="font-size:14px;color:var(--ink-soft);">Mover a:
+        <select data-percha-mover="${u.id}" style="font-size:14px;padding:4px 6px;border:1px solid var(--azul-medio);border-radius:4px;margin-left:4px;">
           <option value="">— Sin sucursal —</option>${optsS}
         </select></label>
-      <label style="font-size:12px;color:var(--ink-soft);">Promotor/a:
-        <select data-percha-promotor="${u.id}" style="font-size:12px;padding:4px 6px;border:1px solid var(--azul-medio);border-radius:4px;margin-left:4px;">
+      <label style="font-size:14px;color:var(--ink-soft);">Promotor/a:
+        <select data-percha-promotor="${u.id}" style="font-size:14px;padding:4px 6px;border:1px solid var(--azul-medio);border-radius:4px;margin-left:4px;">
           <option value="">— Ninguno —</option>${(promotorasDisp||[]).map(pr => `<option value="${pr.id}"${u.promotoraId === pr.id ? ' selected' : ''}>${escHtml(pr.nombre)}</option>`).join('')}
           <option value="__nuevo__">+ Nuevo/a promotor/a…</option>
         </select></label>
@@ -2838,21 +2838,21 @@ async function cargarPerchas(){
   sucursalesDisp.forEach(s => {
     const ps = porSucursal[s.id] || [];
     const btnBorrarSuc = ps.length === 0
-      ? `<button data-suc-borrar="${s.id}" data-nombre="${escHtml(s.nombre)}" style="font-size:12px;padding:3px 8px;border:1px solid var(--rojo,#E8365D);border-radius:4px;background:transparent;color:var(--rojo,#E8365D);cursor:pointer;">Borrar</button>`
+      ? `<button data-suc-borrar="${s.id}" data-nombre="${escHtml(s.nombre)}" style="font-size:14px;padding:3px 8px;border:1px solid var(--rojo,#E8365D);border-radius:4px;background:transparent;color:var(--rojo,#E8365D);cursor:pointer;">Borrar</button>`
       : '';
     html += `<div style="margin-bottom:20px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;border-bottom:1px solid var(--azul-medio,#4a7fa5);padding-bottom:4px;">
-        <span style="font-size:13px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;">Sucursal: ${escHtml(s.nombre)}</span>
-        <button data-suc-renombrar="${s.id}" style="font-size:12px;padding:3px 8px;border:1px solid var(--azul-medio);border-radius:4px;background:transparent;color:var(--azul-medio);cursor:pointer;">Renombrar</button>
+        <span style="font-size:14px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.08em;">Sucursal: ${escHtml(s.nombre)}</span>
+        <button data-suc-renombrar="${s.id}" style="font-size:14px;padding:3px 8px;border:1px solid var(--azul-medio);border-radius:4px;background:transparent;color:var(--azul-medio);cursor:pointer;">Renombrar</button>
         ${btnBorrarSuc}
       </div>
-      ${ps.length ? ps.map(u => renderPerchaCard(u, sucursalesDisp, promotorasDisp)).join('') : '<p style="font-size:13px;color:var(--ink-soft);margin:0 0 8px;">Ninguna percha asignada.</p>'}
+      ${ps.length ? ps.map(u => renderPerchaCard(u, sucursalesDisp, promotorasDisp)).join('') : '<p style="font-size:14px;color:var(--ink-soft);margin:0 0 8px;">Ninguna percha asignada.</p>'}
     </div>`;
   });
   if (sinSucursal.length) {
     html += `<div style="margin-bottom:20px;">
       <div style="margin-bottom:8px;border-bottom:1px solid var(--azul-medio,#4a7fa5);padding-bottom:4px;">
-        <span style="font-size:13px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;">Sin sucursal</span>
+        <span style="font-size:14px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.08em;">Sin sucursal</span>
       </div>
       ${sinSucursal.map(u => renderPerchaCard(u, sucursalesDisp, promotorasDisp)).join('')}
     </div>`;
@@ -2940,10 +2940,10 @@ async function cargarPerchas(){
 // mas las filas editables (hasta % de meta -> comisión %). Vive en su propio
 // overlay, igual patron que el panel de datos de venta.
 function _comisionFilaHtml(hasta, comision, idx){
-  const inp = 'style="width:100%;padding:6px;border:2px solid var(--azul-medio);border-radius:5px;"';
+  const inp = 'style="width:100%;padding:6px;border:2px solid var(--azul-medio);border-radius:4px;"';
   return `<div class="oc-com-fila" data-fila="${idx}" style="display:flex;gap:8px;align-items:center;margin-top:6px;">
-    <label style="flex:1;font-size:12px;color:var(--ink-soft);">Hasta % de meta<br><input type="number" min="1" step="1" class="oc-com-hasta" value="${hasta}" ${inp}></label>
-    <label style="flex:1;font-size:12px;color:var(--ink-soft);">Comisión %<br><input type="number" min="0" max="100" step="1" class="oc-com-pct" value="${comision}" ${inp}></label>
+    <label style="flex:1;font-size:14px;color:var(--ink-soft);">Hasta % de meta<br><input type="number" min="1" step="1" class="oc-com-hasta" value="${hasta}" ${inp}></label>
+    <label style="flex:1;font-size:14px;color:var(--ink-soft);">Comisión %<br><input type="number" min="0" max="100" step="1" class="oc-com-pct" value="${comision}" ${inp}></label>
     <button type="button" class="oc-com-quitar" style="margin-top:14px;border:none;background:transparent;color:var(--rojo,#a3392a);font-size:18px;cursor:pointer;padding:4px 8px;" title="Quitar tramo">✕</button>
   </div>`;
 }
@@ -2951,10 +2951,10 @@ function _comisionBarraHtml(escalas){
   if (!escalas.length) return '';
   const maxComision = Math.max(...escalas.map(e => e.comision), 1);
   const colores = ['#4a7fa5', '#2f7a4f', '#B8760A', '#E86040', '#a3392a', '#6b4a9e'];
-  return `<div style="display:flex;height:22px;border-radius:5px;overflow:hidden;margin-top:10px;border:1px solid var(--azul-medio);">
-    ${escalas.map((e, i) => `<div style="flex:1;background:${colores[i % colores.length]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;" title="Hasta ${e.hasta}% de meta → ${e.comision}%">${e.comision}%</div>`).join('')}
+  return `<div style="display:flex;height:22px;border-radius:4px;overflow:hidden;margin-top:10px;border:1px solid var(--azul-medio);">
+    ${escalas.map((e, i) => `<div style="flex:1;background:${colores[i % colores.length]};display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;" title="Hasta ${e.hasta}% de meta → ${e.comision}%">${e.comision}%</div>`).join('')}
   </div>
-  <div style="display:flex;font-size:11px;color:var(--ink-soft);margin-top:2px;">
+  <div style="display:flex;font-size:14px;color:var(--ink-soft);margin-top:2px;">
     ${escalas.map(e => `<div style="flex:1;text-align:center;">≤${e.hasta}%</div>`).join('')}
   </div>`;
 }
@@ -2973,23 +2973,23 @@ async function abrirEditorComision(id, u){
   const overlay = document.getElementById('oc-comision-overlay');
   const caja = document.getElementById('oc-comision-caja');
   const escalas = Array.isArray(u.escalasComision) ? u.escalasComision : [];
-  const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"';
+  const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"';
   const prom = (u.promotoraId && Array.isArray(window.OCPromotorasCache)) ? window.OCPromotorasCache.find(x => x.id === u.promotoraId) : null;
   // Switch de override (2026-07-23): si esta percha tiene comisionista asignado, por default
   // usamos el % del comisionista (se edita desde Comisiones -> tocar su nombre). El toggle
   // permite "apagarlo" para ESTA percha y usar la comision estandar propia de abajo.
   const toggleHtml = u.promotoraId ? `
-      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:14px;background:#fff;padding:10px;border-radius:6px;border:2px solid var(--azul-medio);">
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:14px;background:#fff;padding:10px;border-radius:4px;border:2px solid var(--azul-medio);">
         <input type="checkbox" id="oc-com-propia" ${u.usarComisionPropia ? "checked" : ""} style="width:18px;height:18px;">
         Usar la comisión estándar de esta percha (en vez de la de ${escHtml(prom ? prom.nombre : "su comisionista")})
       </label>
-      <p id="oc-com-nota" style="font-size:12px;color:var(--ink-soft);margin:4px 0 0;">${u.usarComisionPropia ? "" : `Por defecto está usando el ${Number(prom ? prom.comisionBase : 0) || 0}% de ${escHtml(prom ? prom.nombre : "su comisionista")}. Los campos de abajo solo aplican si activas el switch.`}</p>` : '';
+      <p id="oc-com-nota" style="font-size:14px;color:var(--ink-soft);margin:4px 0 0;">${u.usarComisionPropia ? "" : `Por defecto está usando el ${Number(prom ? prom.comisionBase : 0) || 0}% de ${escHtml(prom ? prom.nombre : "su comisionista")}. Los campos de abajo solo aplican si activas el switch.`}</p>` : '';
   caja.innerHTML = `
     <div class="ficha-producto tag-card" style="text-align:left;background:var(--blanco-calido,#fbf5e8);">
       <div class="titulo">💰 Comisión — ${escHtml(u.nombre)}</div>
-      <p style="font-size:13px;color:var(--ink-soft);">Comisión base y meta mensual. Si agregas tramos, la comisión sube según cuánto se acerque a la meta (ej: 25% hasta el 80% de la meta, 30% de ahí en adelante).</p>
+      <p style="font-size:14px;color:var(--ink-soft);">Comisión base y meta mensual. Si agregas tramos, la comisión sube según cuánto se acerque a la meta (ej: 25% hasta el 80% de la meta, 30% de ahí en adelante).</p>
       ${toggleHtml}
-      <div id="oc-com-camposPropios" style="${(u.promotoraId && !u.usarComisionPropia) ? "pointer-events:none;background:var(--azul-suave,#dde5ec);border-radius:8px;padding:8px;" : ""}">
+      <div id="oc-com-camposPropios" style="${(u.promotoraId && !u.usarComisionPropia) ? "pointer-events:none;background:var(--azul-suave,#dde5ec);border-radius:4px;padding:8px;" : ""}">
         <div style="display:flex;gap:10px;margin-top:10px;">
           <label style="flex:1;font-size:14px;">Comisión base %<br><input id="oc-com-base" type="number" min="0" max="100" step="1" value="${Number(u.comisionSocio)||0}" ${inp}></label>
           <label style="flex:1;font-size:14px;">Meta mensual $<br><input id="oc-com-meta" type="number" min="0" step="1" value="${Number(u.metaMensual)||0}" ${inp}></label>
@@ -2997,7 +2997,7 @@ async function abrirEditorComision(id, u){
         <div style="margin-top:14px;font-size:14px;font-weight:700;">Tramos de comisión (opcional)</div>
         <div id="oc-com-barra">${_comisionBarraHtml(escalas)}</div>
         <div id="oc-com-filas">${escalas.map((e, i) => _comisionFilaHtml(e.hasta, e.comision, i)).join('')}</div>
-        <button type="button" id="oc-com-agregar" style="margin-top:10px;font-size:13px;padding:6px 12px;">+ Agregar tramo</button>
+        <button type="button" id="oc-com-agregar" style="margin-top:10px;font-size:14px;padding:6px 12px;">+ Agregar tramo</button>
       </div>
       <div id="oc-com-msg" style="font-size:14px;margin-top:10px;font-weight:700;"></div>
       <div class="acciones-rapidas" style="margin-top:12px;">
@@ -3226,36 +3226,36 @@ function mostrarFormNuevoProducto(codigoEscaneado){
       ${codigoEscaneado
         ? `<div class="linea"><strong>Código:</strong> ${codigoEscaneado}</div>`
         : `<label style="display:block;margin-top:10px;font-size:14px;">Código de barras / interno<br>
-            <input id="np-barcode" type="text" placeholder="Escanea o escribe el código" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>`}
+            <input id="np-barcode" type="text" placeholder="Escanea o escribe el código" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>`}
       <label style="display:block;margin-top:10px;font-size:14px;">Nombre<br>
-        <input id="np-nombre" type="text" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
+        <input id="np-nombre" type="text" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Categoría<br>
-        <input id="np-categoria" type="text" placeholder="Ej: Licores" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
+        <input id="np-categoria" type="text" placeholder="Ej: Licores" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Tipo de producto<br>
-        <select id="np-tipo-producto" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;">
+        <select id="np-tipo-producto" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;">
           <option value="normal">Normal (mercancía)</option>
           <option value="ticket">Ticket / Evento / Clase</option>
         </select></label>
-      <p style="font-size:12px;color:var(--ink-soft);margin:4px 0 0;">Si eliges "Ticket/Evento", al vender se pedirán siempre los datos del evento y de quien paga.</p>
+      <p style="font-size:14px;color:var(--ink-soft);margin:4px 0 0;">Si eliges "Ticket/Evento", al vender se pedirán siempre los datos del evento y de quien paga.</p>
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Precio venta<br>
-          <input id="np-precio" type="number" min="0" step="0.01" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
+          <input id="np-precio" type="number" min="0" step="0.01" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
         <label style="flex:1;font-size:14px;">Costo<br>
-          <input id="np-costo" type="number" min="0" step="0.01" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
+          <input id="np-costo" type="number" min="0" step="0.01" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       </div>
       <label style="display:block;margin-top:10px;font-size:14px;">Stock inicial<br>
-        <input id="np-stock" type="number" min="0" step="1" value="0" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
+        <input id="np-stock" type="number" min="0" step="1" value="0" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Proveedor<br>
-        <input id="np-proveedor" type="text" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
+        <input id="np-proveedor" type="text" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Foto (opcional — el equipo la ve en la ficha y no se confunde)<br>
-        <input id="np-foto" type="file" accept="image/*" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
+        <input id="np-foto" type="file" accept="image/*" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:15px;font-weight:700;">
         <input id="np-perecible" type="checkbox" style="width:20px;height:20px;"> ¿Este producto expira?</label>
       <div id="np-fecha-wrap" style="display:none;margin-top:8px;">
         <label style="display:block;font-size:14px;">Fecha de caducidad<br>
-          <input id="np-fecha" type="date" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"></label>
+          <input id="np-fecha" type="date" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
         <label style="display:block;margin-top:8px;font-size:14px;">Orden de venta recomendado<br>
-          <select id="np-metodo" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;">
+          <select id="np-metodo" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;">
             <option value="FIFO">FIFO — vender primero lo que vence antes (recomendado)</option>
             <option value="LIFO">LIFO — vender primero lo más nuevo</option>
           </select></label>
@@ -3336,7 +3336,7 @@ async function mostrarFormEditarProducto(id){
   // mismo contenedor donde estaba la ficha — modal de Inventario O panel de Escanear.
   const contenedor = document.getElementById(fichaTargetActual) || document.getElementById("fichaResultado");
   const q = (s) => escHtml(s == null ? "" : s); // item 20: escape completo (<,>,&,comillas), no solo comillas
-  const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"';
+  const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"';
   // M1 costo · M2 percha · M3 umbrales · M4 tipo proveedor/artista (2026-07-22)
   const optsPerchas = perchas.map(u =>
     `<option value="${escHtml(u.id)}"${u.id === p.ubicacionId ? " selected" : ""}>${escHtml(u.nombre)}</option>`
@@ -3348,7 +3348,7 @@ async function mostrarFormEditarProducto(id){
         <input id="ed-nombre" type="text" value="${q(p.nombre)}" ${inp}></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Foto (opcional, se guarda dentro de la ficha)<br>
         <input id="ed-foto" type="file" accept="image/*" ${inp}></label>
-      ${p.foto ? `<img src="${p.foto}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:8px;margin-top:6px;">` : ""}
+      ${p.foto ? `<img src="${p.foto}" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:4px;margin-top:6px;">` : ""}
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Precio venta<br><input id="ed-precio" type="number" min="0" step="0.01" value="${p.precio}" ${inp}></label>
         <label style="flex:1;font-size:14px;">Costo<br><input id="ed-costo" type="number" min="0" step="0.01" value="${p.costo || 0}" ${inp}></label>
@@ -3370,20 +3370,20 @@ async function mostrarFormEditarProducto(id){
           <option value="normal"${p.tipoProducto !== "ticket" ? " selected" : ""}>Normal (mercancía)</option>
           <option value="ticket"${p.tipoProducto === "ticket" ? " selected" : ""}>Ticket / Evento / Clase</option>
         </select></label>
-      <p style="font-size:12px;color:var(--ink-soft);margin:4px 0 0;">Si es "Ticket/Evento", al vender se pedirán siempre los datos del evento y de quien paga.</p>
+      <p style="font-size:14px;color:var(--ink-soft);margin:4px 0 0;">Si es "Ticket/Evento", al vender se pedirán siempre los datos del evento y de quien paga.</p>
       <label style="display:block;margin-top:10px;font-size:14px;">Percha principal<br>
         <select id="ed-ubicacion" ${inp}>
           <option value="todas"${!p.ubicacionId || p.ubicacionId === "todas" ? " selected" : ""}>Sin percha asignada</option>
           ${optsPerchas}
           <option value="__nueva__">+ Nueva percha…</option>
         </select></label>
-      ${hermanos.length ? `<div style="margin-top:8px;font-size:13px;color:var(--ink-soft);">También en: ${hermanos.map(h => `${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)`).join(" · ")}</div>` : ""}
+      ${hermanos.length ? `<div style="margin-top:8px;font-size:14px;color:var(--ink-soft);">También en: ${hermanos.map(h => `${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)`).join(" · ")}</div>` : ""}
       ${(() => { const ocupadas = new Set([p.ubicacionId, ...hermanos.map(h => h.ubicacionId)]); const disponibles = perchas.filter(u => !ocupadas.has(u.id)); return disponibles.length ? `
       <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <select id="ed-nueva-percha" style="padding:8px;border:2px solid var(--azul-medio);border-radius:5px;font-size:14px;">
+        <select id="ed-nueva-percha" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;font-size:14px;">
           ${disponibles.map(u => `<option value="${escHtml(u.id)}">${escHtml(u.nombre)}</option>`).join("")}
         </select>
-        <button type="button" id="ed-agregar-percha" style="font-size:13px;padding:8px 12px;">+ Agregar a esa percha</button>
+        <button type="button" id="ed-agregar-percha" style="font-size:14px;padding:8px 12px;">+ Agregar a esa percha</button>
       </div>` : ""; })()}
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Umbral alerta roja<br><input id="ed-umbral-rojo" type="number" min="0" step="1" value="${p.umbralRojo || 0}" ${inp}></label>
@@ -3511,7 +3511,7 @@ async function abrirAltaProducto(){
   // M6 (2026-07-22): fetch perchas para select de asignacion en alta
   let perchasAlta = [];
   try { perchasAlta = await (await fetch(`${API}/ubicaciones`)).json(); if (!Array.isArray(perchasAlta)) perchasAlta = []; } catch(_){}
-  const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"';
+  const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"';
   body.innerHTML = `
     <div class="ficha-producto tag-card" style="text-align:left;">
       <div class="titulo">Nuevo producto</div>
@@ -3588,7 +3588,7 @@ function pintarFicha(p){
   const contenedor = document.getElementById(fichaTargetActual) || document.getElementById("fichaResultado");
   contenedor.innerHTML = `
     <div class="ficha-producto tag-card">
-      ${p.foto ? `<img src="${p.foto}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:8px;border:2px solid var(--sim-plata-dk,#8A9AAA);float:right;margin-left:10px;">` : ""}
+      ${p.foto ? `<img src="${p.foto}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:4px;border:2px solid var(--sim-plata-dk,#8A9AAA);float:right;margin-left:10px;">` : ""}
       <div class="titulo">${escHtml(p.nombre)}</div>
       <div class="precio">${fmtMoney(p.precio)}</div>
       <div class="linea"><strong>SKU:</strong> ${escHtml(p.sku)}</div>
@@ -3724,15 +3724,15 @@ async function abrirPanelVentaInfo(id, esTicket){
   _ventaInfoProductoCache = p;
   const overlay = document.getElementById("oc-ventainfo-overlay");
   const caja = document.getElementById("oc-ventainfo-caja");
-  const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"';
+  const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"';
   const req = esTicket ? ' <span style="color:var(--rojo,#a3392a);">*</span>' : '';
   caja.innerHTML = `
     <div class="ficha-producto tag-card" style="text-align:left;background:var(--blanco-calido,#fbf5e8);">
       <div class="titulo">${esTicket ? "Vender ticket / evento" : "Datos de la venta"} — ${escHtml(p.nombre)}</div>
-      <p style="font-size:13px;color:var(--ink-soft);">${esTicket ? "Este producto es tipo Ticket/Evento: estos datos son obligatorios." : "Opcional — solo si quieres registrar quién compró y cómo pagó."}</p>
+      <p style="font-size:14px;color:var(--ink-soft);">${esTicket ? "Este producto es tipo Ticket/Evento: estos datos son obligatorios." : "Opcional — solo si quieres registrar quién compró y cómo pagó."}</p>
       <label style="display:block;margin-top:10px;font-size:14px;">Cliente (buscar por nombre, o dejar en blanco)<br>
         <input id="vi-cliente-buscar" type="text" placeholder="Escribe para filtrar..." ${inp}></label>
-      <select id="vi-cliente" size="1" style="width:100%;padding:8px;margin-top:6px;border:2px solid var(--azul-medio);border-radius:5px;">
+      <select id="vi-cliente" size="1" style="width:100%;padding:8px;margin-top:6px;border:2px solid var(--azul-medio);border-radius:4px;">
         <option value="">Venta de mostrador (sin cliente)</option>
         ${clientes.map(c => `<option value="${c.id}">${escHtml(c.nombre)} (${escHtml(c.codigo)})</option>`).join("")}
       </select>
@@ -3833,7 +3833,7 @@ function mostrarToastAnular(ventaId, productoId){
   if (!cont) return;
   clearInterval(toastVentaIntervalo); // cancela el interval anterior si existía
   cont.innerHTML = `<div class="tag-card" style="position:fixed;left:16px;right:16px;bottom:calc(var(--nav-h,64px) + 16px);z-index:400;
-    background:var(--azul-oscuro,#1c3049);color:var(--blanco-calido,#F8F9FB);padding:14px 16px;border-radius:8px;
+    background:var(--azul-oscuro,#1c3049);color:var(--blanco-calido,#F8F9FB);padding:14px 16px;border-radius:4px;
     display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;" id="oc-toast-anular">
     <span>✓ Vendido. Toca aquí si fue error (desaparece en 5s)</span>
     <strong id="oc-toast-cuenta">5s</strong>
@@ -3918,7 +3918,7 @@ async function cargarEtiquetas(){
       <div class="nombre-prod">${escHtml(p.nombre)}</div>
       <div class="precio-prod">${fmtMoney(p.precio)}</div>
       <div class="sku-prod">${escHtml(p.sku)}</div>
-      ${p.perecible ? `<div style="font-size:13px;font-weight:700;color:var(--rust);margin-top:4px;">${icoOC("reloj", "#C05000", 13)} Perecible</div>` : ""}
+      ${p.perecible ? `<div style="font-size:14px;font-weight:700;color:var(--rust);margin-top:4px;">${icoOC("reloj", "#C05000", 13)} Perecible</div>` : ""}
     </div>
   `).join("");
 }
@@ -3941,12 +3941,12 @@ async function abrirEtiqueta(id){
     <button class="cerrar" id="cerrarModal2">✕</button>
     <h4>${p.nombre}</h4>
     <div class="precio-grande">${fmtMoney(p.precio)}</div>
-    ${p.perecible && p.fechaCaducidad ? `<div style="font-size:13px;font-weight:700;color:var(--rust);">Vence: ${p.fechaCaducidad}</div>` : ""}
+    ${p.perecible && p.fechaCaducidad ? `<div style="font-size:14px;font-weight:700;color:var(--rust);">Vence: ${p.fechaCaducidad}</div>` : ""}
     <div class="codigo">${p.barcode}</div>
     <div class="barras" id="barrasClicable" style="cursor:pointer;position:relative;" title="Toca para imprimir o guardar solo el código de barras">${data.barcodeSvg || ""}</div>
-    <div style="font-size:13px;color:var(--azul-medio,#2c4a68);margin-top:-6px;">Toca el código de barras para imprimirlo o guardarlo solo</div>
+    <div style="font-size:14px;color:var(--azul-medio,#2c4a68);margin-top:-6px;">Toca el código de barras para imprimirlo o guardarlo solo</div>
     ${data.qrDataUrl ? `<img src="${data.qrDataUrl}" width="160" height="160" alt="QR del producto">
-    <div style="font-size:13px; color:var(--azul-medio);">Escanea para ver la ficha completa</div>` : ""}
+    <div style="font-size:14px; color:var(--azul-medio);">Escanea para ver la ficha completa</div>` : ""}
   `;
   // Botón de impresión fuera de la etiqueta — no viaja al papel ni aparece en el preview
   const accionesEl = document.getElementById("oc-etiqueta-acciones");
@@ -3960,13 +3960,13 @@ function mostrarMenuBarcode(e, svgBarcode, producto){
   document.getElementById("oc-menu-barcode")?.remove();
   const menu = document.createElement("div");
   menu.id = "oc-menu-barcode";
-  menu.style.cssText = "position:fixed;z-index:10000;background:var(--blanco-calido,#F8F9FB);border:2px solid var(--sim-plata-dk,#8A9AAA);border-radius:8px;box-shadow:0 6px 18px #A1A2A3;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:220px;";
+  menu.style.cssText = "position:fixed;z-index:10000;background:var(--blanco-calido,#F8F9FB);border:2px solid var(--sim-plata-dk,#8A9AAA);border-radius:4px;box-shadow:0 6px 18px #A1A2A3;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:220px;";
   const rect = e.target.closest("#barrasClicable").getBoundingClientRect();
   menu.style.left = Math.max(8, rect.left) + "px";
   menu.style.top = (rect.bottom + 8) + "px";
   menu.innerHTML = `
-    <button id="oc-mb-imprimir" style="text-align:left;padding:10px;border:none;background:transparent;border-radius:5px;cursor:pointer;font-size:14px;color:var(--ink,#211c14);">Imprimir solo el código</button>
-    <button id="oc-mb-guardar" style="text-align:left;padding:10px;border:none;background:transparent;border-radius:5px;cursor:pointer;font-size:14px;color:var(--ink,#211c14);">Guardar como imagen</button>
+    <button id="oc-mb-imprimir" style="text-align:left;padding:10px;border:none;background:transparent;border-radius:4px;cursor:pointer;font-size:14px;color:var(--ink,#211c14);">Imprimir solo el código</button>
+    <button id="oc-mb-guardar" style="text-align:left;padding:10px;border:none;background:transparent;border-radius:4px;cursor:pointer;font-size:14px;color:var(--ink,#211c14);">Guardar como imagen</button>
   `;
   document.body.appendChild(menu);
   const cerrar = (ev) => { if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener("click", cerrar, true); } };
@@ -4063,7 +4063,7 @@ async function cargarActividad(){
   };
   cont.innerHTML = items.map(it => {
     const quien = (it.usuarioNombre && it.usuarioNombre !== 'Sistema')
-      ? `<div style="font-size:12px;font-weight:700;color:var(--azul-medio,#2c4a68);">${escHtml(it.usuarioNombre)}</div>` : '';
+      ? `<div style="font-size:14px;font-weight:700;color:var(--azul-medio,#2c4a68);">${escHtml(it.usuarioNombre)}</div>` : '';
     return `
     <div class="actividad-item">
       <div class="tipo">${escHtml(it.tipo)}</div>
@@ -4100,12 +4100,12 @@ function tarjetaPromotora(pr){
     <div class="tag-card" style="display:flex;align-items:center;gap:12px;padding:10px 14px;margin-bottom:8px;">
       <button type="button" data-abrir-promotora="${pr.id}" style="flex:1;text-align:left;background:transparent;border:none;padding:0;cursor:pointer;">
         <strong style="color:var(--azul-medio,#2c4a68);text-decoration:underline;">${escHtml(pr.nombre)}</strong>
-        <div style="font-size:13px;color:var(--ink-soft);">${Number(pr.comisionBase)||0}% de comisión${(pr.escalasComision&&pr.escalasComision.length)?` · ${pr.escalasComision.length} tramo${pr.escalasComision.length===1?"":"s"}`:""} — toca para editar</div>
-        ${datos ? `<div style="font-size:12px;color:var(--ink-soft);margin-top:2px;">${datos}</div>` : ""}
-        ${pr.direccion ? `<div style="font-size:12px;color:var(--ink-soft);">📍 ${escHtml(pr.direccion)}</div>` : ""}
-        ${pr.notas ? `<div style="font-size:12px;color:var(--ink-soft);font-style:italic;margin-top:2px;">"${escHtml(pr.notas)}"</div>` : ""}
+        <div style="font-size:14px;color:var(--ink-soft);">${Number(pr.comisionBase)||0}% de comisión${(pr.escalasComision&&pr.escalasComision.length)?` · ${pr.escalasComision.length} tramo${pr.escalasComision.length===1?"":"s"}`:""} — toca para editar</div>
+        ${datos ? `<div style="font-size:14px;color:var(--ink-soft);margin-top:2px;">${datos}</div>` : ""}
+        ${pr.direccion ? `<div style="font-size:14px;color:var(--ink-soft);">📍 ${escHtml(pr.direccion)}</div>` : ""}
+        ${pr.notas ? `<div style="font-size:14px;color:var(--ink-soft);font-style:italic;margin-top:2px;">"${escHtml(pr.notas)}"</div>` : ""}
       </button>
-      <button data-archivar-promotora="${pr.id}" data-nombre-promotora="${escHtml(pr.nombre)}" style="font-size:13px;padding:8px 12px;border:2px solid var(--rojo,#a3392a);border-radius:5px;background:transparent;color:var(--rojo,#a3392a);cursor:pointer;">Archivar</button>
+      <button data-archivar-promotora="${pr.id}" data-nombre-promotora="${escHtml(pr.nombre)}" style="font-size:14px;padding:8px 12px;border:2px solid var(--rojo,#a3392a);border-radius:4px;background:transparent;color:var(--rojo,#a3392a);cursor:pointer;">Archivar</button>
     </div>`;
 }
 function renderListaPromotorasViva(query){
@@ -4159,31 +4159,31 @@ async function renderGestionPromotoras(){
     <h3 class="seccion" style="font-size:15px;margin-top:0;">Comisionistas (promotores/as)</h3>
     <div class="tag-card" style="padding:14px;display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="libre" checked> Nombre libre</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="empleado"> Un/a empleado/a</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="proveedor"> Un/a proveedor/a o artista</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="libre" checked> Nombre libre</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="empleado"> Un/a empleado/a</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="proveedor"> Un/a proveedor/a o artista</label>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <input id="promNombre" type="text" placeholder="Nombre del/la comisionista" style="flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
-        <select id="promNombreSelect" style="display:none;flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;"></select>
-        <input id="promComision" type="number" min="0" max="100" placeholder="% comisión (ej: 10)" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
+        <input id="promNombre" type="text" placeholder="Nombre del/la comisionista" style="flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+        <select id="promNombreSelect" style="display:none;flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;"></select>
+        <input id="promComision" type="number" min="0" max="100" placeholder="% comisión (ej: 10)" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
       </div>
       <!-- Datos completos del/la comisionista (JFC 2026-07-23 parte 3): antes solo se
            guardaba nombre + %, muy por detrás de lo que ya se pide para clientes.
            Todo opcional salvo el nombre, para no frenar el alta rápida en el mostrador. -->
       <details style="margin-top:2px;">
-        <summary style="cursor:pointer;font-size:13px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">+ Datos de contacto y pago (opcional) ▸</summary>
+        <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">+ Datos de contacto y pago (opcional) ▸</summary>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px;">
-          <input id="promTelefono" type="text" placeholder="Teléfono" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
-          <input id="promCedula" type="text" placeholder="Cédula / RUC" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
-          <input id="promBanco" type="text" placeholder="Banco" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
-          <input id="promCuenta" type="text" placeholder="N° de cuenta" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
-          <input id="promDireccion" type="text" placeholder="Dirección (opcional)" style="flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;">
-          <textarea id="promNotas" placeholder="Notas (horarios, acuerdos especiales, etc.)" style="flex:2;min-width:200px;padding:10px;border:2px solid var(--azul-medio);border-radius:6px;min-height:40px;font-family:inherit;"></textarea>
+          <input id="promTelefono" type="text" placeholder="Teléfono" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+          <input id="promCedula" type="text" placeholder="Cédula / RUC" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+          <input id="promBanco" type="text" placeholder="Banco" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+          <input id="promCuenta" type="text" placeholder="N° de cuenta" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+          <input id="promDireccion" type="text" placeholder="Dirección (opcional)" style="flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+          <textarea id="promNotas" placeholder="Notas (horarios, acuerdos especiales, etc.)" style="flex:2;min-width:200px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;min-height:40px;font-family:inherit;"></textarea>
         </div>
       </details>
       <div style="margin-top:10px;"><button class="ir" id="btnAltaPromotora" style="padding:10px 18px;">+ Agregar comisionista</button></div>
-      <p style="font-size:12px;color:var(--ink-soft);margin:0;">Un/a empleado/a o un/a proveedor/a también puede ser comisionista a la vez — elegirlo aquí no le quita su otro rol.</p>
+      <p style="font-size:14px;color:var(--ink-soft);margin:0;">Un/a empleado/a o un/a proveedor/a también puede ser comisionista a la vez — elegirlo aquí no le quita su otro rol.</p>
     </div>
     <p id="promMsg" style="font-size:14px;font-weight:700;margin:8px 0 0;"></p>
 
@@ -4195,9 +4195,9 @@ async function renderGestionPromotoras(){
         <path d="M10.2 10.2L15 15" stroke="var(--azul-medio,#2E6278)" stroke-width="2.6" stroke-linecap="round"/>
       </svg>
       <input id="promBuscar" type="search" inputmode="search" autocomplete="off" placeholder="Buscar por nombre, teléfono o cédula…"
-        style="flex:1;min-width:0;padding:10px 12px;font-size:15px;border:2px solid var(--azul-medio);border-radius:8px;">
+        style="flex:1;min-width:0;padding:10px 12px;font-size:15px;border:2px solid var(--azul-medio);border-radius:4px;">
     </div>
-    <p id="promBuscarConteo" style="font-size:13px;color:var(--ink-soft);margin:6px 2px 0;"></p>
+    <p id="promBuscarConteo" style="font-size:14px;color:var(--ink-soft);margin:6px 2px 0;"></p>
     <div id="listaPromotoras" style="margin-top:10px;"></div>`;
   _promotorasVivasCache = lista.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
   const buscarPromEl = document.getElementById("promBuscar");
@@ -4275,11 +4275,11 @@ async function abrirEditorComisionista(id, pr){
   const overlay = document.getElementById('oc-comision-overlay');
   const caja = document.getElementById('oc-comision-caja');
   const escalas = Array.isArray(pr.escalasComision) ? pr.escalasComision : [];
-  const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;"';
+  const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"';
   caja.innerHTML = `
     <div class="ficha-producto tag-card" style="text-align:left;background:var(--blanco-calido,#fbf5e8);">
       <div class="titulo">💰 Comisión — ${escHtml(pr.nombre)}</div>
-      <p style="font-size:13px;color:var(--ink-soft);">Esta es la comisión del/de la comisionista: se aplica en cualquier percha donde esté asignado/a, salvo que esa percha tenga activado "usar su propia comisión estándar".</p>
+      <p style="font-size:14px;color:var(--ink-soft);">Esta es la comisión del/de la comisionista: se aplica en cualquier percha donde esté asignado/a, salvo que esa percha tenga activado "usar su propia comisión estándar".</p>
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Comisión base %<br><input id="oc-com-base" type="number" min="0" max="100" step="1" value="${Number(pr.comisionBase)||0}" ${inp}></label>
         <label style="flex:1;font-size:14px;">Meta mensual $<br><input id="oc-com-meta" type="number" min="0" step="1" value="${Number(pr.metaMensual)||0}" ${inp}></label>
@@ -4295,11 +4295,11 @@ async function abrirEditorComisionista(id, pr){
         <label style="flex:1;min-width:120px;font-size:14px;">N° de cuenta<br><input id="oc-com-cuenta" type="text" value="${escHtml(pr.cuenta||'')}" ${inp}></label>
       </div>
       <label style="display:block;margin-top:10px;font-size:14px;">Dirección<br><input id="oc-com-direccion" type="text" value="${escHtml(pr.direccion||'')}" ${inp}></label>
-      <label style="display:block;margin-top:10px;font-size:14px;">Notas<br><textarea id="oc-com-notas" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:5px;min-height:50px;font-family:inherit;">${escHtml(pr.notas||'')}</textarea></label>
+      <label style="display:block;margin-top:10px;font-size:14px;">Notas<br><textarea id="oc-com-notas" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;min-height:50px;font-family:inherit;">${escHtml(pr.notas||'')}</textarea></label>
       <div style="margin-top:14px;font-size:14px;font-weight:700;">Tramos de comisión (opcional)</div>
       <div id="oc-com-barra">${_comisionBarraHtml(escalas)}</div>
       <div id="oc-com-filas">${escalas.map((e, i) => _comisionFilaHtml(e.hasta, e.comision, i)).join('')}</div>
-      <button type="button" id="oc-com-agregar" style="margin-top:10px;font-size:13px;padding:6px 12px;">+ Agregar tramo</button>
+      <button type="button" id="oc-com-agregar" style="margin-top:10px;font-size:14px;padding:6px 12px;">+ Agregar tramo</button>
       <div id="oc-com-msg" style="font-size:14px;margin-top:10px;font-weight:700;"></div>
       <div class="acciones-rapidas" style="margin-top:12px;">
         <button class="vender" id="oc-com-guardar">Guardar comisión</button>
@@ -4377,12 +4377,12 @@ async function cargarComisiones(){
     <div style="margin-bottom:20px;">${ranking.map((r, i) => {
       const med = medallaOC(i);
       const dormido = (r.diasSinVenta != null && r.diasSinVenta >= 7)
-        ? `<span class="badge-estado rojo" style="margin-left:8px;font-size:11px;">dormido ${r.diasSinVenta}d</span>` : "";
+        ? `<span class="badge-estado rojo" style="margin-left:8px;font-size:14px;">dormido ${r.diasSinVenta}d</span>` : "";
       const top = r.topSku ? ` · mejor SKU: ${escHtml(r.topSku.sku)} (${r.topSku.unidades}u)` : "";
       return `<div class="tag-card" style="display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:8px;">
         <span style="font-size:20px;line-height:1;">${med}</span>
         <div style="flex:1;"><strong>${escHtml(r.nombre)}</strong>${dormido}
-          <div style="font-size:13px;color:var(--ink-soft);">${r.ventasCount} u vendidas · bruto ${fmtMoney(r.ventasBrutas)}${top}</div></div>
+          <div style="font-size:14px;color:var(--ink-soft);">${r.ventasCount} u vendidas · bruto ${fmtMoney(r.ventasBrutas)}${top}</div></div>
         <strong style="color:var(--verde,#2f7a4f);font-size:17px;">${fmtMoney(r.comision)}</strong>
       </div>`;
     }).join("")}</div>` : "";
@@ -4402,7 +4402,7 @@ async function cargarComisiones(){
       const key = reciente ? (altoValor ? "verano" : "primavera") : (altoValor ? "otono" : "invierno");
       grupos[key].push(r);
     });
-    const celda = (k) => { const e = ESTACIONES[k], l = grupos[k] || []; return `<div style="background:${e.bg};border:2px solid ${e.borde};border-radius:10px;padding:12px;min-height:80px;">
+    const celda = (k) => { const e = ESTACIONES[k], l = grupos[k] || []; return `<div style="background:${e.bg};border:2px solid ${e.borde};border-radius:4px;padding:12px;min-height:80px;">
       <div style="font-weight:700;font-size:15px;color:${e.tinta};">${e.icono} ${e.titulo.split(" — ")[0]} (${l.length})</div>
       <div style="font-size:14px;color:#0F1923;margin-top:6px;">${l.length ? l.map(r => escHtml(r.nombre.split(" ")[0])).join(", ") : "—"}</div></div>`; };
     return `
@@ -4428,11 +4428,11 @@ async function cargarComisiones(){
     const etiqueta = pct >= 100 ? "¡Meta cumplida!" : `${pct}% de la meta`;
     return `
       <div style="margin-top:10px;">
-        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:${color};margin-bottom:4px;">
+        <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;color:${color};margin-bottom:4px;">
           <span>Meta mensual: ${fmtMoney(meta)}</span><span>${etiqueta}</span>
         </div>
-        <div style="background:#e8e0d4;border-radius:6px;height:10px;overflow:hidden;">
-          <div class="oc-thermo-fill" data-pct="${p}" style="height:100%;width:0%;background:${color};border-radius:6px;transition:width 0.7s cubic-bezier(.4,0,.2,1);"></div>
+        <div style="background:#e8e0d4;border-radius:4px;height:10px;overflow:hidden;">
+          <div class="oc-thermo-fill" data-pct="${p}" style="height:100%;width:0%;background:${color};border-radius:4px;transition:width 0.7s cubic-bezier(.4,0,.2,1);"></div>
         </div>
       </div>`;
   }
@@ -4451,7 +4451,7 @@ async function cargarComisiones(){
       <details style="margin-top:10px;">
         <summary style="font-size:14px;font-weight:700;cursor:pointer;color:var(--azul-medio,#2c4a68);user-select:none;">¿Qué pasa si vendo más? →</summary>
         <div style="padding:10px 0 4px;">
-          <label style="font-size:13px;">Ventas proyectadas: <strong id="sim-lbl-${uid}">${fmtMoney(f.ventasBrutas)}</strong></label><br>
+          <label style="font-size:14px;">Ventas proyectadas: <strong id="sim-lbl-${uid}">${fmtMoney(f.ventasBrutas)}</strong></label><br>
           <input type="range" id="sim-rng-${uid}"
             min="0" max="${Math.round(max)}" step="5" value="${Math.round(f.ventasBrutas)}"
             style="width:100%;margin:6px 0 4px;accent-color:#E8A020;"
@@ -4472,14 +4472,14 @@ async function cargarComisiones(){
 
   const cardsHtml = filas.map(f => {
     const dormida = (f.diasSinVenta != null && f.diasSinVenta >= 7)
-      ? `<span class="badge-estado rojo" style="font-size:11px;">dormida ${f.diasSinVenta}d</span>` : "";
+      ? `<span class="badge-estado rojo" style="font-size:14px;">dormida ${f.diasSinVenta}d</span>` : "";
     return `
     <div class="tag-card" style="text-align:left;margin-bottom:12px;padding:16px;">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
         <strong style="font-size:16px;">${escHtml(f.ubicacion)}</strong>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">${dormida}<span class="badge-estado ${f.estado === "pagado" ? "verde" : f.estado === "sin ventas" ? "amarillo" : "rojo"}">${f.estado}</span></div>
       </div>
-      ${f.promotorNombre ? `<div style="font-size:13px;color:var(--ink-soft);margin-top:4px;">Promotor/a: <button type="button" data-abrir-promotora="${f.promotoraId}" style="background:transparent;border:none;padding:0;cursor:pointer;font-weight:700;color:var(--azul-medio,#2c4a68);text-decoration:underline;">${escHtml(f.promotorNombre)}</button>${f.origenComision === "percha" ? ' <span style="font-size:11px;color:var(--ink-soft);">(usando comisión estándar de esta percha, no la del comisionista)</span>' : ""}</div>` : ""}
+      ${f.promotorNombre ? `<div style="font-size:14px;color:var(--ink-soft);margin-top:4px;">Promotor/a: <button type="button" data-abrir-promotora="${f.promotoraId}" style="background:transparent;border:none;padding:0;cursor:pointer;font-weight:700;color:var(--azul-medio,#2c4a68);text-decoration:underline;">${escHtml(f.promotorNombre)}</button>${f.origenComision === "percha" ? ' <span style="font-size:14px;color:var(--ink-soft);">(usando comisión estándar de esta percha, no la del comisionista)</span>' : ""}</div>` : ""}
       <table style="width:100%;margin-top:10px;font-size:14px;">
         <tr><td>Ventas del mes</td><td style="text-align:right;">${fmtMoney(f.ventasBrutas)}</td></tr>
         <tr><td><strong>Comisión de la promotor/a</strong></td><td style="text-align:right;"><strong>${fmtMoney(f.comisionSocio)}</strong></td></tr>
@@ -4566,11 +4566,11 @@ function ofrecerResumenSemanalSiToca(){
   // (2026-07-17) el sello de 'ya ofrecido' se guarda al RESPONDER, no al pintar —
   // si el toast falla, la oferta no se quema por 7 dias.
   const toast = document.createElement("div");
-  toast.style.cssText = "position:fixed;bottom:16px;left:16px;right:16px;max-width:420px;margin:0 auto;background:#0F1923;border:2px solid #25D366;border-radius:10px;padding:14px 16px;z-index:9500;box-shadow:0 8px 30px #060d14;";
+  toast.style.cssText = "position:fixed;bottom:16px;left:16px;right:16px;max-width:420px;margin:0 auto;background:#0F1923;border:2px solid #25D366;border-radius:4px;padding:14px 16px;z-index:9500;box-shadow:0 8px 30px #060d14;";
   toast.innerHTML = `<p style="color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;font-size:14px;margin:0 0 10px;font-weight:700;">¿Enviarte el resumen de esta semana por WhatsApp?</p>
     <div style="display:flex;gap:8px;">
-      <button id="oc-resumen-sem-si" style="flex:1;min-height:44px;border:none;border-radius:7px;background:#25D366;color:#04210f !important;-webkit-text-fill-color:#04210f !important;font-weight:700;cursor:pointer;">Enviar</button>
-      <button id="oc-resumen-sem-no" style="min-height:44px;padding:0 14px;border:2px solid #5294AC;border-radius:7px;background:transparent;color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;cursor:pointer;">Ahora no</button>
+      <button id="oc-resumen-sem-si" style="flex:1;min-height:44px;border:none;border-radius:4px;background:#25D366;color:#04210f !important;-webkit-text-fill-color:#04210f !important;font-weight:700;cursor:pointer;">Enviar</button>
+      <button id="oc-resumen-sem-no" style="min-height:44px;padding:0 14px;border:2px solid #5294AC;border-radius:4px;background:transparent;color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;cursor:pointer;">Ahora no</button>
     </div>`;
   document.body.appendChild(toast);
   toast.querySelector("#oc-resumen-sem-si").addEventListener("click", () => { try { localStorage.setItem("amg_resumen_semanal_ofrecido", String(Date.now())); } catch (_) {} enviarResumenSemanalWhatsApp(); toast.remove(); });
@@ -4815,10 +4815,10 @@ async function cargarReservasEventos(){
   if (!cont) return;
   let lista;
   try { lista = await (await fetch(`${API}/reservas-eventos`)).json(); }
-  catch (_) { cont.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">No se pudo cargar la lista de reservas. Recarga la vista.</p>'; return; }
-  if (!Array.isArray(lista) || !lista.length){ cont.innerHTML = '<p style="font-size:13px;color:var(--ink-soft);">Todavía no hay reservas registradas.</p>'; return; }
+  catch (_) { cont.innerHTML = '<p style="font-size:14px;color:var(--ink-soft);">No se pudo cargar la lista de reservas. Recarga la vista.</p>'; return; }
+  if (!Array.isArray(lista) || !lista.length){ cont.innerHTML = '<p style="font-size:14px;color:var(--ink-soft);">Todavía no hay reservas registradas.</p>'; return; }
   cont.innerHTML = `<h4 style="font-size:14px;margin:0 0 6px;">Reservas registradas</h4>` + lista.slice().reverse().map(rv => `
-    <div class="tag-card" style="padding:10px 12px;margin-bottom:6px;font-size:13px;">
+    <div class="tag-card" style="padding:10px 12px;margin-bottom:6px;font-size:14px;">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">
         <strong>${escHtml(rv.nombreEvento || "")}</strong>
         <span style="color:var(--ink-soft);">${escHtml(rv.fecha || "")}</span>
@@ -5025,7 +5025,7 @@ window.addEventListener("oc-datos-importados", async () => {
       d.setAttribute("role", "status");
       d.style.cssText = "position:fixed;bottom:0;left:0;right:0;z-index:10004;background:#0F1923;border-top:3px solid #E86040;padding:10px 14px;text-align:center;";
       d.innerHTML = '<span style="color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:15px;font-weight:700;">Algo falló en esta pantalla. Recarga la página; si se repite, avísanos por WhatsApp.</span>' +
-        ' <button style="margin-left:10px;min-height:40px;padding:8px 14px;border-radius:6px;border:2px solid #5294AC;background:transparent;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:14px;font-weight:700;cursor:pointer;" onclick="location.reload()">Recargar</button>';
+        ' <button style="margin-left:10px;min-height:40px;padding:8px 14px;border-radius:4px;border:2px solid #5294AC;background:transparent;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:14px;font-weight:700;cursor:pointer;" onclick="location.reload()">Recargar</button>';
       (document.body || document.documentElement).appendChild(d);
       setTimeout(() => d.remove(), 12000);
     } catch (_) {}
@@ -5057,7 +5057,7 @@ window.dialogosBloqueados = function () {
       d.id = "oc-doble-tab";
       d.style.cssText = "position:fixed;inset:0;z-index:10003;background:#0F1923;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;";
       d.innerHTML = '<p style="color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:18px;font-weight:700;max-width:420px;">Ya hay una caja de AMIGABLE-123 abierta en otra pestaña. Para no pisar los datos, usa una sola a la vez.</p>' +
-        '<button id="oc-doble-usar" style="min-height:48px;padding:12px 22px;border-radius:8px;border:2px solid #5294AC;background:transparent;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:16px;font-weight:700;cursor:pointer;">Usar aquí de todos modos</button>';
+        '<button id="oc-doble-usar" style="min-height:48px;padding:12px 22px;border-radius:4px;border:2px solid #5294AC;background:transparent;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:16px;font-weight:700;cursor:pointer;">Usar aquí de todos modos</button>';
       document.body.appendChild(d);
       document.getElementById("oc-doble-usar").addEventListener("click", () => { soyPrincipal = true; d.remove(); });
     }
@@ -5088,7 +5088,7 @@ window.dialogosBloqueados = function () {
   <div id="oc-ventainfo-caja" style="max-width:460px;width:100%;margin:16px auto;"></div>
 </div>
 <div id="oc-modal-overlay" style="display:none;position:fixed;inset:0;z-index:10000;background:#0F141E;align-items:center;justify-content:center;padding:20px;">
-  <div id="oc-modal-caja" class="tag-card" style="max-width:380px;width:100%;text-align:left;background:var(--blanco-calido,#fbf5e8);padding:22px 20px;border-radius:12px;">
+  <div id="oc-modal-caja" class="tag-card" style="max-width:380px;width:100%;text-align:left;background:var(--blanco-calido,#fbf5e8);padding:22px 20px;border-radius:4px;">
     <div id="oc-modal-msg" style="font-size:15px;color:var(--ink,#211c14);white-space:pre-line;margin-bottom:18px;"></div>
     <div id="oc-modal-botones" style="display:flex;gap:10px;justify-content:flex-end;"></div>
   </div>
