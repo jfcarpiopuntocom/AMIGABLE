@@ -59,10 +59,10 @@ modal.setAttribute("aria-hidden","true");
 modal.innerHTML=`
     <div id="am-welcome-card" class="am-welcome-card" role="dialog" aria-label="Bienvenida">
       <p class="marca">Amigable-123</p>
-      <h2>Bienvenido</h2>
+      <h2>Bienvenido/a</h2>
       <p class="tagline">Deja de adivinar. Empieza a ver.</p>
       <p class="formal">Administra tu negocio, a color — inventario, clientes y perchas</p>
-      <p class="cuerpo">Manejar tu negocio no tiene por qué ser aburrido ni abrumador. Aquí tus productos hablan en colores que se encienden solos cuando hay que actuar: verde si todo marcha bien, dorado si hay dinero esperándote, rojo si toca actuar ya. Funciona sin internet, tus datos son solo tuyos, y no hay suscripciones ni anuncios de nadie.</p>
+      <p class="cuerpo">Manejar tu negocio no tiene por qué ser aburrido ni abrumador. Aquí tus productos hablan en colores que se encienden solos cuando hay que actuar: verde si todo marcha bien, dorado si hay dinero esperándote, rojo si toca actuar ya. Funciona offline, tus datos son solo tuyos, y no hay suscripciones ni anuncios de nadie.</p>
       <button id="am-welcome-tut" style="width:100%;min-height:46px;margin-bottom:8px;border-radius:8px;border:2px solid #E86040;background:#E86040;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:15px;font-weight:700;cursor:pointer;">Hacer el tutorial guiado</button>
       <button id="am-welcome-guia">Ver la guía</button>
       <button id="am-welcome-ok">Empezar</button>

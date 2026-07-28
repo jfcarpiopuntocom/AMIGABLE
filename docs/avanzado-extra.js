@@ -159,6 +159,71 @@
   vista.appendChild(bkMount);
   if (window.OCBackupScheduler) window.OCBackupScheduler.montar(bkMount);
 })();
+// === MIS SINCRONIZACIONES (2026-07-28): agrupa Respaldo + Sincronizar equipo
+// + Caja fuerte automatica bajo un solo mini-header azul (lado sereno de la
+// app, mismo tratamiento visual que Mi Equipo). 100% aditivo: NO recrea los
+// paneles, solo los MUEVE (appendChild re-parenta, listeners intactos) dentro
+// de un wrapper nuevo. Si algun panel no existe (modulo no cargo), se omite
+// sin romper nada. NO BORRAR los paneles originales, solo se reubican. ===
+(function () {
+  try {
+    var panelSync = document.getElementById("oc-sync-panel");
+    var mountBackupSched = document.getElementById("oc-backup-scheduler-mount");
+    // NOTA: el Respaldo manual/exportar NO se incluye aqui a proposito -
+    // vive detras del PIN de la capa contable (Ver capa contable) desde
+    // antes de este cambio, y mover su nodo lo hubiera sacado de esa
+    // proteccion sin autorizacion. Sincronizar equipo y Caja fuerte ya
+    // eran publicos (fuera de esa capa), asi que agruparlos aqui no
+    // cambia ningun control de acceso existente.
+    var piezas = [panelSync, mountBackupSched].filter(Boolean);
+    if (!piezas.length) return;
+
+    var wrap = document.createElement("div");
+    wrap.className = "tag-card";
+    wrap.id = "oc-mis-sincronizaciones";
+    wrap.style.cssText = "text-align:left;margin-top:22px;border-top:5px solid var(--azul-medio,#2c4a68);background:var(--blanco-calido,#fbf5e8);";
+    wrap.innerHTML =
+      '<h3 class="seccion" style="margin-top:0;color:var(--azul-medio,#2c4a68);">Mis Sincronizaciones</h3>' +
+      '<p style="font-size:14px;color:var(--ink-soft);margin-top:0;">' +
+      'amigable-123 es, en el fondo, un cuaderno compartido de control de inventario, perchas y clientes, en colores. ' +
+      'Aquí controlas cómo ese cuaderno se comparte entre tus dispositivos y los de tu equipo. ' +
+      '(El respaldo manual descargable vive dentro de la capa contable, protegido con tu PIN.)</p>' +
+      '<div id="oc-sync-faq" style="display:flex;flex-direction:column;gap:6px;margin:10px 0 18px;font-size:13px;color:var(--ink-soft);">' +
+        '<div><strong style="color:var(--ink);">(?) Sincronizar equipo</strong> — mantiene a todos tus dispositivos (dueño, admins, empleados) al día en segundos, cifrado, para siempre mientras esté activo.</div>' +
+        '<div><strong style="color:var(--ink);">(?) Caja fuerte automática</strong> — puntos de restauración guardados solo en este navegador por si borras algo sin querer. No reemplaza el respaldo manual.</div>' +
+      '</div>';
+    var primerNodo = piezas[0];
+    primerNodo.parentNode.insertBefore(wrap, primerNodo);
+    piezas.forEach(function (el) { wrap.appendChild(el); });
+  } catch (_) { /* si algo falla aqui, los paneles originales quedan donde ya estaban - cero riesgo */ }
+})();
+// === FIN MIS SINCRONIZACIONES ===
+
+// === POLITICA DE PRIVACIDAD Y DATOS (2026-07-28) ===========================
+// Desplegable informativo al fondo de Avanzado. Texto legal/descriptivo,
+// no hay logica de negocio aqui. Estandares referenciados: RGPD/UE (derecho
+// de acceso, portabilidad y minimizacion de datos) aplicados voluntariamente
+// aunque AMIGABLE no procese datos de terceros (arquitectura sin nube: los
+// datos del negocio NUNCA salen del dispositivo/equipo del usuario).
+(function () {
+  try {
+    var priv = document.createElement("details");
+    priv.className = "tag-card";
+    priv.id = "oc-privacidad";
+    priv.style.cssText = "text-align:left;margin-top:22px;";
+    priv.innerHTML =
+      '<summary style="cursor:pointer;font-size:15px;font-weight:700;color:var(--ink);">Política de Privacidad y Manejo de Datos</summary>' +
+      '<div style="font-size:14px;color:var(--ink-soft);margin-top:12px;line-height:1.55;">' +
+      '<p>amigable-123 es un cuaderno compartido de control de inventario, perchas y clientes, en colores. No manejamos ni almacenamos los datos de tu negocio: permanecen en tu dispositivo y en los de tu equipo. Solo registramos tus datos de contacto (correo, licencia) para poder darte soporte.</p>' +
+      '<p><strong style="color:var(--ink);">Código abierto y auditable.</strong> Sin bloatware, sin publicidad de terceros, sin venta ni arriendo de tus datos de contacto a terceros, sin código malicioso ni formas invasivas de recolección.</p>' +
+      '<p><strong style="color:var(--ink);">Estándares.</strong> Nos guiamos por los principios más exigentes disponibles en Ecuador y a nivel internacional — incluida la UE en lo que aplica sin comprometer la autonomía del usuario sobre sus propios datos: minimización de datos, cifrado de extremo a extremo para la sincronización entre equipos, y descentralización (sin base de datos central de tu negocio).</p>' +
+      '<p><strong style="color:var(--ink);">Es una PWA (Progressive Web App).</strong> Su creador la mantiene funcionando sólidamente, pero cada usuario con licencia gobierna sus propios datos y conserva una privacidad que ni una libreta de papel ni una app de pago mensual indefinido pueden ofrecer al mismo tiempo — esa diferencia es la que justifica invertir en cifrado, descentralización y autonomía real del usuario.</p>' +
+      '<p style="font-size:13px;">amigable-123 no se responsabiliza por usos extralegales o ilegales de cualquier tipo. Fue concebida para el micro y pequeño emprendedor o comerciante.</p>' +
+      '</div>';
+    vista.appendChild(priv);
+  } catch (_) {}
+})();
+// === FIN POLITICA DE PRIVACIDAD ============================================
 // === EQUIPO (multi-usuario, admins + empleados, 2026-07-22) ===========
     // Panel de gestión del Equipo: admins + empleados con PINs y correos.
     // - Dueño: crea admins y empleados, cambia cualquier PIN, desactiva cualquiera.
@@ -170,12 +235,14 @@
     const equipoPanel = document.createElement("div");
     equipoPanel.className = "tag-card";
     equipoPanel.id = "oc-emp-panel";
-    equipoPanel.style.cssText = "text-align:left;margin-top:22px;";
+    equipoPanel.style.cssText = "text-align:left;margin-top:22px;border-top:5px solid var(--azul-medio,#2c4a68);";
     equipoPanel.innerHTML = `
-      <h3 class="seccion" style="margin-top:0;">Equipo</h3>
+      <h3 class="seccion" style="margin-top:0;color:var(--azul-medio,#2c4a68);">Mi Equipo</h3>
       <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">
-        Cada miembro tiene su propio PIN de 3 dígitos. Sus ventas, ajustes y movimientos
-        quedan registrados con su nombre en el historial. El PIN del dueño no aparece aquí.
+        Da de alta o de baja roles, edita PINs y agrupa todo tu equipo aquí. Cada miembro tiene su
+        propio PIN de 3 dígitos y su nombre visible en la tabla — el PIN identifica el dispositivo,
+        el nombre identifica a la persona. Sus ventas, ajustes y movimientos quedan registrados con
+        su nombre en el historial. El PIN del dueño no aparece aquí.
       </p>
       <div id="oc-emp-lista" style="margin-bottom:18px;"></div>
       <details id="oc-emp-form-wrap" style="margin-bottom:6px;">
