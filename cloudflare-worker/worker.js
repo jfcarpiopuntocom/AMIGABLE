@@ -65,8 +65,9 @@ async function handleCheckin(req, env) {
     nombre: body.nombre || existente.nombre || "",
     apellido: body.apellido || existente.apellido || "",
     cedula: body.cedula || existente.cedula || "",
-    // New instances start as "observada" — JFC decides activa/limitada/bloqueada from panel
-    estado: existente.estado || "observada",
+    // Toda instancia nueva arranca en "minima": el plan gratuito es el piso,
+    // no un castigo. JFC la sube a "full" desde el panel cuando el cliente paga.
+    estado: normalizarEstado(existente.estado),
     ip,
     activatedAt: existente.activatedAt || (body.activatedAt ? body.activatedAt : null),
     firstSeen: existente.firstSeen || Date.now(),
@@ -75,6 +76,37 @@ async function handleCheckin(req, env) {
   };
   await env.LICENCIAS.put(`inst:${instanceId}`, JSON.stringify(registro));
   return json({ ok: true, estado: registro.estado });
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   ESTADOS DE LICENCIA (modelo definido por JFC, 2026-07-28)
+
+     minima     Gratis para siempre, para cualquiera, sin pedir permiso.
+                Tope: 25 productos, 100 ventas al mes (se renueva cada mes)
+                y 1 empleado. Es el estado por defecto de toda instancia
+                nueva. JFC: "es free para cualquiera".
+     full       Uso completo, sin topes. JFC la activa desde el panel
+                cuando el cliente paga.
+     bloqueada  Cortada por abuso o impago. Unico estado punitivo.
+
+   "observada" quedo eliminada: no tenia sentido vigilar a alguien que ya
+   esta en un plan gratuito legitimo. Los registros viejos que la tengan se
+   leen como "minima".
+
+   normalizarEstado() existe para que los registros escritos ANTES de este
+   cambio sigan funcionando sin migracion. Se aplica al leer y al escribir,
+   de modo que KV se va limpiando solo a medida que las instancias hacen
+   checkin. NO borrar hasta que no queden registros con nombres viejos. */
+const MAPA_ESTADOS_VIEJOS = {
+  activa: "full",       // antes "activa" era el uso completo
+  limitada: "minima",   // antes "limitada" era el tope gratuito
+  observada: "minima",  // eliminada: degrada al plan gratuito, nunca castiga
+};
+const ESTADOS_VALIDOS = ["minima", "full", "bloqueada"];
+function normalizarEstado(e) {
+  const v = String(e || "").toLowerCase();
+  if (ESTADOS_VALIDOS.includes(v)) return v;
+  return MAPA_ESTADOS_VIEJOS[v] || "minima";
 }
 
 // /recover-pin — envía el PIN del dueño a su correo vía Resend.
@@ -328,6 +360,7 @@ export default {
       if (!requireMasterKey(req, env)) return json({ error: "Master Key incorrecta" }, 401);
       const lista = await env.LICENCIAS.list({ prefix: "inst:" });
       const registros = await Promise.all(lista.keys.map((k) => env.LICENCIAS.get(k.name).then((v) => JSON.parse(v))));
+      registros.forEach((r) => { if (r) r.estado = normalizarEstado(r.estado); });
       registros.sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
       return json(registros);
     }
@@ -341,8 +374,12 @@ export default {
       if (!raw) return json({ error: "Instancia no encontrada" }, 404);
       const reg = JSON.parse(raw);
       let body; try { body = await req.json(); } catch (_) { body = {}; }
-      if (!["activa", "observada", "limitada", "bloqueada"].includes(body.estado)) return json({ error: "Estado inválido" }, 400);
-      reg.estado = body.estado;
+      const nuevoEstado = normalizarEstado(body.estado);
+      if (!ESTADOS_VALIDOS.includes(String(body.estado || "").toLowerCase())
+          && !MAPA_ESTADOS_VIEJOS[String(body.estado || "").toLowerCase()]) {
+        return json({ error: "Estado inválido" }, 400);
+      }
+      reg.estado = nuevoEstado;
       await env.LICENCIAS.put(`inst:${instanceId}`, JSON.stringify(reg));
       return json({ ok: true });
     }
