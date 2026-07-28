@@ -174,6 +174,53 @@ async function handleRecoverPin(req, env) {
 }
 
 // ===========================================================================
+// Reidentificación self-service (JFC 2026-07-28) — "si alguien se sabe la
+// licencia Y la cédula del dueño Y su correo, ya es suficiente prueba para
+// validarse como admin". Público, sin intervención de JFC. La licencia (código
+// random de 12 chars) es el secreto fuerte; cédula+correo son confirmación.
+// Solo confirma/niega — nunca devuelve datos de negocio ni PII de vuelta.
+// ===========================================================================
+function normLicencia(s) { return String(s || "").trim().toUpperCase(); }
+function normCedula(s) { return String(s || "").replace(/\D/g, ""); }
+function normEmail(s) { return String(s || "").trim().toLowerCase(); }
+
+async function handleVerificarIdentidad(req, env) {
+  const raw = await req.text();
+  if (raw.length > 512) return json({ error: "Payload too large" }, 413);
+  let body;
+  try { body = JSON.parse(raw); } catch (_) { return json({ ok: false, error: "Invalid JSON" }, 400); }
+
+  const licenseCode = normLicencia(body.licenseCode);
+  const cedula = normCedula(body.cedula);
+  const email = normEmail(body.email);
+  if (!licenseCode || !cedula || !email) {
+    return json({ ok: false, error: "Faltan datos (licencia, cédula y correo son los 3 obligatorios)." }, 400);
+  }
+
+  // Anti-fuerza-bruta: rate-limit por licencia intentada, no por IP (una
+  // licencia real solo la intenta su dueño real un puñado de veces).
+  try {
+    const rlKey = `rl:identidad:${licenseCode}`;
+    const n = parseInt((await env.LICENCIAS.get(rlKey)) || "0", 10) || 0;
+    if (n >= 8) return json({ ok: false, error: "Demasiados intentos con esta licencia. Espera una hora o contacta a soporte." }, 429);
+    await env.LICENCIAS.put(rlKey, String(n + 1), { expirationTtl: 3600 });
+  } catch (_) { /* fail-open: si el KV falla, no bloqueamos una verificación legítima */ }
+
+  const lista = await env.LICENCIAS.list({ prefix: "inst:" });
+  for (const k of lista.keys) {
+    let reg;
+    try { reg = JSON.parse(await env.LICENCIAS.get(k.name)); } catch (_) { continue; }
+    if (!reg) continue;
+    if (normLicencia(reg.licenseCode) === licenseCode
+      && normCedula(reg.cedula) === cedula
+      && normEmail(reg.email) === email) {
+      return json({ ok: true, instanceId: reg.instanceId });
+    }
+  }
+  return json({ ok: false, error: "Los datos no coinciden con ninguna licencia registrada. Revisa mayúsculas y espacios." }, 404);
+}
+
+// ===========================================================================
 // EPIC "La Licencia Manda" (JFC 2026-07-24) — recuperación por licencia.
 // Sigue el manifiesto NO CLOUD: NO se guardan datos de negocio. Solo un código
 // efímero de liberación (TTL 1h, un solo uso) atado al instanceId, para que
@@ -264,6 +311,11 @@ export default {
     // Recuperación de PIN — público pero con validación de instanceId en KV
     if (url.pathname === "/recover-pin" && req.method === "POST") {
       return handleRecoverPin(req, env);
+    }
+
+    // Reidentificación self-service (licencia+cedula+correo) — público, rate-limited
+    if (url.pathname === "/verificar-identidad" && req.method === "POST") {
+      return handleVerificarIdentidad(req, env);
     }
 
     // Public checkin (activation + login heartbeat)
