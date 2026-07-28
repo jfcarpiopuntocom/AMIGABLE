@@ -109,6 +109,47 @@ function normalizarEstado(e) {
   return MAPA_ESTADOS_VIEJOS[v] || "minima";
 }
 
+/* ─────────────────────────────────────────────────────────────────────
+   UNA LICENCIA, VARIOS DISPOSITIVOS (JFC 2026-07-28)
+
+   JFC vio su propia licencia AMG-7ZXZ-LS9K-XNWC dos veces en el panel y con
+   razon lo llamo un error. Lo que pasa es que cada dispositivo genera su
+   propio instanceId, y el KV esta indexado por instanceId — asi que activar
+   la misma licencia en un segundo telefono crea una fila nueva.
+
+   Eso NO se arregla borrando la segunda fila: las dos son reales y hacen
+   falta. Un dispositivo es una cosa (tiene su IP, su ultima conexion, se
+   puede perder o robar) y una licencia es otra (es el negocio, es la sala de
+   sincronizacion). Fusionarlas en KV perderia el rastro de los dispositivos,
+   que es justo lo que sirve cuando alguien dice "se me perdio el telefono".
+
+   Se arregla en como se MUESTRA: el panel agrupa por codigo de licencia y
+   pinta una sola fila por negocio, con sus dispositivos adentro.
+   anotarHermanos() le da al panel lo que necesita para agrupar sin tener que
+   recorrer la lista dos veces ni repetir aqui la regla de que es "la misma
+   licencia" (comparar normalizado, no en crudo).
+
+   Las instancias sin codigo de licencia NO se agrupan entre si: son
+   dispositivos en demo, cada uno independiente. Agruparlas todas bajo ""
+   habria juntado a desconocidos en una misma fila.
+   ───────────────────────────────────────────────────────────────────── */
+function anotarHermanos(registros) {
+  const porCodigo = {};
+  registros.forEach((r) => {
+    if (!r) return;
+    const cod = normLicencia(r.licenseCode);
+    if (!cod) return;
+    (porCodigo[cod] = porCodigo[cod] || []).push(r.instanceId);
+  });
+  registros.forEach((r) => {
+    if (!r) return;
+    const cod = normLicencia(r.licenseCode);
+    const grupo = cod ? (porCodigo[cod] || []) : [];
+    r.dispositivos = grupo.length || 1;
+    r.hermanos = grupo.filter((id) => id !== r.instanceId);
+  });
+}
+
 // /recover-pin — envía el PIN del dueño a su correo vía Resend.
 // NO almacena el PIN en ningún lado. Recibe { email, pin, instanceId },
 // valida el instanceId contra KV (anti-abuso leve), manda el correo y listo.
@@ -362,7 +403,27 @@ export default {
       const registros = await Promise.all(lista.keys.map((k) => env.LICENCIAS.get(k.name).then((v) => JSON.parse(v))));
       registros.forEach((r) => { if (r) r.estado = normalizarEstado(r.estado); });
       registros.sort((a, b) => (b.lastSeen || 0) - (a.lastSeen || 0));
+      anotarHermanos(registros);
       return json(registros);
+    }
+
+    // Borrar una instancia (master). Pensado para limpiar registros de prueba,
+    // no para castigar a nadie: para cortar el servicio esta "bloqueada".
+    const mBorrar = url.pathname.match(/^\/licencias\/([^/]+)$/);
+    if (mBorrar && req.method === "DELETE") {
+      if (!requireMasterKey(req, env)) return json({ error: "Master Key incorrecta" }, 401);
+      const instanceId = decodeURIComponent(mBorrar[1]);
+      const raw = await env.LICENCIAS.get(`inst:${instanceId}`);
+      if (!raw) return json({ error: "Instancia no encontrada" }, 404);
+      // Se archiva ANTES de borrar y sin expiracion. Un borrado a un clic desde
+      // un panel es exactamente donde ocurren los arrepentimientos, y son unos
+      // pocos cientos de bytes. Para recuperarla: leer borrado:<instanceId> y
+      // volver a escribirla en inst:<instanceId>.
+      await env.LICENCIAS.put(`borrado:${instanceId}`, JSON.stringify({
+        borradoEn: Date.now(), registro: JSON.parse(raw),
+      }));
+      await env.LICENCIAS.delete(`inst:${instanceId}`);
+      return json({ ok: true, archivadoEn: `borrado:${instanceId}` });
     }
 
     // Change instance status
