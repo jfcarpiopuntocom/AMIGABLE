@@ -1239,7 +1239,7 @@
   <!-- VISTA: INVENTARIO -->
   <section id="vista-inventario" class="vista">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
-      <h3 class="seccion" style="margin-top:0;flex:1;">Tus productos</h3>
+      <h3 class="seccion" style="margin-top:0;flex:1;">Mi Inventario</h3>
       <!-- Alta libre (+): SOLO dueno. Se revela en cargarInventario() segun rol. -->
       <button id="btnAltaProducto" class="ir" style="display:none;padding:10px 16px;flex-shrink:0;" onclick="abrirAltaProducto()">+ Agregar</button>
     </div>
@@ -1470,7 +1470,7 @@
        El empleado ve la lista y puede registrar clientes; los montos y la
        matriz de estaciones son SOLO del dueno (cargarClientes aplica el rol). -->
   <section id="vista-clientes" class="vista">
-    <h3 class="seccion" style="margin-top:0;">Tus clientes</h3>
+    <h3 class="seccion" style="margin-top:0;">Mis Clientes</h3>
     <p style="font-size:16px;color:var(--ink-soft);margin-top:0;">Tu cartera completa, viva y buscable al instante. Más abajo, la lectura por estaciones te dice a quién cuidar y a quién despertar.</p>
     <details style="margin:-4px 0 12px;font-size:14px;">
       <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
@@ -2051,6 +2051,7 @@ function tarjetaCliente(c, esDueno, ctx) {
   const panelEditAbierto = window.OCClienteEditOpen && window.OCClienteEditOpen.has(editKey);
   const btnEditar = `<button onclick="toggleEditarContacto('${editKey}')" style="margin-top:8px;font-size:14px;padding:4px 12px;background:#F4F7FA;border:1.5px solid var(--azul-medio,#2E6278);border-radius:4px;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;cursor:pointer;">Editar contacto ✎</button>`;
   const panelEditar = `<div id="oc-${editKey}" style="display:${panelEditAbierto ? "flex" : "none"};gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:8px 10px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;">
+      <input id="oc-edit-nombre-${c.id}" type="text" value="${escHtml(c.nombre || "")}" placeholder="Nombre" style="flex:1;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
       <input id="oc-edit-tel-${c.id}" type="text" value="${escHtml(c.telefono || "")}" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:120px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
       <input id="oc-edit-email-${c.id}" type="email" value="${escHtml(c.email || "")}" placeholder="Correo" style="flex:1;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
       <input id="oc-edit-notas-${c.id}" type="text" value="${escHtml(c.notas || "")}" placeholder="Notas" style="flex:2;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
@@ -2138,10 +2139,12 @@ function toggleEditarContacto(key) {
   renderListaViva(buscarEl ? buscarEl.value : "");
 }
 async function guardarContactoCliente(id) {
+  const nombreEl = document.getElementById(`oc-edit-nombre-${id}`);
+  const nombre = nombreEl ? nombreEl.value : undefined;
   const telefono = document.getElementById(`oc-edit-tel-${id}`).value;
   const email = document.getElementById(`oc-edit-email-${id}`).value;
   const notas = document.getElementById(`oc-edit-notas-${id}`).value;
-  const res = await fetch(`${API}/clientes/${id}/contacto`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ telefono, email, notas }) });
+  const res = await fetch(`${API}/clientes/${id}/contacto`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre, telefono, email, notas }) });
   if (!res.ok) { const r = await res.json().catch(() => ({})); alert(r.error || "No se pudo guardar el contacto."); return; }
   cargarClientes();
 }
@@ -2563,6 +2566,20 @@ async function cargarHoy(){
         ).join("")}</ul>` : "";
     }
   } catch (_) { /* sin estrellas: el bloque queda vacío */ }
+  // #16 (2026-07-28): en la vista del Empleado, "Para impulsar hoy" va ANTES
+  // del semaforo de urgencias (orden inverso al del dueño) — es lo primero
+  // que un empleado necesita saber al llegar a trabajar.
+  try {
+    const _esEmpleadoHoy = window.OCAuth && window.OCAuth.rolActual() === "empleado";
+    const _seccionHoy = document.getElementById("vista-hoy");
+    const _hero = document.getElementById("heroSemaforo");
+    const _estrellaCont = document.getElementById("estrellaHoy");
+    if (_esEmpleadoHoy && _seccionHoy && _hero && _estrellaCont && _seccionHoy.firstElementChild !== _estrellaCont) {
+      _seccionHoy.insertBefore(_estrellaCont, _hero);
+    } else if (!_esEmpleadoHoy && _seccionHoy && _hero && _estrellaCont && _seccionHoy.firstElementChild === _estrellaCont) {
+      _seccionHoy.insertBefore(_hero, _estrellaCont); // volver al orden normal si cambio de rol sin recargar
+    }
+  } catch (_) { /* reorden es cosmetico — nunca debe romper el resto de Hoy */ }
 
   // Mood/flavor del día, SOLO dueño (moodHoy tiene clase fin-dueno, ya oculta al
   // empleado arriba). Estable por día del año.
