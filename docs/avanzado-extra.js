@@ -42,7 +42,7 @@
     </p>
     <div id="oc-sync-estado" style="font-size:13px;font-weight:700;margin-bottom:10px;"></div>
     <div id="oc-sync-apagado" style="display:${salaActiva ? "none" : "flex"};gap:8px;flex-wrap:wrap;align-items:center;">
-      <input id="oc-sync-codigo" type="text" value="${escHtml(codigoPrecargado)}" placeholder="Código de tu negocio (AMG-XXXX-XXXX)" maxlength="40"
+      <input id="oc-sync-codigo" type="text" value="${escHtml(codigoPrecargado)}" placeholder="Código de tu negocio (AMG-XXXX-XXXX-XXXX)" maxlength="40"
         style="flex:1;min-width:220px;padding:8px;border:2px solid var(--azul-medio);border-radius:5px;font-size:14px;">
       <button id="oc-sync-activar" class="ir">Activar</button>
     </div>
@@ -60,6 +60,19 @@
     </div>
     <p id="oc-sync-msg" style="font-size:13px;margin-top:8px;font-weight:700;"></p>`;
   vista.appendChild(panel);
+
+  /* Mascara de guiones en el codigo de sincronizacion (JFC 2026-07-28, punto 7).
+     El helper vive en auth-ui.js y se expone por window.OCAuth.mascaraLicencia.
+     Importa especialmente AQUI: este campo define la SALA de sync, y
+     OCSyncControl.activar() solo exige 6 caracteres — un codigo mal tecleado
+     no da error, mete al equipo en una sala vacia y la desincronizacion es
+     silenciosa. Si auth-ui.js no cargo todavia, el input sigue funcionando
+     normal (solo sin ayuda de formato). */
+  try {
+    if (window.OCAuth && window.OCAuth.mascaraLicencia) {
+      window.OCAuth.mascaraLicencia(document.getElementById("oc-sync-codigo"));
+    }
+  } catch (_) {}
 
   const pillTexto = (estado, n) => {
     if (estado === "conectado") return "Sincronizado" + (n != null ? ` · ${n} equipo${n === 1 ? "" : "s"}` : "");
