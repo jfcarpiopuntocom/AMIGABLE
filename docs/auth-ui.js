@@ -9,9 +9,81 @@
    Copia self-contained (mismo texto que la version larga en Avanzado -> Mis
    Sincronizaciones -> Politica de Privacidad y Manejo de Datos) porque el gate
    corre ANTES del login, sin acceso al DOM de avanzado-extra.js todavia. */
+
+/* =======================================================================
+   BLINDAJE DE MODALES .oc-subgate  (2026-07-28)
+   -----------------------------------------------------------------------
+   QUE ARREGLA (4 bugs reales que dejaban al usuario tirado):
+   1. Doble apertura: cada abrir*() hacia createElement sin preguntar si ese
+      modal ya estaba abierto. Dos toques al mismo boton (comun en movil, el
+      primer tap a veces no da feedback) apilaban DOS modales identicos.
+      Cerrar el de arriba dejaba un clon fantasma que parecia no cerrarse.
+   2. Timers zombis: los setTimeout(cont.remove) de "Listo, ya casi" seguian
+      vivos aunque el usuario cerrara antes. Si abria OTRO modal dentro de
+      esa ventana, el timer viejo se lo borraba en la cara.
+   3. Sin Escape: en desktop no habia forma de salir con teclado. Si el boton
+      Cancelar quedaba fuera de viewport (pantalla corta), no habia salida.
+   4. Sin click-afuera: el gesto que el 100% de los usuarios prueba primero.
+
+   COMO SE USA (obligatorio para CUALQUIER modal nuevo):
+     var cont = _ocSubgate("mi-id-unico");
+     if (!cont) return;              // ya estaba abierto -> no hacer nada
+     cont.innerHTML = "...";
+     document.body.appendChild(cont);
+     boton.addEventListener("click", function(){ cont.cerrar() });
+     cont.luego(function(){ cont.cerrar() }, 1500);   // en vez de setTimeout
+
+   NO usar cont.remove() directo: salta la limpieza de timers y listeners.
+   NO crear divs .oc-subgate a mano: pierden guard, Escape y click-afuera.
+
+   opts.obligatorio = true  -> modal que NO se puede esquivar (sin Escape,
+   sin click-afuera). Reservado para candados de confirmacion intencionales.
+   ======================================================================= */
+function _ocSubgate(id, opts){
+  opts = opts || {};
+  // Guard anti-doble-apertura. Es la linea que mas bugs previene aqui.
+  if (id && document.getElementById(id)) return null;
+  var cont = document.createElement("div");
+  cont.className = "oc-subgate";
+  if (id) cont.id = id;
+  var timers = [];
+  var cerrado = false;
+  function cerrar(){
+    if (cerrado) return;                 // idempotente: llamarlo 5 veces es seguro
+    cerrado = true;
+    for (var i = 0; i < timers.length; i++){ try{ clearTimeout(timers[i]) }catch(_){} }
+    timers.length = 0;
+    try{ document.removeEventListener("keydown", onKey, true) }catch(_){}
+    try{ cont.remove() }catch(_){}
+    // alCerrar: red de seguridad para modales que envuelven una Promise.
+    // Garantiza que la Promise SIEMPRE se salda, se cierre por el boton,
+    // por Escape, por click-afuera o por guard. Sin esto, un modal cerrado
+    // por una ruta no prevista deja al llamador esperando para siempre y la
+    // pantalla queda muerta sin error visible. Se llama al final y una sola
+    // vez (cerrar() es idempotente).
+    if (typeof opts.alCerrar === "function"){ try{ opts.alCerrar() }catch(_){} }
+  }
+  function onKey(e){
+    if (e.key === "Escape" || e.key === "Esc"){ try{ e.stopPropagation() }catch(_){} cerrar(); }
+  }
+  if (!opts.obligatorio){
+    document.addEventListener("keydown", onKey, true);
+    // Solo el fondo cierra; un click dentro de la .caja no debe descartar
+    // lo que el usuario esta escribiendo.
+    cont.addEventListener("click", function(e){ if (e.target === cont) cerrar(); });
+  }
+  cont.cerrar = cerrar;
+  // Reemplazo seguro de setTimeout: el timer muere con el modal.
+  cont.luego = function(fn, ms){
+    var t = setTimeout(function(){ if (!cerrado) { try{ fn() }catch(_){} } }, ms);
+    timers.push(t);
+    return t;
+  };
+  return cont;
+}
 function abrirPoliticaPrivacidad(){
-  const cont=document.createElement("div");
-  cont.className="oc-subgate";
+  const cont=_ocSubgate("oc-priv-modal");
+  if(!cont)return;
   cont.innerHTML=`<div class="caja" style="background:var(--blanco-calido,#fbf5e8);border:2px solid var(--brass,#9c7a35);border-radius:8px;padding:26px 22px;max-width:480px;width:100%;text-align:left;max-height:82vh;overflow-y:auto;">
     <h2 style="font-family:var(--font-display,sans-serif);color:var(--ink,#211c14);font-size:20px;margin:0 0 12px;text-align:center;">Política de Privacidad y Manejo de Datos</h2>
     <div style="font-size:14px;color:var(--ink-soft,#5d5340);line-height:1.55;">
@@ -24,10 +96,10 @@ function abrirPoliticaPrivacidad(){
     <button id="oc-priv-cerrar" style="width:100%;min-height:44px;margin-top:14px;padding:11px;border-radius:8px;border:2px solid var(--azul-medio,#2c4a68);background:var(--azul-medio,#2c4a68);color:#fff;font-size:15px;font-weight:700;cursor:pointer;">Entendido</button>
   </div>`;
   document.body.appendChild(cont);
-  cont.querySelector("#oc-priv-cerrar").addEventListener("click",()=>cont.remove());
+  cont.querySelector("#oc-priv-cerrar").addEventListener("click",()=>cont.cerrar());
 }/* Banner "Actualizar app" quitado (JFC 2026-07-16): "no tiene el menor sentido — YO mantengo la app actualizada, para eso son 2 anos de soporte, y para el cache del usuario ya estan los meta tags y otros metodos de refresh". Tenia ademas un bug real: APP_VERSION vivia hardcodeada aqui y nunca se sincronizaba con version.json, asi que el banner salia SIEMPRE. NO reintroducir sin que JFC lo pida. */function abrirUnirseEquipo(){
-  const cont=document.createElement("div");
-  cont.className="oc-subgate";
+  const cont=_ocSubgate("oc-ue-modal");
+  if(!cont)return;
   cont.innerHTML=`<div class="caja" style="background:var(--blanco-calido,#fbf5e8);border:2px solid var(--brass,#9c7a35);border-radius:8px;padding:26px 22px;max-width:420px;width:100%;text-align:center;">
     <h2 style="font-family:var(--font-display,sans-serif);color:var(--ink,#211c14);font-size:22px;margin:0 0 4px;">Unirme a mi equipo</h2>
     <p style="font-size:14px;color:var(--ink-soft,#5d5340);margin:0 0 14px;">Pide el código al dueño/a de tu licencia (te lo comparte una sola vez, como la clave del wifi). Tu celular queda sincronizado con el equipo para siempre — no hace falta repetir esto.</p>
@@ -38,7 +110,7 @@ function abrirPoliticaPrivacidad(){
   </div>`;
   document.body.appendChild(cont);
   const msgEl=cont.querySelector("#oc-ue-msg");
-  cont.querySelector("#oc-ue-cancelar").addEventListener("click",()=>cont.remove());
+  cont.querySelector("#oc-ue-cancelar").addEventListener("click",()=>cont.cerrar());
   cont.querySelector("#oc-ue-confirmar").addEventListener("click",(ev)=>{
     const btn=ev.currentTarget;
     if(btn.disabled)return;
@@ -49,13 +121,13 @@ function abrirPoliticaPrivacidad(){
     if(!r.ok){msgEl.textContent=r.error;return}
     msgEl.style.color="var(--verde-suave,#2f7a4f)";
     msgEl.textContent="¡Listo! Tu celular ya está sincronizado con el equipo.";
-    setTimeout(()=>cont.remove(),1800);
+    cont.luego(()=>cont.cerrar(),1800);
   })
 }
 async function abrirFlujoReset(){await listo;if(window.OCSecure&&window.OCSecure.tieneOwnerPassword&&window.OCSecure.tieneOwnerPassword()){return abrirResetConPassword()}const email=window.OCSecure.leerCorreo();const pin=window.OCSecure.recuperarPinDueno();const msgEl=$("oc-msg");if(!email){msgEl.style.color="var(--ink-soft,#5d5340)";msgEl.textContent="No hay correo configurado. Entra como dueno y registralo en Avanzado.";return}if(!pin){msgEl.style.color="var(--ink-soft,#5d5340)";msgEl.textContent="Cambia tu clave una vez en Avanzado para activar la recuperacion.";return}msgEl.style.color="var(--ink-soft,#5d5340)";msgEl.textContent="Enviando…";var _owned;try{_owned=JSON.parse(localStorage.getItem("amigable_owned")||"null")||{}}catch(_){_owned={}}const resultado=window.OCEmailRecovery?await window.OCEmailRecovery.enviarCodigo(email,pin,_owned.instanceId||""):{enviado:false,codigo:pin};if(resultado.enviado){msgEl.style.color="var(--verde-suave,#2f7a4f)";msgEl.textContent=`Clave enviada a ${enmascarar(email)}.`}else{msgEl.style.color="var(--ink,#211c14)";msgEl.textContent=`Tu clave de dueno: ${resultado.codigo}`}}
 function pedirPasswordInicial(){
-  if(document.getElementById("oc-pwi-modal"))return;
-  var cont=document.createElement("div");cont.className="oc-subgate";cont.id="oc-pwi-modal";
+  var cont=_ocSubgate("oc-pwi-modal");
+  if(!cont)return;
   cont.innerHTML='<div class="caja" style="'+_ocCaja()+'">'
     +'<h2 style="font-family:var(--font-display,sans-serif);color:var(--ink,#211c14) !important;-webkit-text-fill-color:var(--ink,#211c14) !important;font-size:22px;margin:0 0 4px;">Crea tu password de recuperacion</h2>'
     +'<p style="font-size:14px;color:var(--ink-soft,#5d5340) !important;-webkit-text-fill-color:var(--ink-soft,#5d5340) !important;margin:0 0 4px;">Tu PIN es para el dia a dia. Tu <b>password</b> es tu llave para recuperar el acceso si olvidas el PIN, sin depender de nadie. Es tuya, aqui mismo, cifrada.</p>'
@@ -68,7 +140,7 @@ function pedirPasswordInicial(){
     +'</div>';
   document.body.appendChild(cont);
   var msg=cont.querySelector("#oc-pwi-msg");
-  cont.querySelector("#oc-pwi-luego").addEventListener("click",function(){cont.remove()});
+  cont.querySelector("#oc-pwi-luego").addEventListener("click",function(){cont.cerrar()});
   cont.querySelector("#oc-pwi-ok").addEventListener("click",async function(ev){
     var b=ev.currentTarget;if(b.disabled)return;b.disabled=true;setTimeout(function(){b.disabled=false},1000);
     var p1=cont.querySelector("#oc-pwi-p1").value||"";
@@ -78,7 +150,7 @@ function pedirPasswordInicial(){
     var ok=await window.OCSecure.fijarOwnerPassword(p1);
     if(!ok){msg.style.color="var(--rojo,#a3392a)";msg.textContent="No se pudo guardar. Intenta de nuevo.";return}
     msg.style.color="var(--verde-suave,#2f7a4f)";msg.textContent="Listo. Tu acceso ya esta protegido.";
-    setTimeout(function(){cont.remove()},1400);
+    cont.luego(function(){cont.cerrar()},1400);
   });
 }
 function _ocWorkerBase(){try{var ov=(localStorage.getItem("amigable_cf_worker_url")||"").trim();if(ov)return ov.replace(/\/+$/,"")}catch(_){}return(CF_WORKER_URL_DEFAULT||"").replace(/\/+$/,"")}
@@ -87,7 +159,8 @@ function _ocCaja(){return "background:var(--blanco-calido,#fbf5e8);border:2px so
 function _ocIn(){return "width:100%;box-sizing:border-box;padding:11px 12px;border:2px solid var(--azul-medio,#2c4a68);border-radius:8px;font-size:16px;margin-bottom:10px;"}
 function _ocBtn(){return "width:100%;min-height:48px;padding:14px;border-radius:9px;border:2px solid var(--rust,#b2461f);background:var(--rust,#b2461f);color:#fff !important;-webkit-text-fill-color:#fff !important;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:8px;"}
 function abrirResetConPassword(){
-  var cont=document.createElement("div");cont.className="oc-subgate";
+  var cont=_ocSubgate("oc-rp-modal");
+  if(!cont)return;
   cont.innerHTML='<div class="caja" style="'+_ocCaja()+'">'
     +'<h2 style="font-family:var(--font-display,sans-serif);color:var(--ink,#211c14) !important;-webkit-text-fill-color:var(--ink,#211c14) !important;font-size:22px;margin:0 0 4px;">Recupera tu acceso</h2>'
     +'<p style="font-size:14px;color:var(--ink-soft,#5d5340) !important;-webkit-text-fill-color:var(--ink-soft,#5d5340) !important;margin:0 0 16px;">Escribe tu password de dueno y elige un PIN nuevo. Es al instante, aqui mismo.</p>'
@@ -102,8 +175,8 @@ function abrirResetConPassword(){
     +'</div>';
   document.body.appendChild(cont);
   var msg=cont.querySelector("#oc-rp-msg");
-  cont.querySelector("#oc-rp-cancel").addEventListener("click",function(){cont.remove()});
-  cont.querySelector("#oc-rp-liberar").addEventListener("click",function(){cont.remove();abrirLiberarLicencia()});
+  cont.querySelector("#oc-rp-cancel").addEventListener("click",function(){cont.cerrar()});
+  cont.querySelector("#oc-rp-liberar").addEventListener("click",function(){cont.cerrar();abrirLiberarLicencia()});
   cont.querySelector("#oc-rp-ok").addEventListener("click",async function(ev){
     var b=ev.currentTarget;if(b.disabled)return;b.disabled=true;setTimeout(function(){b.disabled=false},1000);
     var pass=cont.querySelector("#oc-rp-pass").value||"";
@@ -118,12 +191,13 @@ function abrirResetConPassword(){
     if(pin!==pin2){msg.style.color="var(--rojo,#a3392a)";msg.textContent="Los dos PIN no coinciden.";return}
     await window.OCSecure.fijarOwnerPin(pin);
     msg.style.color="var(--verde-suave,#2f7a4f)";msg.textContent="Listo. Entra con tu PIN nuevo.";
-    setTimeout(function(){cont.remove();try{$("oc-msg").textContent=""}catch(_){}},1600);
+    cont.luego(function(){cont.cerrar();try{$("oc-msg").textContent=""}catch(_){}},1600);
   });
 }
 function abrirLiberarLicencia(){
   var owned=_ocOwned();var lic=owned.licenseCode||"";var inst=owned.instanceId||"";
-  var cont=document.createElement("div");cont.className="oc-subgate";
+  var cont=_ocSubgate("oc-lib-modal");
+  if(!cont)return;
   var waTxt="Hola JFC, soy dueno de la licencia "+(lic||"(no la tengo a la mano)")+", instancia "+(inst?inst.slice(0,8):"?")+". Olvide mi PIN y mi password, necesito liberar mi acceso en amigable-123.";
   cont.innerHTML='<div class="caja" style="'+_ocCaja()+'">'
     +'<h2 style="font-family:var(--font-display,sans-serif);color:var(--ink,#211c14) !important;-webkit-text-fill-color:var(--ink,#211c14) !important;font-size:21px;margin:0 0 4px;">Liberar con mi licencia</h2>'
@@ -142,7 +216,7 @@ function abrirLiberarLicencia(){
     +'</div>';
   document.body.appendChild(cont);
   var msg=cont.querySelector("#oc-lib-msg");
-  cont.querySelector("#oc-lib-cancel").addEventListener("click",function(){cont.remove()});
+  cont.querySelector("#oc-lib-cancel").addEventListener("click",function(){cont.cerrar()});
   cont.querySelector("#oc-lib-ok").addEventListener("click",async function(ev){
     var b=ev.currentTarget;if(b.disabled)return;b.disabled=true;setTimeout(function(){b.disabled=false},1200);
     var code=(cont.querySelector("#oc-lib-code").value||"").trim().toUpperCase();
@@ -166,7 +240,7 @@ function abrirLiberarLicencia(){
     await window.OCSecure.fijarOwnerPin(pin);
     await window.OCSecure.fijarOwnerPassword(pass);
     msg.style.color="var(--verde-suave,#2f7a4f)";msg.textContent="Listo. Entra con tu PIN nuevo.";
-    setTimeout(function(){cont.remove();try{$("oc-msg").textContent=""}catch(_){}},1600);
+    cont.luego(function(){cont.cerrar();try{$("oc-msg").textContent=""}catch(_){}},1600);
   });
 }
-function abrirReidentificarme(){const cont=document.createElement("div");cont.className="oc-subgate";cont.innerHTML='<div class="caja" style="'+_ocCaja()+'">'+'<h2 style="font-family:var(--font-display,sans-serif);color:var(--ink,#211c14) !important;-webkit-text-fill-color:var(--ink,#211c14) !important;font-size:20px;margin:0 0 4px;">Reidentificarme como dueño/a</h2>'+'<p style="font-size:14px;color:var(--ink-soft,#5d5340) !important;-webkit-text-fill-color:var(--ink-soft,#5d5340) !important;margin:0 0 12px;">Si sabes tu licencia, tu cédula y tu correo registrados, no necesitas esperar a nadie: te reconocemos como dueño/a de tu negocio ahora mismo.</p>'+'<input id="oc-rid-lic" type="text" autocomplete="off" placeholder="Licencia (AMG-XXXX-XXXX-XXXX)" style="'+_ocIn()+'font-family:var(--font-mono,monospace);text-align:center;text-transform:uppercase;">'+'<input id="oc-rid-cedula" type="text" inputmode="numeric" autocomplete="off" placeholder="Cédula o pasaporte" style="'+_ocIn()+'">'+'<input id="oc-rid-email" type="email" inputmode="email" autocomplete="off" placeholder="Correo registrado" style="'+_ocIn()+'">'+'<button id="oc-rid-ok" style="'+_ocBtn()+'">Verificar mi identidad</button>'+'<button id="oc-rid-cancel" style="background:none;border:none;color:var(--azul-medio,#2c4a68) !important;-webkit-text-fill-color:var(--azul-medio,#2c4a68) !important;font-size:14px;cursor:pointer;padding:8px;">Cancelar</button>'+'<div id="oc-rid-paso2" style="display:none;margin-top:12px;border-top:1px solid #e5ddca;padding-top:12px;">'+'<input id="oc-rid-pin" type="tel" inputmode="numeric" maxlength="3" placeholder="PIN nuevo (3 digitos)" style="'+_ocIn()+'font-family:var(--font-mono,monospace);text-align:center;letter-spacing:6px;">'+'<input id="oc-rid-pass" type="password" placeholder="Password nueva (min 6)" style="'+_ocIn()+'">'+'<button id="oc-rid-fijar" style="'+_ocBtn()+'background:var(--verde-suave,#2f7a4f);border-color:var(--verde-suave,#2f7a4f);">Guardar y entrar</button>'+'</div>'+'<p id="oc-rid-msg" style="min-height:18px;font-size:14px;font-weight:700;margin:8px 0 0;"></p>'+'</div>';document.body.appendChild(cont);const msg=cont.querySelector("#oc-rid-msg");let _licVerificada="";cont.querySelector("#oc-rid-cancel").addEventListener("click",()=>cont.remove());cont.querySelector("#oc-rid-ok").addEventListener("click",async(ev)=>{const b=ev.currentTarget;if(b.disabled)return;b.disabled=true;setTimeout(()=>{b.disabled=false},1200);const lic=(cont.querySelector("#oc-rid-lic").value||"").trim();const cedula=(cont.querySelector("#oc-rid-cedula").value||"").trim();const email=(cont.querySelector("#oc-rid-email").value||"").trim();if(!lic||!cedula||!email){msg.style.color="var(--rojo,#a3392a)";msg.textContent="Completa los 3 campos.";return}const base=_ocWorkerBase();if(!base){msg.style.color="var(--rojo,#a3392a)";msg.textContent="No hay conexion configurada. Intenta mas tarde.";return}msg.style.color="var(--ink-soft,#5d5340)";msg.textContent="Verificando...";try{const resp=await fetch(base+"/verificar-identidad",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({licenseCode:lic,cedula:cedula,email:email})});let r={};try{r=await resp.json()}catch(_){}if(resp.ok&&r&&r.ok===true){_licVerificada=lic.toUpperCase();msg.style.color="var(--verde-suave,#2f7a4f)";msg.textContent="Identidad confirmada. Fija tu PIN y password para este dispositivo.";cont.querySelector("#oc-rid-paso2").style.display="block"}else{msg.style.color="var(--rojo,#a3392a)";msg.textContent=(r&&r.error)||"No se pudo verificar."}}catch(_){msg.style.color="var(--rojo,#a3392a)";msg.textContent="Sin conexion. Intenta de nuevo."}});cont.querySelector("#oc-rid-fijar").addEventListener("click",async(ev)=>{const b=ev.currentTarget;if(b.disabled)return;b.disabled=true;setTimeout(()=>{b.disabled=false},1000);const pin=(cont.querySelector("#oc-rid-pin").value||"").trim();const pass=cont.querySelector("#oc-rid-pass").value||"";if(!/^\d{3}$/.test(pin)){msg.style.color="var(--rojo,#a3392a)";msg.textContent="El PIN debe ser 3 digitos.";return}if(String(pass).length<6){msg.style.color="var(--rojo,#a3392a)";msg.textContent="La password debe tener al menos 6 caracteres.";return}await window.OCSecure.fijarOwnerPin(pin);await window.OCSecure.fijarOwnerPassword(pass);try{let owned={};try{owned=JSON.parse(localStorage.getItem("amigable_owned")||"null")||{}}catch(_){owned={}}if(!owned.instanceId)owned.instanceId=(globalThis.crypto&&globalThis.crypto.randomUUID)?globalThis.crypto.randomUUID():Date.now().toString(36)+"-"+Math.random().toString(36).slice(2);owned.licenseCode=_licVerificada;const licInput=(cont.querySelector("#oc-rid-lic").value||"").trim().toUpperCase();if(licInput===_licVerificada)owned.licenseCode=_licVerificada;owned.email=(cont.querySelector("#oc-rid-email").value||"").trim();owned.cedula=(cont.querySelector("#oc-rid-cedula").value||"").trim();owned.activatedAt=owned.activatedAt||Date.now();localStorage.setItem("amigable_owned",JSON.stringify(owned));if(window.OCSyncControl)window.OCSyncControl.activar(owned.licenseCode);if(typeof enviarHeartbeatLicencia==="function")enviarHeartbeatLicencia({instanceId:owned.instanceId,licenseCode:owned.licenseCode,email:owned.email,cedula:owned.cedula,activatedAt:owned.activatedAt,accion:"reidentificado"});}catch(_){}msg.style.color="var(--verde-suave,#2f7a4f)";msg.textContent="Listo. Este dispositivo ya es tuyo. Entra con tu PIN nuevo.";setTimeout(()=>{cont.remove();try{$("oc-msg").textContent=""}catch(_){}},1800);});}function montarLogout(){if(document.getElementById("oc-logout"))return;const header=document.querySelector("header");if(!header)return;const chipPrevio=document.getElementById("oc-user-chip");if(chipPrevio)chipPrevio.remove();const rolChipPrevio=document.getElementById("oc-rol-chip");if(rolChipPrevio)rolChipPrevio.remove();const b=document.createElement("button");b.id="oc-logout";b.textContent="Salir";b.addEventListener("click",()=>cerrarSesion());if(window.OCCurrentUser&&window.OCCurrentUser.nombre){const chip=document.createElement("span");chip.id="oc-user-chip";chip.textContent=window.OCCurrentUser.nombre;chip.style.cssText="font-size:13px;font-weight:700;color:var(--ink,#211c14) !important;"+"-webkit-text-fill-color:var(--ink,#211c14) !important;margin-right:6px;"+"padding:4px 10px;background:var(--amarillo-claro,#fff3c4);border-radius:20px;";header.appendChild(chip)}const _rolTxt={dueno:"Dueño/a de la licencia",admin:"Admin",empleado:"Empleado/a",contador:"Contador/a"}[rol]||"";if(_rolTxt&&!demoSesion){const rc=document.createElement("span");rc.id="oc-rol-chip";rc.textContent=_rolTxt;rc.style.cssText="font-size:12px;font-weight:700;color:#fff !important;-webkit-text-fill-color:#fff !important;margin-right:6px;padding:4px 10px;background:var(--rust,#E86040);border-radius:20px;text-transform:uppercase;letter-spacing:.03em;";header.appendChild(rc)}header.appendChild(b)}function enmascarar(email){const[u,dom]=String(email).split("@");if(!dom)return"•••";return`${u.slice(0,1)}${"•".repeat(Math.max(2,u.length-1))}@${dom}`}window.OCAuth={rolActual:()=>rol,esDemo:()=>demoSesion,enmascarar:enmascarar,pedirPasswordInicial:pedirPasswordInicial,tieneOwnerPassword:()=>!!(window.OCSecure&&window.OCSecure.tieneOwnerPassword&&window.OCSecure.tieneOwnerPassword()),listo:()=>listo,abrirFlujoReset:abrirFlujoReset,workerUrl:()=>(localStorage.getItem("amigable_cf_worker_url")||"").trim()||CF_WORKER_URL_DEFAULT,pedirSubclaveContable(){return new Promise(resolve=>{const cont=document.createElement("div");cont.className="oc-subgate";cont.innerHTML=`<div class="caja" style="background:var(--blanco-calido,#fbf5e8);border:2px solid var(--brass,#9c7a35);border-radius:8px;padding:26px 22px;max-width:420px;width:100%;text-align:center;">\n          <h2 style="font-family:var(--font-display,sans-serif);color:var(--ink,#211c14);font-size:22px;margin:0 0 4px;">Capa contable</h2>\n          <div class="sub" style="font-size:14px;color:var(--ink-soft,#5d5340);margin-bottom:18px;">Subclave de 3 dígitos para ver cuentas T, P&amp;G y balance</div>\n          <div class="oc-slots" id="oc-slots2"><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>\n          <div class="oc-pad" id="oc-pad2"></div>\n          <div class="oc-acciones"><button id="sc-cancelar">Cancelar</button><button id="sc-borrar">Borrar</button></div>\n          <div class="oc-msg" id="oc-msg2"></div></div>`;document.body.appendChild(cont);let tec;async function alCompletar(code){if(await window.OCSecure.verificarAcct(code)){cont.remove();resolve(true)}else{cont.querySelector("#oc-msg2").textContent="Subclave incorrecta.";cont.classList.add("err");setTimeout(()=>cont.classList.remove("err"),400);tec=montarTeclado(cont.querySelector("#oc-pad2"),cont.querySelector("#oc-slots2"),alCompletar)}}tec=montarTeclado(cont.querySelector("#oc-pad2"),cont.querySelector("#oc-slots2"),alCompletar);cont.querySelector("#sc-borrar").addEventListener("click",()=>tec.reset());cont.querySelector("#sc-cancelar").addEventListener("click",()=>{cont.remove();resolve(false)})})}}})();
+function abrirReidentificarme(){const cont=_ocSubgate("oc-rid-modal");if(!cont)return;cont.innerHTML='<div class="caja" style="'+_ocCaja()+'">'+'<h2 style="font-family:var(--font-display,sans-serif);color:var(--ink,#211c14) !important;-webkit-text-fill-color:var(--ink,#211c14) !important;font-size:20px;margin:0 0 4px;">Reidentificarme como dueño/a</h2>'+'<p style="font-size:14px;color:var(--ink-soft,#5d5340) !important;-webkit-text-fill-color:var(--ink-soft,#5d5340) !important;margin:0 0 12px;">Si sabes tu licencia, tu cédula y tu correo registrados, no necesitas esperar a nadie: te reconocemos como dueño/a de tu negocio ahora mismo.</p>'+'<input id="oc-rid-lic" type="text" autocomplete="off" placeholder="Licencia (AMG-XXXX-XXXX-XXXX)" style="'+_ocIn()+'font-family:var(--font-mono,monospace);text-align:center;text-transform:uppercase;">'+'<input id="oc-rid-cedula" type="text" inputmode="numeric" autocomplete="off" placeholder="Cédula o pasaporte" style="'+_ocIn()+'">'+'<input id="oc-rid-email" type="email" inputmode="email" autocomplete="off" placeholder="Correo registrado" style="'+_ocIn()+'">'+'<button id="oc-rid-ok" style="'+_ocBtn()+'">Verificar mi identidad</button>'+'<button id="oc-rid-cancel" style="background:none;border:none;color:var(--azul-medio,#2c4a68) !important;-webkit-text-fill-color:var(--azul-medio,#2c4a68) !important;font-size:14px;cursor:pointer;padding:8px;">Cancelar</button>'+'<div id="oc-rid-paso2" style="display:none;margin-top:12px;border-top:1px solid #e5ddca;padding-top:12px;">'+'<input id="oc-rid-pin" type="tel" inputmode="numeric" maxlength="3" placeholder="PIN nuevo (3 digitos)" style="'+_ocIn()+'font-family:var(--font-mono,monospace);text-align:center;letter-spacing:6px;">'+'<input id="oc-rid-pass" type="password" placeholder="Password nueva (min 6)" style="'+_ocIn()+'">'+'<button id="oc-rid-fijar" style="'+_ocBtn()+'background:var(--verde-suave,#2f7a4f);border-color:var(--verde-suave,#2f7a4f);">Guardar y entrar</button>'+'</div>'+'<p id="oc-rid-msg" style="min-height:18px;font-size:14px;font-weight:700;margin:8px 0 0;"></p>'+'</div>';document.body.appendChild(cont);const msg=cont.querySelector("#oc-rid-msg");let _licVerificada="";cont.querySelector("#oc-rid-cancel").addEventListener("click",()=>cont.cerrar());cont.querySelector("#oc-rid-ok").addEventListener("click",async(ev)=>{const b=ev.currentTarget;if(b.disabled)return;b.disabled=true;setTimeout(()=>{b.disabled=false},1200);const lic=(cont.querySelector("#oc-rid-lic").value||"").trim();const cedula=(cont.querySelector("#oc-rid-cedula").value||"").trim();const email=(cont.querySelector("#oc-rid-email").value||"").trim();if(!lic||!cedula||!email){msg.style.color="var(--rojo,#a3392a)";msg.textContent="Completa los 3 campos.";return}const base=_ocWorkerBase();if(!base){msg.style.color="var(--rojo,#a3392a)";msg.textContent="No hay conexion configurada. Intenta mas tarde.";return}msg.style.color="var(--ink-soft,#5d5340)";msg.textContent="Verificando...";try{const resp=await fetch(base+"/verificar-identidad",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({licenseCode:lic,cedula:cedula,email:email})});let r={};try{r=await resp.json()}catch(_){}if(resp.ok&&r&&r.ok===true){_licVerificada=lic.toUpperCase();msg.style.color="var(--verde-suave,#2f7a4f)";msg.textContent="Identidad confirmada. Fija tu PIN y password para este dispositivo.";cont.querySelector("#oc-rid-paso2").style.display="block"}else{msg.style.color="var(--rojo,#a3392a)";msg.textContent=(r&&r.error)||"No se pudo verificar."}}catch(_){msg.style.color="var(--rojo,#a3392a)";msg.textContent="Sin conexion. Intenta de nuevo."}});cont.querySelector("#oc-rid-fijar").addEventListener("click",async(ev)=>{const b=ev.currentTarget;if(b.disabled)return;b.disabled=true;setTimeout(()=>{b.disabled=false},1000);const pin=(cont.querySelector("#oc-rid-pin").value||"").trim();const pass=cont.querySelector("#oc-rid-pass").value||"";if(!/^\d{3}$/.test(pin)){msg.style.color="var(--rojo,#a3392a)";msg.textContent="El PIN debe ser 3 digitos.";return}if(String(pass).length<6){msg.style.color="var(--rojo,#a3392a)";msg.textContent="La password debe tener al menos 6 caracteres.";return}await window.OCSecure.fijarOwnerPin(pin);await window.OCSecure.fijarOwnerPassword(pass);try{let owned={};try{owned=JSON.parse(localStorage.getItem("amigable_owned")||"null")||{}}catch(_){owned={}}if(!owned.instanceId)owned.instanceId=(globalThis.crypto&&globalThis.crypto.randomUUID)?globalThis.crypto.randomUUID():Date.now().toString(36)+"-"+Math.random().toString(36).slice(2);owned.licenseCode=_licVerificada;const licInput=(cont.querySelector("#oc-rid-lic").value||"").trim().toUpperCase();if(licInput===_licVerificada)owned.licenseCode=_licVerificada;owned.email=(cont.querySelector("#oc-rid-email").value||"").trim();owned.cedula=(cont.querySelector("#oc-rid-cedula").value||"").trim();owned.activatedAt=owned.activatedAt||Date.now();localStorage.setItem("amigable_owned",JSON.stringify(owned));if(window.OCSyncControl)window.OCSyncControl.activar(owned.licenseCode);if(typeof enviarHeartbeatLicencia==="function")enviarHeartbeatLicencia({instanceId:owned.instanceId,licenseCode:owned.licenseCode,email:owned.email,cedula:owned.cedula,activatedAt:owned.activatedAt,accion:"reidentificado"});}catch(_){}msg.style.color="var(--verde-suave,#2f7a4f)";msg.textContent="Listo. Este dispositivo ya es tuyo. Entra con tu PIN nuevo.";cont.luego(()=>{cont.cerrar();try{$("oc-msg").textContent=""}catch(_){}},1800);});}function montarLogout(){if(document.getElementById("oc-logout"))return;const header=document.querySelector("header");if(!header)return;const chipPrevio=document.getElementById("oc-user-chip");if(chipPrevio)chipPrevio.remove();const rolChipPrevio=document.getElementById("oc-rol-chip");if(rolChipPrevio)rolChipPrevio.remove();const b=document.createElement("button");b.id="oc-logout";b.textContent="Salir";b.addEventListener("click",()=>cerrarSesion());if(window.OCCurrentUser&&window.OCCurrentUser.nombre){const chip=document.createElement("span");chip.id="oc-user-chip";chip.textContent=window.OCCurrentUser.nombre;chip.style.cssText="font-size:13px;font-weight:700;color:var(--ink,#211c14) !important;"+"-webkit-text-fill-color:var(--ink,#211c14) !important;margin-right:6px;"+"padding:4px 10px;background:var(--amarillo-claro,#fff3c4);border-radius:20px;";header.appendChild(chip)}const _rolTxt={dueno:"Dueño/a de la licencia",admin:"Admin",empleado:"Empleado/a",contador:"Contador/a"}[rol]||"";if(_rolTxt&&!demoSesion){const rc=document.createElement("span");rc.id="oc-rol-chip";rc.textContent=_rolTxt;rc.style.cssText="font-size:12px;font-weight:700;color:#fff !important;-webkit-text-fill-color:#fff !important;margin-right:6px;padding:4px 10px;background:var(--rust,#E86040);border-radius:20px;text-transform:uppercase;letter-spacing:.03em;";header.appendChild(rc)}header.appendChild(b)}function enmascarar(email){const[u,dom]=String(email).split("@");if(!dom)return"•••";return`${u.slice(0,1)}${"•".repeat(Math.max(2,u.length-1))}@${dom}`}window.OCAuth={rolActual:()=>rol,esDemo:()=>demoSesion,enmascarar:enmascarar,pedirPasswordInicial:pedirPasswordInicial,tieneOwnerPassword:()=>!!(window.OCSecure&&window.OCSecure.tieneOwnerPassword&&window.OCSecure.tieneOwnerPassword()),listo:()=>listo,abrirFlujoReset:abrirFlujoReset,workerUrl:()=>(localStorage.getItem("amigable_cf_worker_url")||"").trim()||CF_WORKER_URL_DEFAULT,pedirSubclaveContable(){return new Promise(resolve=>{const cont=_ocSubgate("oc-sc-modal",{alCerrar:()=>resolve(false)});if(!cont){resolve(false);return}cont.innerHTML=`<div class="caja" style="background:var(--blanco-calido,#fbf5e8);border:2px solid var(--brass,#9c7a35);border-radius:8px;padding:26px 22px;max-width:420px;width:100%;text-align:center;">\n          <h2 style="font-family:var(--font-display,sans-serif);color:var(--ink,#211c14);font-size:22px;margin:0 0 4px;">Capa contable</h2>\n          <div class="sub" style="font-size:14px;color:var(--ink-soft,#5d5340);margin-bottom:18px;">Subclave de 3 dígitos para ver cuentas T, P&amp;G y balance</div>\n          <div class="oc-slots" id="oc-slots2"><div class="slot"></div><div class="slot"></div><div class="slot"></div></div>\n          <div class="oc-pad" id="oc-pad2"></div>\n          <div class="oc-acciones"><button id="sc-cancelar">Cancelar</button><button id="sc-borrar">Borrar</button></div>\n          <div class="oc-msg" id="oc-msg2"></div></div>`;document.body.appendChild(cont);let tec;async function alCompletar(code){if(await window.OCSecure.verificarAcct(code)){resolve(true);cont.cerrar()}else{cont.querySelector("#oc-msg2").textContent="Subclave incorrecta.";cont.classList.add("err");setTimeout(()=>cont.classList.remove("err"),400);tec=montarTeclado(cont.querySelector("#oc-pad2"),cont.querySelector("#oc-slots2"),alCompletar)}}tec=montarTeclado(cont.querySelector("#oc-pad2"),cont.querySelector("#oc-slots2"),alCompletar);cont.querySelector("#sc-borrar").addEventListener("click",()=>tec.reset());cont.querySelector("#sc-cancelar").addEventListener("click",()=>cont.cerrar())})}}})();

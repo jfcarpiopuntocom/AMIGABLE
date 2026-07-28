@@ -2045,10 +2045,26 @@ function badgeComportamiento(ev) {
 
 // tarjetaCliente: genera HTML de la tarjeta de un cliente con calificador 1-5.
 // ctx: prefijo para IDs únicos (útil si el mismo cliente aparece en 2 listas).
+// IMPORTANTE (2026-07-28, code review): si se agrega OTRO llamado a esta función
+// en la misma vista (ej. Matriz de comportamiento pasa a usar tarjetas completas
+// en vez de chips), hay que pasarle un ctx DISTINTO de "est" — de lo contrario
+// los ids oc-rate-*/oc-inc-* colisionan entre ambas copias del mismo cliente y
+// los clics de calificar/incidente terminan pegándole a la copia equivocada.
 function tarjetaCliente(c, esDueno, ctx) {
   ctx = ctx || "est";
   const key = ctx + "-" + c.id;
   const ev = c.evaluacion || { trato: 0, confiabilidad: 0, historial: [] };
+  // Blindaje (2026-07-28, code review): si un snapshot viejo (caja fuerte
+  // automatica u otra ruta de restauracion que no pase por el import manual)
+  // trae evaluacion sin migrar a la escala 1-5, aqui se normaliza igual que
+  // cnv() en mock-backend.js. Sin esto, filaRate() pintaba mal las estrellas
+  // para clientes con la escala legada -1/0/1.
+  if (ev.escala !== 5) {
+    const cnv5 = (v) => { v = Number(v) || 0; return v === -1 ? 2 : v === 1 ? 5 : v > 1 ? v : 0; };
+    ev.trato = cnv5(ev.trato);
+    ev.confiabilidad = cnv5(ev.confiabilidad);
+    ev.escala = 5;
+  }
   const dato = esDueno
     ? `<div style="font-size:15px;color:#2C3E50;margin-top:3px;">${c.frecuencia} compra(s) en 90 días · ${fmtMoney(c.monto)}${c.recencia != null ? ` · última hace ${c.recencia} día(s)` : " · sin compras aún"}</div>`
     : "";
@@ -4837,9 +4853,12 @@ async function evaluarCliente(clienteId, campo, valor, btn) {
   try {
     // Toggle: si el usuario toca el mismo valor que ya está activo → limpia a 0.
     // Usa data-valor en el contenedor .oc-rate-row para evitar depender del atributo SVG fill.
+    let _row = null, _valorAnterior = 0;
     if (btn && btn.parentElement) {
       const row = btn.closest(".oc-rate-row") || btn.parentElement;
+      _row = row;
       const currentVal = parseInt(row.dataset.valor || "0", 10);
+      _valorAnterior = currentVal;
       if (currentVal === valor) valor = 0;
       row.dataset.valor = String(valor); // actualizar para la próxima interacción
       // Actualización optimista: pinta/borra iconos al instante sin esperar fetch.
@@ -4868,11 +4887,31 @@ async function evaluarCliente(clienteId, campo, valor, btn) {
       if (wrap) wrap.style.display = (valor >= 1 && valor <= 2) ? "flex" : "none";
       setTimeout(cargarClientes, 300);
     } else {
-      // Fetch fallido: revertir optimistic update lo antes posible.
+      // Fetch fallido: revertir optimistic update DE INMEDIATO (sincrónico),
+      // no solo confiar en el refresh async — si cargarClientes() tambien
+      // falla (red caida), el dataset.valor optimista quedaria mintiendo y
+      // el proximo toggle-a-cero en evaluarCliente() se dispararia mal.
       console.warn("[evaluarCliente] PATCH no-ok:", res.status, clienteId, campo, valor);
+      if (_row) {
+        _row.dataset.valor = String(_valorAnterior);
+        try {
+          const iconoFn = campo === "trato" ? svgHeartR : svgStarR;
+          _row.querySelectorAll(".oc-rate-btn").forEach((b, i) => { b.innerHTML = iconoFn(i + 1 <= _valorAnterior, 22); });
+        } catch(_) {}
+      }
       setTimeout(cargarClientes, 50);
     }
-  } catch(e) { console.error("Error evaluando cliente:", e); setTimeout(cargarClientes, 400); }
+  } catch(e) {
+    console.error("Error evaluando cliente:", e);
+    if (_row) {
+      _row.dataset.valor = String(_valorAnterior);
+      try {
+        const iconoFn = campo === "trato" ? svgHeartR : svgStarR;
+        _row.querySelectorAll(".oc-rate-btn").forEach((b, i) => { b.innerHTML = iconoFn(i + 1 <= _valorAnterior, 22); });
+      } catch(_) {}
+    }
+    setTimeout(cargarClientes, 400);
+  }
   finally {
     if (btn) btn.disabled = false;
     // Liberar el lock 350ms después (cubre el setTimeout de cargarClientes de 300ms).
