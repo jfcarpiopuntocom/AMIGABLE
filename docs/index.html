@@ -4669,7 +4669,7 @@ async function cargarComisiones(){
     </div>`;
   }).join("");
 
-  cont.innerHTML = btnWA + rankHtml + matrizComisionistasHtml(ranking) + cardsHtml;
+  cont.innerHTML = btnWA + rankHtml + cardsHtml + matrizComisionistasHtml(ranking); // #23 (2026-07-28): la matriz estorbaba el uso diario, ahora al fondo
   cont.querySelectorAll("[data-abrir-promotora]").forEach(btn => btn.addEventListener("click", () => {
     abrirEditorComisionista(btn.dataset.abrirPromotora, null);
   }));
