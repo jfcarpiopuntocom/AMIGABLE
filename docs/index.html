@@ -1256,14 +1256,15 @@
       </div>
     </details>
     <div class="filtros-estado" id="filtrosEstado">
-      <!-- Filtros alineados a la semantica Simon CONGELADA (2026-07-07):
-           amarillo=Oportunidad, naranja=Revisar, azul=Dato, negro=Dormido -->
+      <!-- Filtros alineados a la semantica Simon (2026-07-28): azul salio del
+           semaforo — ya no es color de estado de producto, solo vive en tips
+           contables (capa financiera). amarillo=Oportunidad, naranja=Revisar,
+           negro=Dormido. -->
       <button data-estado="" class="activo">Todos</button>
       <button data-estado="rojo">Urgente</button>
       <button data-estado="naranja">Revisar</button>
       <button data-estado="amarillo">Oportunidad</button>
       <button data-estado="verde">Sano</button>
-      <button data-estado="azul">Dato</button>
       <button data-estado="negro">Dormido</button>
     </div>
     <div class="grid-cajas" id="gridInventario"></div>
@@ -1581,7 +1582,11 @@
       <p id="msgGastos" style="font-size:14px; margin-top:10px;"></p>
     </div>
 
-    <h3 class="seccion" id="oc-pl-titulo">Pérdidas y ganancias (hoy)</h3>
+<h3 class="seccion">Serenidad financiera</h3>
+    <!-- #4 (2026-07-28): unico lugar de la app donde el azul aparece — tips
+         contables, nunca color de estado en tarjetas de inventario. -->
+    <div id="oc-tips-financieros" class="tag-card" style="text-align:left;border-left:5px solid var(--sim-azul);"></div>
+        <h3 class="seccion" id="oc-pl-titulo">Pérdidas y ganancias (hoy)</h3>
     <!-- #12 (2026-07-28): elegir periodo para ver/exportar. Default "hoy" = cero regresion. -->
     <select id="oc-periodo-pl" onchange="cargarAvanzado()" style="margin-bottom:8px;padding:8px 10px;border:2px solid var(--azul-medio,#2c4a68);border-radius:6px;font-size:14px;">
       <option value="hoy">Hoy</option>
@@ -4911,6 +4916,26 @@ async function marcarComisionPagada(ubicacionId, promotorNombre, monto){
 }
 
 // --- VISTA AVANZADO ---
+// #4 (2026-07-28): unico lugar donde vive el azul — margen bajo como tip
+// contable, nunca como color de tarjeta de inventario.
+async function cargarTipsFinancieros(){
+  const cont = document.getElementById("oc-tips-financieros");
+  if (!cont) return;
+  let tips;
+  try {
+    tips = await (await fetch(`${API}/reportes/tips-financieros?ubicacionId=${ubicacionActual}`)).json();
+  } catch (_) { cont.innerHTML = ""; return; }
+  if (!Array.isArray(tips) || !tips.length) {
+    cont.innerHTML = `<p style="font-size:14px;color:var(--ink-soft);margin:0;">Sin novedades de margen por ahora — todo tranquilo.</p>`;
+    return;
+  }
+  cont.innerHTML = `
+    <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Estos productos tienen margen bajo (menos del 25%) — vale la pena revisar precio o costo cuando puedas, sin apuro:</p>
+    <ul style="margin:0;padding-left:18px;font-size:14px;">
+      ${tips.slice(0, 12).map(t => `<li>${escHtml(t.nombre)} — margen ${t.margenPct}% (${fmtMoney(t.costo)} → ${fmtMoney(t.precio)})</li>`).join("")}
+    </ul>`;
+}
+
 async function cargarGastosMensuales(){
   const input = document.getElementById("inputGastosMensuales");
   const msg = document.getElementById("msgGastos");
@@ -5044,6 +5069,7 @@ async function cargarReservasEventos(){
     </div>`).join("");
 }
 async function cargarAvanzado(){
+  cargarTipsFinancieros();
   await cargarGastosMensuales();
   await cargarActividad();
   cargarReservasEventos();
