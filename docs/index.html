@@ -489,6 +489,10 @@
     border-color:#D9D9D9;
     box-shadow:0 1px 2px #DFE0E2, 0 14px 30px -14px #8D8B88;
     background-size:14px 14px, auto;
+    /* Animacion #1 (2026-07-28, aprobada por JFC via find-animation-opportunities):
+       antes el banner cambiaba de color (verde/amarillo/rojo) de un salto seco.
+       Suaviza el cambio de estado de salud del negocio, sin animar nada mas. */
+    transition:background-color 280ms ease-out, box-shadow 280ms ease-out;
   }
   /* Borde y textura de puntos por estado: antes eran blancos con alpha (Ley 1),
      ahora son el blend solido real de blanco sobre el color de fondo de cada
@@ -838,6 +842,7 @@
   @media (prefers-reduced-motion: reduce){
     .oc-rate-btn svg{ transition:none; }
     .oc-rate-btn.oc-pop svg{ animation:none; }
+    .hero-semaforo{ transition:none; }
   }
   .badge-estado.azul{background:var(--sim-azul-bg); color:var(--sim-azul-dk);}
 
