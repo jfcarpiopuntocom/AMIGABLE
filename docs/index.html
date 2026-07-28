@@ -900,6 +900,12 @@
     overflow:auto;
     padding:20px;
   }
+  /* Fix #2 (2026-07-28): modalEtiqueta y modalFicha comparten .modal-fondo
+     (z-index:50). modalFicha aparece DESPUES en el DOM, asi que al editar un
+     producto y tocar "Ver etiqueta" quedaba tapada por completo hasta cerrar
+     la edicion — parecia que se abria y se ocultaba sola. z-index propio,
+     mas alto que cualquier otro modal-fondo, para que SIEMPRE quede encima. */
+  #modalEtiqueta{ z-index:10040; }
   .modal-fondo.activo{display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:40px;}
   .etiqueta-imprimible{
     background:var(--blanco-calido);
@@ -1237,6 +1243,9 @@
       <!-- Alta libre (+): SOLO dueno. Se revela en cargarInventario() segun rol. -->
       <button id="btnAltaProducto" class="ir" style="display:none;padding:10px 16px;flex-shrink:0;" onclick="abrirAltaProducto()">+ Agregar</button>
     </div>
+    <!-- #19 (2026-07-28): busqueda por nombre o SKU, filtra el grid en el cliente. -->
+    <input id="invBuscar" type="text" placeholder="Buscar por nombre o SKU..." oninput="clearTimeout(window._invBuscarT);window._invBuscarT=setTimeout(cargarInventario,250)"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;margin:4px 0 10px;border:2px solid var(--azul-medio,#2c4a68);border-radius:8px;font-size:15px;">
     <details style="margin:-4px 0 12px;font-size:14px;">
       <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
       <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
@@ -2700,7 +2709,11 @@ async function cargarInventario(){
     grid.innerHTML = `<p>No hay productos en este filtro.</p>`;
     return;
   }
+  const _buscarEl = document.getElementById("invBuscar");
+  const _q = (_buscarEl ? _buscarEl.value : "").trim().toLowerCase();
+  if (_q) productos = productos.filter(p => (p.nombre || "").toLowerCase().includes(_q) || (p.sku || "").toLowerCase().includes(_q));
   const esDuenoInv = window.OCAuth && window.OCAuth.rolActual() === "dueno";
+  if (_q && productos.length === 0) { grid.innerHTML = `<p style="font-size:15px;color:var(--ink-soft);">Nada coincide con "${escHtml(_q)}".</p>`; return; }
   grid.innerHTML = productos.map(p => `
     <div class="caja tag-card ${p.estado} n${calcularNivelBloom(p)}">
       ${p.estrella ? '<span class="estrella-badge">⭐</span>' : ''}
