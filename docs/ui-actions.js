@@ -101,6 +101,26 @@
     { fnName: "abrirAltaProducto", eventPrefix: "producto_alta_apertura", mapArgs: function () { return {}; } }
   ];
 
+  // Resumen del valor devuelto por una accion, por LISTA BLANCA. Nunca copia el
+  // objeto entero: un resultado puede traer la foto del producto en base64 y
+  // meterla en cada hecho inflaria el registro sin aportar nada. Solo se
+  // guardan los campos con los que se puede reconstruir el inventario.
+  // Devuelve null si el resultado no tiene forma reconocible — eso es correcto
+  // y esperado: no todas las acciones tocan stock.
+  function resumirResultado(value) {
+    try {
+      if (!value || typeof value !== "object") return null;
+      // Varias rutas devuelven { producto: {...} } y otras el producto directo.
+      var p = value.producto && typeof value.producto === "object" ? value.producto : value;
+      var out = {};
+      if (p.id != null) out.productoId = String(p.id);
+      if (typeof p.stockActual === "number") out.stockActual = p.stockActual;
+      if (p.sku != null) out.sku = String(p.sku);
+      if (value.ventaId != null) out.ventaId = String(value.ventaId);
+      return Object.keys(out).length ? out : null;
+    } catch (_) { return null; }
+  }
+
   var envueltas = [];
   var noEncontradas = [];
 
@@ -136,7 +156,15 @@
         return result.then(
           function (value) {
             var dur = ((global.performance && global.performance.now) ? global.performance.now() : Date.now()) - t0;
-            Bus.emit(spec.eventPrefix + ":completado", { payload: payload, durationMs: Math.round(dur) });
+            // resultado: el estado en que QUEDO el producto tras la accion.
+            // Sin esto, un hecho de venta dice "se vendio algo del producto X"
+            // pero no cuanto, y reconciliacion.js no puede reconstruir el
+            // inventario — solo contar acciones. Con el stock resultante, dos
+            // hechos consecutivos del mismo producto permiten deducir el
+            // movimiento real aunque la cantidad no viniera en los argumentos.
+            // Se extrae por lista blanca y dentro de try/catch: un resultado con
+            // forma inesperada NO puede romper una venta.
+            Bus.emit(spec.eventPrefix + ":completado", { payload: payload, durationMs: Math.round(dur), resultado: resumirResultado(value) });
             return value;
           },
           function (err) {

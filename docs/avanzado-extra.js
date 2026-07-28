@@ -172,6 +172,24 @@
   vista.appendChild(bkMount);
   if (window.OCBackupScheduler) window.OCBackupScheduler.montar(bkMount);
 })();
+// === MI CONSTANCIA DE TRABAJO (JFC 2026-07-28, punto 13) =====================
+// El respaldo del dueno protege al negocio; este protege a la PERSONA que
+// atiende. Se pinta solo si quien mira es empleado — montar() se autolimita, no
+// hace falta filtrar por rol aqui. Ver docs/respaldo-empleado.js para el
+// alcance exacto de lo que viaja y lo que no (los costos NO viajan).
+(function(){
+  var reMount = document.createElement("div");
+  reMount.id = "oc-respaldo-empleado-mount";
+  vista.appendChild(reMount);
+  if (window.OCRespaldoEmpleado) window.OCRespaldoEmpleado.montar(reMount);
+})();
+// === PUNTOS DE RETORNO (micelio Fase B) ======================================
+// El div ya existe en index.html, colocado a proposito ANTES del edutip y del
+// bloque de soporte tecnico: JFC pidio el checksum al fondo del todo.
+(function(){
+  var m = document.getElementById("oc-reconciliacion-mount");
+  if (m && window.AMG && window.AMG.Reconciliacion) window.AMG.Reconciliacion.montarPanel(m);
+})();
 // === MIS SINCRONIZACIONES (2026-07-28): agrupa Respaldo + Sincronizar equipo
 // + Caja fuerte automatica bajo un solo mini-header azul (lado sereno de la
 // app, mismo tratamiento visual que Mi Equipo). 100% aditivo: NO recrea los

@@ -231,6 +231,52 @@
     if (!w) mostrarLinkFallback(url, "Abrir WhatsApp");
   }
 
+  // ==========================================================================
+  // ENTREGA DEL ARCHIVO — extraido de correrRespaldo() (JFC 2026-07-28) para
+  // que el respaldo del EMPLEADO (respaldo-empleado.js) reutilice exactamente
+  // el mismo camino en vez de duplicarlo. Aqui viven varios arreglos que
+  // costaron trabajo: el AbortError de Web Share, el popup bloqueado en movil,
+  // el download ignorado en iOS. Duplicar este bloque significaria perder esos
+  // arreglos en la copia. Un solo mecanismo de entrega, dos cargas distintas.
+  //
+  // Devuelve "compartido" | "fallback" | "cancelado".
+  //   cancelado = el usuario cerro el menu de compartir a proposito; quien
+  //   llama NO debe marcar el respaldo como hecho ni dejar de recordarlo.
+  //
+  // plantillaTexto admite el marcador %CANAL%, que se reemplaza por el canal
+  // real elegido para no decirle "correo" a quien respalda por WhatsApp.
+  // ==========================================================================
+  async function entregarArchivo(info, prefs, titulo, plantillaTexto) {
+    let resultado = "fallback";
+    try {
+      // navigator.share exige un File; comprobamos canShare con el archivo real
+      // (algunos navegadores dicen tener share pero no aceptan archivos).
+      const file = new File([info.texto], info.nombre, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        const canalTxt = prefs.canalWhatsapp && !prefs.canalEmail ? "WhatsApp" : "correo o WhatsApp";
+        await navigator.share({
+          files: [file],
+          title: titulo,
+          text: String(plantillaTexto).replace("%CANAL%", canalTxt),
+        });
+        resultado = "compartido";
+      }
+    } catch (e) {
+      // AbortError = cerro el menu de compartir a proposito: no insistimos con
+      // el fallback ni marcamos un respaldo que no ocurrio.
+      resultado = (e && e.name === "AbortError") ? "cancelado" : "fallback";
+    }
+
+    if (resultado === "fallback") {
+      // Descarga + canales premade. WhatsApp primero (nueva pestana) y mailto
+      // con un pequeno retraso, para que el open() de wa.me no se coma el mailto.
+      descargarArchivo(info.texto, info.nombre);
+      if (prefs.canalWhatsapp) abrirWa(prefs.whatsapp, info.nombre, info.humano);
+      if (prefs.canalEmail)    setTimeout(() => abrirMailto(prefs.email, info.nombre, info.humano), 300);
+    }
+    return resultado;
+  }
+
   // Corre la rutina completa: descarga + abre canales elegidos + marca timestamp.
   async function correrRespaldo(silencioso) {
     const prefs = getPrefs();
@@ -270,35 +316,10 @@
     //      descargado). Es el techo posible sin servidor en escritorio.
     // NUNCA meter un servidor en medio de estos datos. Esa regla es de JFC.
     // ========================================================================
-    let resultado = "fallback"; // "compartido" | "fallback" | "cancelado"
-    try {
-      // navigator.share exige un File; comprobamos canShare con el archivo real
-      // (algunos navegadores dicen tener share pero no aceptan archivos).
-      const file = new File([info.texto], info.nombre, { type: "application/json" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        const canalTxt = prefs.canalWhatsapp && !prefs.canalEmail ? "WhatsApp" : "correo o WhatsApp";
-        await navigator.share({
-          files: [file],
-          title: "Respaldo amigable-123",
-          text: `Respaldo de tu negocio (amigable-123) ${info.humano}. Envíatelo a TI mismo/a por ${canalTxt} — es tuyo, no pasa por ningún servidor.`,
-        });
-        resultado = "compartido";
-      }
-    } catch (e) {
-      // AbortError = el dueño cerró el menú de compartir a propósito: no
-      // insistimos con el fallback ni marcamos un respaldo que no ocurrió.
-      resultado = (e && e.name === "AbortError") ? "cancelado" : "fallback";
-    }
+    const resultado = await entregarArchivo(info, prefs, "Respaldo amigable-123",
+      `Respaldo de tu negocio (amigable-123) ${info.humano}. Envíatelo a TI mismo/a por %CANAL% — es tuyo, no pasa por ningún servidor.`);
 
     if (resultado === "cancelado") return; // no marcar backup, seguir recordando
-
-    if (resultado === "fallback") {
-      // Descarga + canales premade. WhatsApp primero (nueva pestaña) y mailto
-      // con un pequeño retraso, para que el open() de wa.me no se coma el mailto.
-      descargarArchivo(info.texto, info.nombre);
-      if (prefs.canalWhatsapp) abrirWa(prefs.whatsapp, info.nombre, info.humano);
-      if (prefs.canalEmail)    setTimeout(() => abrirMailto(prefs.email, info.nombre, info.humano), 300);
-    }
 
     const canal = prefs.canalEmail && prefs.canalWhatsapp ? "both" : (prefs.canalEmail ? "email" : "whatsapp");
     setLast(canal);
@@ -607,6 +628,12 @@
     correr: correrRespaldo,
     chequearAlArrancar,
     getPrefs,
+    // Reutilizados por respaldo-empleado.js — mismo camino de entrega, misma
+    // normalizacion de WhatsApp. NO duplicar estas funciones en otro archivo.
+    entregarArchivo,
+    stampArchivo,
+    stampHumano,
+    waEsValido,
     // Utilidades expuestas para pruebas manuales desde DevTools:
     _toca: () => toca(getPrefs()),
     _mostrarRecordatorio: mostrarRecordatorioRespaldo,

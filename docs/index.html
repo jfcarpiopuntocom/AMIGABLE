@@ -1604,9 +1604,12 @@
       <p id="msgGastos" style="font-size:14px; margin-top:10px;"></p>
     </div>
 
-<h3 class="seccion">Serenidad financiera</h3>
-    <!-- #4 (2026-07-28): unico lugar de la app donde el azul aparece — tips
-         contables, nunca color de estado en tarjetas de inventario. -->
+<!-- EN OBSERVACION (renombrado por JFC 2026-07-28: "Serenidad financiera"
+         no describia nada). Lista los productos cuyo margen quedo por debajo
+         del 25% — no estan perdiendo plata todavia, pero hay que mirarlos.
+         Ese "todavia no es problema, pero ojo" ES el nombre de la cajita.
+         El azul aqui es semantico: ver la regla de color mas abajo. -->
+    <h3 class="seccion">En observación</h3>
     <div id="oc-tips-financieros" class="tag-card" style="text-align:left;border-left:5px solid var(--sim-azul);"></div>
         <h3 class="seccion" id="oc-pl-titulo">Pérdidas y ganancias (hoy)</h3>
     <!-- #12 (2026-07-28): elegir periodo para ver/exportar. Default "hoy" = cero regresion. -->
@@ -1624,6 +1627,18 @@
 
     <h3 class="seccion">Inventario valorizado</h3>
     <div class="tabla-wrap"><table class="reporte" id="tablaValorizado"></table></div>
+
+    <!-- PUNTOS DE RETORNO (micelio Fase B, 2026-07-28). Lo pinta
+         reconciliacion.js; se autolimita al dueno real (vacio para empleado y
+         para demo). Ver docs/reconciliacion.js: compara pero NUNCA corrige. -->
+    <div id="oc-reconciliacion-mount"></div>
+
+    <!-- EDUTIP CONTABLE (JFC 2026-07-28). Regla de color: el azul vive SOLO
+         aqui y en "En observacion" — reflexiones y ensenanza contable, al pie
+         de la seccion. Nunca es color de estado en inventario. Para cambiar el
+         texto edita docs/edutips.js; esta caja se llena sola. NO BORRAR. -->
+    <div id="oc-edutip-contable" class="tag-card"
+         style="text-align:left;border-left:5px solid var(--sim-azul);margin-top:26px;"></div>
 
     <!-- SOPORTE TECNICO (2026-07-24): el codigo ya prometia este panel en un
          comentario ("mandame lo que dice AVANZADO > soporte") pero nunca se
@@ -5538,6 +5553,9 @@ function ocAlert(mensaje) {
 <script src="./identity-context.js"></script>
 <script src="./audit-store.js"></script>
 <script src="./hechos.js"></script>
+<script src="./reconciliacion.js"></script>
+<script src="./respaldo-empleado.js"></script>
+<script src="./edutips.js"></script>
 <script src="./sync-queue.js"></script>
 <script src="./simon-config.js"></script>
 <script src="./percha-reposicion.js"></script>

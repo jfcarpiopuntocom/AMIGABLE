@@ -76,7 +76,7 @@ function upsertClienteDesdeContacto(nombre,telefono,email,evento){
 const OPS_APLICADAS_KEY="amigable_sync_ops_aplicadas";let _opsAplicadas=null;
 function _cargarOpsAplicadas(){if(_opsAplicadas)return _opsAplicadas;try{_opsAplicadas=new Set(JSON.parse(localStorage.getItem(OPS_APLICADAS_KEY)||"[]"))}catch(_){_opsAplicadas=new Set()}return _opsAplicadas}
 function _marcarOpAplicada(opId){const s=_cargarOpsAplicadas();s.add(opId);if(s.size>500){const arr=[...s];s.clear();arr.slice(-500).forEach(x=>s.add(x))}try{localStorage.setItem(OPS_APLICADAS_KEY,JSON.stringify([...s]))}catch(_){}}
-function emitirOpStock(tipo,payload){if(window.OCSyncEmit){try{window.OCSyncEmit(tipo,payload)}catch(_){}}}
+function emitirOpStock(tipo,payload){if(window.OCSyncEmit){try{window.OCSyncEmit(tipo,payload)}catch(_){}}try{var _mp=productos.find(function(x){return x.id===(payload&&payload.productoId)});if(window.AMG&&window.AMG.EventBus)window.AMG.EventBus.emit("inventario_"+tipo+":completado",{payload:payload,resultado:_mp?{productoId:_mp.id,stockActual:_mp.stockActual,sku:_mp.sku}:null})}catch(_){}}
 window.OCSync={
   // Llamado por sync-realtime.js al recibir un Op de otro dispositivo.
   // Aplica SOLO deltas (nunca valores absolutos) — dos ventas simultaneas
