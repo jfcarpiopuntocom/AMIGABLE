@@ -843,7 +843,14 @@
     .oc-rate-btn svg{ transition:none; }
     .oc-rate-btn.oc-pop svg{ animation:none; }
     .hero-semaforo{ transition:none; }
+    .oc-grid-fade{ animation:none; }
   }
+  /* Animaciones 3 y 4 (2026-07-28, aprobadas por JFC): el grid de Inventario
+     se reconstruye entero via innerHTML en cada filtro Y en cada toggle de
+     estrella (misma funcion cargarInventario) — sin bridge visual, era un
+     parpadeo. Un fade corto en el contenedor suaviza AMBOS casos a la vez. */
+  @keyframes ocGridFadeIn{ from{ opacity:0; } to{ opacity:1; } }
+  .oc-grid-fade{ animation:ocGridFadeIn 180ms ease-out; }
   .badge-estado.azul{background:var(--sim-azul-bg); color:var(--sim-azul-dk);}
 
   .acciones-rapidas{
@@ -2773,6 +2780,7 @@ async function cargarInventario(){
       </div>
     </div>
   `).join("");
+  grid.classList.remove("oc-grid-fade");void grid.offsetWidth;grid.classList.add("oc-grid-fade");
 
   // Ajuste rápido +/- stock sin escanear. Pide motivo, deja log para el dueño.
   grid.querySelectorAll("[data-ajuste-menos],[data-ajuste-mas]").forEach(btn => {
