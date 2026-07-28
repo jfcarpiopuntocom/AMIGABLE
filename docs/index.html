@@ -409,10 +409,20 @@
     border-top:2px solid var(--ink);
     position:fixed;
     left:0; right:0; bottom:0;
-    /* min-height (no height fija) permite que la nav crezca para el home indicator
-       de iOS sin aplastar los botones. El área de contenido usa --nav-h + inset. */
+    /* ALTURA FIJA (fix 2026-07-28, JFC: "el menu de abajo en iOS safari se
+       estira cuando uno no ha refrescado la pantalla"). Antes: height:auto +
+       align-items por defecto (stretch). En iOS, env(safe-area-inset-bottom)
+       cambia de valor cuando la barra de URL se colapsa o se expande; con
+       height:auto la nav crecia y, por stretch, los botones crecian con ella,
+       comiendo pantalla hacia arriba hasta el siguiente refresh.
+       Ahora la altura del contenido es fija y SOLO el padding inferior absorbe
+       el home indicator. box-sizing:content-box es imprescindible: con
+       border-box la altura incluiria el safe-area y aplastaria los botones en
+       iPhones con notch — que es el bug que height:auto intentaba evitar. */
+    box-sizing:content-box;
     min-height:var(--nav-h);
-    height:auto;
+    height:var(--nav-h);
+    align-items:center;
     padding:6px 6px env(safe-area-inset-bottom, 6px);
     z-index:35;
     /* Con 7 botones (Comisiones y Avanzado se agregaron después), flex:1
