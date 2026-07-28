@@ -1095,7 +1095,7 @@
        La animacion CSS con forwards lo oculta AUNQUE el JS falle (red de
        seguridad para Safari/iOS): no depende de nadie para quitarse. */
     pointer-events:none;
-    animation:ocSplashOut .45s ease 1.15s forwards;}
+    animation:ocSplashOut .45s ease 1.6s forwards;}
   @keyframes ocSplashOut{ to{ transform:scale(.92); visibility:hidden; } }
   #oc-splash{flex-direction:column;gap:16px;}#oc-splash img{width:min(72vw,340px);height:auto;display:block;}#oc-splash .oc-splash-tag{font-family:var(--font-display,sans-serif);font-size:17px;font-weight:700;color:#F8F9FB !important;-webkit-text-fill-color:#F8F9FB !important;margin:0;text-align:center;letter-spacing:.01em;}
   #oc-splash.fuera{transform:scale(.92);pointer-events:none;visibility:hidden;}
@@ -2579,18 +2579,22 @@ async function cargarHoy(){
         ).join("")}</ul>` : "";
     }
   } catch (_) { /* sin estrellas: el bloque queda vacío */ }
-  // #16 (2026-07-28): en la vista del Empleado, "Para impulsar hoy" va ANTES
-  // del semaforo de urgencias (orden inverso al del dueño) — es lo primero
-  // que un empleado necesita saber al llegar a trabajar.
+  // #16 (2026-07-28, corregido tras feedback de JFC — "no antes de TODO, solo
+  // antes de Alertas de hoy, el semaforo 'Necesitas actuar hoy' se queda arriba"):
+  // en la vista del Empleado, "Para impulsar hoy" va justo ANTES de "Alertas
+  // de hoy" (los urgentes rojo/naranja), pero DEBAJO del semaforo hero y de
+  // las tarjetas de resumen — es un ajuste de orden acotado, no un rediseño.
   try {
     const _esEmpleadoHoy = window.OCAuth && window.OCAuth.rolActual() === "empleado";
     const _seccionHoy = document.getElementById("vista-hoy");
-    const _hero = document.getElementById("heroSemaforo");
+    const _listaAlertas = document.getElementById("listaAlertas");
+    const _tituloAlertas = _listaAlertas ? _listaAlertas.previousElementSibling : null; // <h3>Alertas de hoy</h3>
     const _estrellaCont = document.getElementById("estrellaHoy");
-    if (_esEmpleadoHoy && _seccionHoy && _hero && _estrellaCont && _seccionHoy.firstElementChild !== _estrellaCont) {
-      _seccionHoy.insertBefore(_estrellaCont, _hero);
-    } else if (!_esEmpleadoHoy && _seccionHoy && _hero && _estrellaCont && _seccionHoy.firstElementChild === _estrellaCont) {
-      _seccionHoy.insertBefore(_hero, _estrellaCont); // volver al orden normal si cambio de rol sin recargar
+    const _moodCont = document.getElementById("moodHoy");
+    if (_esEmpleadoHoy && _seccionHoy && _tituloAlertas && _estrellaCont && _tituloAlertas.nextElementSibling !== _estrellaCont && _estrellaCont.nextElementSibling !== _tituloAlertas) {
+      _seccionHoy.insertBefore(_estrellaCont, _tituloAlertas);
+    } else if (!_esEmpleadoHoy && _seccionHoy && _estrellaCont && _moodCont && _estrellaCont.nextElementSibling !== _moodCont) {
+      _seccionHoy.insertBefore(_estrellaCont, _moodCont); // volver a su lugar original (justo antes de moodHoy)
     }
   } catch (_) { /* reorden es cosmetico — nunca debe romper el resto de Hoy */ }
 
@@ -5171,12 +5175,12 @@ async function cargarDashboardInicial(intento){
 }
 cargarDashboardInicial(0);
 
-// Splash de arranque: visible 1s, fade de 0.45s y se quita del DOM.
-// Ajustado JFC 2026-07-23: pedido explícito de branding constante de 1s (antes 0.8s).
+// Splash de arranque: visible 1.6s, fade de 0.45s y se quita del DOM.
+// Ajustado JFC 2026-07-28: pedido explícito de 1.6s (antes 1s, antes 0.8s).
 setTimeout(() => {
   const sp = document.getElementById("oc-splash");
   if (sp) { sp.classList.add("fuera"); setTimeout(() => sp.remove(), 500); }
-}, 1000);
+}, 1600);
 </script>
 
 <script src="./crypto-store.js"></script>
