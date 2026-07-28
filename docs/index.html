@@ -3384,6 +3384,60 @@ async function crearProductoNuevo(codigoEscaneado){
 // cambia si el dueno lo digita de nuevo en su campo propio. El empleado NUNCA
 // ve estos botones (dos capas de management).
 // ============================================================================
+// === Blindaje anti-perdida de datos (#15, 2026-07-28) ===================
+// El editor de producto es el formulario mas largo de la app; perder lo
+// digitado ahi es lo peor que puede pasar con la app ya en uso real. Dos
+// capas independientes:
+//  1) capturarValoresFormEdicion/restaurarValoresFormEdicion: preservan los
+//     campos a traves de cualquier re-render intermedio (ej. "+ Agregar a
+//     esa percha", que NO es un guardado pero antes recargaba todo el form).
+//  2) Borrador en localStorage (auto-guardado con debounce) por producto:
+//     sobrevive a cierres de pestaña, recargas, "Cancelar" por error, o
+//     cualquier otro camino de perdida que no hayamos anticipado. Al reabrir
+//     "Editar" para el mismo producto, si hay un borrador mas nuevo que lo
+//     guardado, se ofrece restaurarlo — nunca se aplica solo, sin avisar.
+const ED_CAMPOS_IDS = ["ed-nombre","ed-precio","ed-costo","ed-proveedor","ed-categoria","ed-barcode","ed-ubicacion","ed-umbral-rojo","ed-umbral-amarillo","ed-tipo-proveedor","ed-comision-pct","ed-tipo-producto"];
+function capturarValoresFormEdicion(){
+  const out = {};
+  ED_CAMPOS_IDS.forEach((id) => { const el = document.getElementById(id); if (el) out[id] = el.value; });
+  return out;
+}
+function restaurarValoresFormEdicion(vals){
+  if (!vals) return;
+  Object.keys(vals).forEach((id) => { const el = document.getElementById(id); if (el) el.value = vals[id]; });
+  const tp = document.getElementById("ed-tipo-proveedor");
+  if (tp) tp.dispatchEvent(new Event("change"));
+}
+function edBorradorKey(id){ return "amigable_borrador_prod_" + id; }
+function edGuardarBorrador(id){
+  try {
+    const vals = capturarValoresFormEdicion();
+    localStorage.setItem(edBorradorKey(id), JSON.stringify({ vals, ts: Date.now() }));
+  } catch (_) { /* localStorage lleno o bloqueado: el resto de la app sigue funcionando */ }
+}
+function edLeerBorrador(id){
+  try {
+    const raw = localStorage.getItem(edBorradorKey(id));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && parsed.vals ? parsed : null;
+  } catch (_) { return null; }
+}
+function edLimpiarBorrador(id){
+  try { localStorage.removeItem(edBorradorKey(id)); } catch (_) {}
+}
+let _edFormActivoId = null; // producto cuyo formulario de edicion esta abierto ahora mismo
+window.addEventListener("beforeunload", (ev) => {
+  if (!_edFormActivoId) return;
+  const el = document.getElementById("ed-nombre");
+  if (!el) return; // el form ya no esta en pantalla
+  // El borrador ya se auto-guarda con cada tecla; este aviso es una capa
+  // adicional, no la unica proteccion — si el usuario decide salir igual,
+  // sus datos siguen recuperables la proxima vez que abra "Editar".
+  ev.preventDefault();
+  ev.returnValue = "";
+});
+
 async function mostrarFormEditarProducto(id){
   // Reforzado (JFC 2026-07-18): sin este catch, un fallo de red aqui tiraba
   // una excepcion no atrapada y "Editar" no hacia nada visible.
@@ -3481,6 +3535,31 @@ async function mostrarFormEditarProducto(id){
     document.getElementById("ed-comision-wrap").style.display = e.target.value === "consignacion" ? "block" : "none";
   });
   attachPerchaInlineCreate(document.getElementById("ed-ubicacion"));
+  // Blindaje #15: activar auto-guardado de borrador + ofrecer restaurar uno previo.
+  _edFormActivoId = p.id;
+  const _edCont = document.getElementById("ed-nombre") ? document.getElementById("ed-nombre").closest(".ficha-producto") : null;
+  if (_edCont) {
+    let _edDebounce = null;
+    _edCont.addEventListener("input", () => {
+      clearTimeout(_edDebounce);
+      _edDebounce = setTimeout(() => edGuardarBorrador(p.id), 400);
+    });
+  }
+  const _borrador = edLeerBorrador(p.id);
+  if (_borrador) {
+    const _msgEl = document.getElementById("ed-msg");
+    if (_msgEl) {
+      const _cuando = new Date(_borrador.ts).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" });
+      _msgEl.innerHTML = `<span style="color:var(--rust,#E86040);">Tenías cambios sin guardar de las ${escHtml(_cuando)}.</span> `
+        + `<button type="button" id="ed-restaurar-borrador" style="font-size:13px;padding:4px 10px;">Restaurar</button> `
+        + `<button type="button" id="ed-descartar-borrador" style="font-size:13px;padding:4px 10px;background:transparent;">Descartar</button>`;
+      const _btnR = document.getElementById("ed-restaurar-borrador");
+      const _btnD = document.getElementById("ed-descartar-borrador");
+      if (_btnR) _btnR.addEventListener("click", () => { restaurarValoresFormEdicion(_borrador.vals); _msgEl.innerHTML = ""; });
+      if (_btnD) _btnD.addEventListener("click", () => { edLimpiarBorrador(p.id); _msgEl.innerHTML = ""; });
+    }
+  }
+
   // Multi-percha real (2026-07-22): clona este producto (mismo SKU) en otra
   // percha con stock 0, listo para recibir transferencia o venta directa.
   const btnAgregarPercha = document.getElementById("ed-agregar-percha");
@@ -3495,7 +3574,15 @@ async function mostrarFormEditarProducto(id){
         });
         const data = await res.json();
         if (!res.ok) { await ocAlert(data.error); btnAgregarPercha.disabled = false; return; }
+        // Fix #15 (2026-07-28): mostrarFormEditarProducto vuelve a pedir el
+        // producto al servidor y REEMPLAZA todo el formulario — eso borraba
+        // cualquier nombre/precio/costo/etc. que el usuario ya hubiera escrito
+        // y no hubiera guardado todavia. "+ Agregar a esa percha" es una accion
+        // intermedia, no un guardado: hay que preservar lo digitado a traves
+        // del re-render, no perderlo.
+        const _valsPreEdit = capturarValoresFormEdicion();
         await mostrarFormEditarProducto(p.id); // re-render: la nueva percha ya aparece en "También en:"
+        restaurarValoresFormEdicion(_valsPreEdit);
       } catch (_) {
         await ocAlert("No se pudo conectar con el servidor. Intenta de nuevo.");
         btnAgregarPercha.disabled = false;
@@ -3550,6 +3637,8 @@ async function guardarEdicionProducto(id){
     return;
   }
   if (!res.ok){ msg.style.color = "var(--rojo)"; msg.textContent = data.error; return; }
+  edLimpiarBorrador(id); // Blindaje #15: guardado exitoso -> el borrador ya no hace falta
+  _edFormActivoId = null;
   pintarFicha(data);
   cargarInventario();
 }
