@@ -4333,17 +4333,52 @@ async function cargarActividad(){
     if (d.nombre) return escHtml(d.nombre);
     return escHtml(Object.values(d).filter(v => typeof v !== 'object').join(' · '));
   };
+  // ANULACIÓN SUPERVISADA (hallazgo pre-demo, 2026-07-28): una venta solo se
+  // podía anular en los primeros 30s, sin excepción para nadie. Pasado ese
+  // tiempo quedaba como venta fantasma para siempre — un dedo resbalado
+  // durante una demo se volvía irreversible. El dueño/admin ahora ve un
+  // botón "Anular" aquí, en el log, para ventas de HOY que ya perdieron su
+  // ventana normal. El backend (mock-backend.js) exige body.forzado=true Y
+  // que la venta sea de hoy — nunca reescribe días ya cerrados.
+  const rolLog = window.OCAuth && window.OCAuth.rolActual && window.OCAuth.rolActual();
+  const puedeAnularSupervisado = rolLog === "dueno" || rolLog === "admin";
+  const hoyLog = new Date().toISOString().slice(0, 10);
   cont.innerHTML = items.map(it => {
     const quien = (it.usuarioNombre && it.usuarioNombre !== 'Sistema')
       ? `<div style="font-size:14px;font-weight:700;color:var(--azul-medio,#2c4a68);">${escHtml(it.usuarioNombre)}</div>` : '';
+    const esVentaHoyConId = it.tipo === "venta" && it.detalle && it.detalle.ventaId
+      && String(it.fecha).slice(0, 10) === hoyLog;
+    const btnAnularSup = (puedeAnularSupervisado && esVentaHoyConId)
+      ? `<button data-anular-forzado="${escHtml(it.detalle.ventaId)}" data-producto="${escHtml(it.detalle.producto || '')}"
+           style="margin-top:6px;font-size:13px;padding:5px 10px;border:2px solid var(--rojo,#E8365D);border-radius:5px;background:transparent;color:var(--rojo,#E8365D);cursor:pointer;">
+           Anular esta venta
+         </button>` : '';
     return `
     <div class="actividad-item">
       <div class="tipo">${escHtml(it.tipo)}</div>
       <div>${resumenDetalle(it.detalle)}</div>
       ${quien}
       <div style="color:var(--azul-medio);">${escHtml(new Date(it.fecha).toLocaleString())}</div>
+      ${btnAnularSup}
     </div>`;
   }).join("");
+  cont.querySelectorAll("[data-anular-forzado]").forEach(btn => btn.addEventListener("click", async () => {
+    const ventaId = btn.dataset.anularForzado;
+    const producto = btn.dataset.producto || "este producto";
+    if (!(await ocConfirm(`Anular la venta de "${producto}"? Esto devuelve la unidad al stock y quita el ingreso de hoy. Solo funciona para ventas de hoy.`, { danger: true }))) return;
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${API}/ventas/${encodeURIComponent(ventaId)}/anular`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ forzado: true, motivo: "Anulación supervisada desde Log de actividad" }),
+      });
+      const r = await res.json().catch(() => ({}));
+      if (!res.ok) { alert(r.error || "No se pudo anular."); btn.disabled = false; return; }
+      await cargarActividad();
+      if (typeof cargarInventario === "function") cargarInventario();
+      if (typeof cargarHoy === "function") cargarHoy();
+    } catch (e) { alert("Error de red: " + e.message); btn.disabled = false; }
+  }));
 }
 
 // --- GESTIÓN DE COMISIONISTAS (promotores/as): agregar y archivar ---

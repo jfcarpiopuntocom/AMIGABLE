@@ -201,7 +201,8 @@
     cont.id = "amg-simon-percha";
     cont.innerHTML =
       '<p style="font-size:15px;font-weight:700;color:#0F1923;margin:14px 0 0;">Días para "dormido" en esta percha (default de sus productos)</p>' +
-      campo("amg-sc-percha-dormido", "", cur.diasDormido, "vacío = estándar de la app");
+      '<p style="font-size:14px;color:#0F1923;margin:2px 0 8px;">Déjalo vacío para usar el número de días estándar de la app.</p>' +
+      campo("amg-sc-percha-dormido", "", cur.diasDormido, "ej. 180 para galería");
     ancla.closest("label").insertAdjacentElement("afterend", cont);
     document.getElementById("amg-sc-percha-dormido").addEventListener("change", function (e) {
       if (!perchaId) return;
