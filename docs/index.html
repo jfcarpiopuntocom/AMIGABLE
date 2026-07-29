@@ -3867,6 +3867,12 @@ async function abrirAltaProducto(){
         <input id="np-nombre" type="text" ${inp}></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Categoría<br>
         <input id="np-categoria" type="text" placeholder="Ej: Licores" ${inp}></label>
+      <label style="display:block;margin-top:10px;font-size:14px;">Tipo de producto<br>
+        <select id="np-tipo-producto" ${inp}>
+          <option value="normal">Normal (mercancía)</option>
+          <option value="ticket">Ticket / Evento / Clase</option>
+        </select></label>
+      <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 0;">Si eliges "Ticket/Evento", al vender se pedirán siempre los datos del evento y de quien paga — y la comisión se calcula sobre lo que esa persona pagó, no sobre este precio.</p>
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Precio venta<br>
           <input id="np-precio" type="number" min="0" step="0.01" ${inp}></label>
