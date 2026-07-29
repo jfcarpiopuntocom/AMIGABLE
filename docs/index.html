@@ -2750,9 +2750,11 @@ async function cargarHoy(){
     rojo: "Necesitas actuar hoy — hay emergencias en tu negocio."
   };
   document.getElementById("heroTitulo").textContent = titulos[data.semaforoGeneral] || "Tu negocio hoy";
-  // Plata del negocio (ganancia/entra/sale/inventario): SOLO dueño. El titular
-  // tampoco le revela la ganancia al empleado — solo el conteo de ventas.
-  const esDuenoHoy = window.OCAuth && window.OCAuth.rolActual() === "dueno";
+  // Plata del negocio (ganancia/entra/sale/inventario): dueño Y admin (admin
+  // es co-dueño, no personal — mismo criterio ya documentado en el panel de
+  // Equipo). El empleado sigue sin verla — solo el conteo de ventas.
+  const rolHoyAhora = window.OCAuth && window.OCAuth.rolActual ? window.OCAuth.rolActual() : "";
+  const esDuenoHoy = rolHoyAhora === "dueno" || rolHoyAhora === "admin";
   document.getElementById("heroSubtitulo").innerHTML = esDuenoHoy
     ? `Ganaste ${fmtMoney(data.resumenDia.gananciaHoy)} hoy, con ${data.resumenDia.ventasCount} ventas registradas.`
     : `${data.resumenDia.ventasCount} ventas registradas hoy.`;
@@ -2980,9 +2982,14 @@ function pintarBotonesOrdenInventario() {
   });
 }
 async function cargarInventario(){
-  // El "+" de alta libre es del dueno; el empleado ni lo ve (dos capas).
+  // El "+" de alta libre es de dueño Y admin (admin es co-dueño); el
+  // empleado ni lo ve (dos capas). rolInvAhora se reusa mas abajo para
+  // esDuenoInv, en vez de volver a llamar rolActual() por separado y
+  // arriesgar que uno de los dos checks se quede desactualizado.
+  const rolInvAhora = window.OCAuth && window.OCAuth.rolActual ? window.OCAuth.rolActual() : "";
+  const esDuenoOAdminInv = rolInvAhora === "dueno" || rolInvAhora === "admin";
   const btnAlta = document.getElementById("btnAltaProducto");
-  if (btnAlta) btnAlta.style.display = (window.OCAuth && window.OCAuth.rolActual() === "dueno") ? "" : "none";
+  if (btnAlta) btnAlta.style.display = esDuenoOAdminInv ? "" : "none";
   let url = `${API}/productos?ubicacionId=${ubicacionActual}`;
   if (filtroEstadoActual) url += `&estado=${filtroEstadoActual}`;
   const grid = document.getElementById("gridInventario");
@@ -3005,7 +3012,7 @@ async function cargarInventario(){
   const _buscarEl = document.getElementById("invBuscar");
   const _q = (_buscarEl ? _buscarEl.value : "").trim().toLowerCase();
   if (_q) productos = productos.filter(p => (p.nombre || "").toLowerCase().includes(_q) || (p.sku || "").toLowerCase().includes(_q));
-  const esDuenoInv = window.OCAuth && window.OCAuth.rolActual() === "dueno";
+  const esDuenoInv = esDuenoOAdminInv;
   if (_q && productos.length === 0) { grid.innerHTML = `<p style="font-size:15px;color:var(--ink-soft);">Nada coincide con "${escHtml(_q)}".</p>`; return; }
   productos = ordenarInventario(productos);
   pintarBotonesOrdenInventario();
@@ -3550,7 +3557,8 @@ async function ejecutarEscaneo(){
   }
   if (!res.ok){
     const err = await res.json();
-    const puedeCrear = window.OCAuth && window.OCAuth.rolActual() === "dueno";
+    const rolCrearAhora = window.OCAuth && window.OCAuth.rolActual ? window.OCAuth.rolActual() : "";
+    const puedeCrear = rolCrearAhora === "dueno" || rolCrearAhora === "admin";
     contenedor.innerHTML = `<p style="color:var(--rojo); font-weight:bold;">${err.error}</p>` +
       (puedeCrear ? `<button class="ir" style="margin-top:10px;" onclick="mostrarFormNuevoProducto('${escHtml(codigo).replace(/'/g, "\\'")}')">+ Dar de alta este producto</button>` : "");
     return;
@@ -4085,6 +4093,10 @@ document.getElementById("inputEscaner").addEventListener("keydown", (e) => {
 let fichaTargetActual = "fichaResultado";
 function pintarFicha(p){
   const contenedor = document.getElementById(fichaTargetActual) || document.getElementById("fichaResultado");
+  // Costo/margen y editar/eliminar: dueño Y admin (admin es co-dueño). El
+  // empleado no ve costo/margen ni puede editar/eliminar la ficha.
+  const rolFichaAhora = window.OCAuth && window.OCAuth.rolActual ? window.OCAuth.rolActual() : "";
+  const esDuenoOAdminFicha = rolFichaAhora === "dueno" || rolFichaAhora === "admin";
   contenedor.innerHTML = `
     <div class="ficha-producto tag-card">
       ${p.foto ? `<img src="${p.foto}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:4px;border:2px solid var(--sim-plata-dk,#8A9AAA);float:right;margin-left:10px;">` : ""}
@@ -4096,8 +4108,8 @@ function pintarFicha(p){
       ${p.tipoProveedor === "consignacion" ? `<div class="linea"><strong>Relación:</strong> Consignación · ${p.comisionProveedorPct || 0}% al artista</div>` : ""}
       ${p.ubicacionNombre && p.ubicacionNombre !== "todas" ? `<div class="linea"><strong>Percha:</strong> ${escHtml(p.ubicacionNombre)}</div>` : ""}
       ${(p.otrasPerchas && p.otrasPerchas.length) ? `<div class="linea"><strong>${icoOC("percha", "currentColor", 12)} También en:</strong> ${p.otrasPerchas.map(h => `<span data-ver-hermano="${h.id}" style="cursor:pointer;text-decoration:underline;">${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)</span>`).join(" · ")}</div>` : ""}
-      ${(window.OCAuth && window.OCAuth.rolActual() === "dueno") ? `<div class="linea"><strong>Costo:</strong> ${fmtMoney(p.costo||0)} · Margen: ${fmtMoney((p.precio||0)-(p.costo||0))} (${p.precio > 0 ? Math.round(((p.precio-(p.costo||0))/p.precio)*100) : 0}%)</div>` : ""}
-      ${(window.OCAuth && window.OCAuth.rolActual() === "dueno" && p.otrasPerchas && p.otrasPerchas.some(h => h.precio != null && h.precio !== p.precio)) ? `<div class="linea" style="color:var(--rust,#E86040);"><strong>⚠ Precio distinto en otra percha</strong> — revisa "También en" arriba, se copió al crear la percha y no se actualiza sola.</div>` : ""}
+      ${esDuenoOAdminFicha ? `<div class="linea"><strong>Costo:</strong> ${fmtMoney(p.costo||0)} · Margen: ${fmtMoney((p.precio||0)-(p.costo||0))} (${p.precio > 0 ? Math.round(((p.precio-(p.costo||0))/p.precio)*100) : 0}%)</div>` : ""}
+      ${(esDuenoOAdminFicha && p.otrasPerchas && p.otrasPerchas.some(h => h.precio != null && h.precio !== p.precio)) ? `<div class="linea" style="color:var(--rust,#E86040);"><strong>⚠ Precio distinto en otra percha</strong> — revisa "También en" arriba, se copió al crear la percha y no se actualiza sola.</div>` : ""}
       ${(p.stockComprometido > 0) ? `<div class="linea" style="color:#B8760A;"><strong>Reservado en transferencias pendientes:</strong> ${p.stockComprometido} unidades</div>` : ""}
       <div class="linea"><strong>Stock actual:</strong> ${p.stockActual} unidades${p.stockActual < 0 ? ` <span class="badge-estado rojo" style="margin-left:6px;">Descuadre — revisa el Log de actividad</span>` : ""}</div>
       ${p.perecible ? `<div class="linea"><strong>Vence:</strong> ${escHtml(p.fechaCaducidad || "sin fecha")}${p.metodoCosteo ? ` · ${escHtml(p.metodoCosteo)}` : ""}</div>` : ""}
@@ -4108,7 +4120,7 @@ function pintarFicha(p){
         <button onclick="ajustar('${p.id}', -1)">-1 stock</button>
         <button class="etiqueta" onclick="abrirEtiqueta('${p.id}')">Ver etiqueta</button>
       </div>
-      ${(window.OCAuth && window.OCAuth.rolActual() === "dueno") ? `<div class="acciones-rapidas" style="margin-top:8px;">
+      ${esDuenoOAdminFicha ? `<div class="acciones-rapidas" style="margin-top:8px;">
         <button onclick="mostrarFormEditarProducto('${p.id}')">${icoOC("lapiz", "currentColor", 14)} Editar ficha</button>
         <button style="border-color:var(--rojo);color:var(--rojo);" onclick="eliminarProductoUI('${p.id}', this)">Eliminar</button>
       </div>` : ""}
