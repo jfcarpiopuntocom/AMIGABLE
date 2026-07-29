@@ -5160,6 +5160,18 @@ async function guardarReservaEvento(){
   document.getElementById("resTieneReserva").value = "si";
   cargarReservasEventos();
 }
+// Borrar reserva (JFC 2026-07-28: "una reserva de prueba en la demo se queda
+// ahi para siempre" — el backend ya tenia DELETE /api/reservas-eventos/:id,
+// solo faltaba el boton en la tarjeta).
+async function borrarReservaEvento(id){
+  if (!confirm("Borrar esta reserva? No se puede deshacer.")) return;
+  try {
+    const res = await fetch(`${API}/reservas-eventos/${encodeURIComponent(id)}`, { method: "DELETE" });
+    const r = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(r.error || "No se pudo borrar la reserva."); return; }
+    cargarReservasEventos();
+  } catch (_) { alert("No se pudo borrar (sin conexión al motor local). Intenta de nuevo."); }
+}
 async function cargarReservasEventos(){
   const cont = document.getElementById("resLista");
   if (!cont) return;
@@ -5171,7 +5183,11 @@ async function cargarReservasEventos(){
     <div class="tag-card" style="padding:10px 12px;margin-bottom:6px;font-size:14px;">
       <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">
         <strong>${escHtml(rv.nombreEvento || "")}</strong>
-        <span style="color:var(--ink-soft);">${escHtml(rv.fecha || "")}</span>
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span style="color:var(--ink-soft);">${escHtml(rv.fecha || "")}</span>
+          <button onclick="borrarReservaEvento('${escHtml(rv.id)}')" title="Borrar esta reserva"
+            style="background:none;border:none;color:var(--rojo,#E8365D);cursor:pointer;font-size:15px;padding:0 2px;">&#128465;</button>
+        </span>
       </div>
       <div style="color:var(--ink-soft);margin-top:2px;">
         ${rv.tieneReserva === "si" ? "Con reservación" : "Sin reservación"}${rv.numPersonas ? ` · ${escHtml(String(rv.numPersonas))} persona(s)` : ""}

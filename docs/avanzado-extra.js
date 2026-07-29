@@ -247,7 +247,7 @@
       '<div style="font-size:14px;color:var(--ink-soft);margin-top:12px;line-height:1.55;">' +
       '<p>amigable-123 es un cuaderno compartido de control de inventario, perchas y clientes, en colores. No manejamos ni almacenamos los datos de tu negocio: permanecen en tu dispositivo y en los de tu equipo. Solo registramos tus datos de contacto (correo, licencia) para poder darte soporte.</p>' +
       '<p><strong style="color:var(--ink);">Código abierto y auditable.</strong> Sin bloatware, sin publicidad de terceros, sin venta ni arriendo de tus datos de contacto a terceros, sin código malicioso ni formas invasivas de recolección.</p>' +
-      '<p><strong style="color:var(--ink);">Estándares.</strong> Nos guiamos por los principios más exigentes disponibles en Ecuador y a nivel internacional — incluida la UE en lo que aplica sin comprometer la autonomía del usuario sobre sus propios datos: minimización de datos, cifrado de extremo a extremo para la sincronización entre equipos, y descentralización (sin base de datos central de tu negocio).</p>' +
+      '<p><strong style="color:var(--ink);">Estándares.</strong> Nos guiamos por los principios más exigentes disponibles en Ecuador y a nivel internacional — incluidos los del GDPR europeo (Reglamento General de Protección de Datos) en lo que aplica sin comprometer la autonomía del usuario sobre sus propios datos: minimización de datos, derecho al olvido (tus datos viven solo en tu dispositivo — borrarlos es instantáneo y total), cifrado de extremo a extremo para la sincronización entre equipos, y descentralización (sin base de datos central de tu negocio).</p>' +
       '<p><strong style="color:var(--ink);">Es una PWA (Progressive Web App).</strong> Su creador la mantiene funcionando sólidamente, pero cada usuario con licencia gobierna sus propios datos y conserva una privacidad que ni una libreta de papel ni una app de pago mensual indefinido pueden ofrecer al mismo tiempo — esa diferencia es la que justifica invertir en cifrado, descentralización y autonomía real del usuario.</p>' +
       '<p style="font-size:13px;">amigable-123 no se responsabiliza por usos extralegales o ilegales de cualquier tipo. Fue concebida para el micro y pequeño emprendedor o comerciante.</p>' +
       '</div>';
@@ -382,6 +382,11 @@
                        border-radius:5px;background:transparent;color:var(--azul-medio);cursor:pointer;margin-left:4px;">
                 PIN
               </button>
+              <button data-editar-datos="${escHtml(u.id)}"
+                style="font-size:12px;padding:5px 10px;border:2px solid var(--brass,#9c7a35);
+                       border-radius:5px;background:transparent;color:var(--brass,#9c7a35);cursor:pointer;margin-left:4px;">
+                Editar
+              </button>
             ` : `<span style="font-size:12px;color:var(--ink-soft);">Solo dueño</span>`}
           </td>`;
         tbody.appendChild(tr);
@@ -407,6 +412,35 @@
               </div>
             </td>`;
           tbody.appendChild(trPin);
+
+          // Fila inline para editar nombre y rol (JFC 2026-07-28: "se puede
+          // activar/desactivar y cambiar PIN, pero NO editar nombre ni rol
+          // despues de creado" — el rol solo lo cambia el dueño, un admin
+          // puede renombrar a un empleado pero no ascenderlo).
+          const trDatos = document.createElement("tr");
+          trDatos.id = `oc-datos-row-${u.id}`;
+          trDatos.style.cssText = "display:none;background:var(--azul-suave,#EEF3F7);";
+          trDatos.innerHTML = `
+            <td colspan="4" style="padding:10px 12px;">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <input data-nombre-input="${escHtml(u.id)}" value="${escHtml(u.nombre)}" maxlength="60"
+                  placeholder="Nombre"
+                  style="min-width:140px;padding:7px 10px;border:2px solid var(--azul-medio);border-radius:5px;font-size:14px;">
+                ${isDueno() ? `
+                <select data-rol-input="${escHtml(u.id)}"
+                  style="padding:7px 10px;border:2px solid var(--azul-medio);border-radius:5px;font-size:14px;">
+                  <option value="empleado"${u.rol !== "admin" ? " selected" : ""}>Empleado</option>
+                  <option value="admin"${u.rol === "admin" ? " selected" : ""}>Admin</option>
+                </select>` : ""}
+                <button data-guardar-datos="${escHtml(u.id)}"
+                  style="padding:7px 14px;border:2px solid var(--brass,#9c7a35);border-radius:5px;
+                         background:var(--brass,#9c7a35);color:var(--blanco-calido);font-size:13px;font-weight:700;cursor:pointer;">
+                  Guardar
+                </button>
+                <span data-datos-msg="${escHtml(u.id)}" style="font-size:13px;font-weight:700;"></span>
+              </div>
+            </td>`;
+          tbody.appendChild(trDatos);
         }
       });
 
@@ -431,6 +465,37 @@
         btn.addEventListener("click", () => {
           const row = document.getElementById("oc-pin-row-" + btn.dataset.cambiarPin);
           if (row) row.style.display = row.style.display === "none" ? "" : "none";
+        });
+      });
+
+      // Bind: mostrar/ocultar fila de editar nombre/rol
+      tbody.querySelectorAll("[data-editar-datos]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const row = document.getElementById("oc-datos-row-" + btn.dataset.editarDatos);
+          if (row) row.style.display = row.style.display === "none" ? "" : "none";
+        });
+      });
+
+      // Bind: guardar nombre/rol
+      tbody.querySelectorAll("[data-guardar-datos]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.guardarDatos;
+          const inpNombre = tbody.querySelector(`[data-nombre-input="${id}"]`);
+          const selRol = tbody.querySelector(`[data-rol-input="${id}"]`);
+          const msg = tbody.querySelector(`[data-datos-msg="${id}"]`);
+          const nombre = (inpNombre ? inpNombre.value : "").trim();
+          msg.style.color = "var(--rojo,#a3392a)";
+          if (!nombre) { msg.textContent = "El nombre no puede quedar vacío."; return; }
+          const patchBody = { nombre };
+          if (selRol) patchBody.rol = selRol.value;
+          try {
+            const r = await fetch("/api/usuarios/" + id, {
+              method: "PATCH", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(patchBody),
+            });
+            if (!r.ok) { const e = await r.json(); msg.textContent = e.error || "Error al actualizar."; return; }
+            await renderEmpleados();
+          } catch (_) { msg.textContent = "Error de red."; }
         });
       });
 
