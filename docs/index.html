@@ -5453,6 +5453,13 @@ async function cargarAvanzado(){
   await cargarActividad();
   cargarReservasEventos();
   cargarSoporteTecnico();
+  // Bug real encontrado en auditoria (JFC 2026-07-29): el panel de
+  // "Transferencias entre ubicaciones" (avanzado-extra.js) se pintaba UNA
+  // sola vez al hacer login y nunca se volvia a refrescar — una transferencia
+  // solicitada despues quedaba invisible para quien la aprueba hasta cerrar
+  // sesion o recargar la pagina. Se refresca aqui cada vez que se visita
+  // Avanzado, igual que el resto de los paneles de esta funcion.
+  if (window.__ocRenderTransferencias) { try { window.__ocRenderTransferencias(); } catch (_) {} }
   // Reforzado (JFC 2026-07-18): cargarAvanzado() se llama fire-and-forget (nav
   // click, sin await) — sin este try/catch, un fallo de red aqui tiraba una
   // excepcion no atrapada y el panel Avanzado se quedaba congelado en blanco,
