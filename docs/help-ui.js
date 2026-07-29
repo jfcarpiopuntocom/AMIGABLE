@@ -45,9 +45,9 @@
       <li><b style="color:#E8A020;">Dorado</b>: hay dinero esperándote — actúa.</li>
       <li><b style="color:#F97316;">Naranja</b>: se acaba — reabastece antes de que sea emergencia.</li>
       <li><b style="color:#E8365D;">Rojo</b>: emergencia — actúa ya.</li>
-      <li><b style="color:#5294AC;">Azul</b>: sabiduría — tips, consejos, y la capa contable.</li>
       <li><b style="color:#0A0A0F;">Negro</b>: inventario muerto — tu dinero no se mueve. Cámbialo.</li>
     </ul>
+    <p style="font-size:14px;color:var(--ink-soft);">El <b style="color:#5294AC;">azul</b> es distinto a propósito: nunca es una señal de stock. Solo aparece en secciones serenas — notas contables y reflexiones financieras breves.</p>
     <h3>Hoy: tu señal diaria</h3>
     <ul>
       <li>Un vistazo a Hoy te dice qué atender antes de abrir.</li>
