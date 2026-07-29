@@ -1288,6 +1288,11 @@
     <!-- #19 (2026-07-28): busqueda por nombre o SKU, filtra el grid en el cliente. -->
     <input id="invBuscar" type="text" placeholder="Buscar por nombre o SKU..." oninput="clearTimeout(window._invBuscarT);window._invBuscarT=setTimeout(cargarInventario,250)"
       style="width:100%;box-sizing:border-box;padding:10px 12px;margin:4px 0 10px;border:2px solid var(--azul-medio,#2c4a68);border-radius:8px;font-size:15px;">
+    <!-- Ordenar por columna (2026-07-29): complementa la busqueda de arriba.
+         Todos los roles la ven: el inventario es dato operativo, no personal. -->
+    <div id="ordenInventario" style="display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px;">
+      <span style="font-size:13px;color:var(--ink-soft,#5d5340);align-self:center;">Ordenar por:</span>
+    </div>
     <details style="margin:-4px 0 12px;font-size:14px;">
       <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
       <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
@@ -1505,6 +1510,9 @@
         <p style="margin:0;font-size:14px;color:var(--ink);">3. Las perchas nuevas se crean desde Inventario, dentro de una sucursal.</p>
       </div>
     </details>
+    <div id="vp-orden" style="display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 12px;">
+      <span style="font-size:13px;color:var(--ink-soft,#5d5340);align-self:center;">Ordenar por:</span>
+    </div>
     <div id="vp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;"></div>
   </section>
 
@@ -1555,6 +1563,7 @@
         style="flex:1;min-width:0;padding:12px 14px;font-size:16px;border:2px solid var(--azul-medio);border-radius:4px;">
     </div>
     <p id="cliBuscarConteo" style="font-size:14px;color:var(--ink-soft);margin:6px 2px 0;"></p>
+    <div id="ordenClientes" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0;"></div>
     <div id="listaClientes" style="margin-top:10px;"></div>
     <h3 class="seccion" style="margin-top:30px;">Estaciones y comportamiento</h3>
     <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Solo dueño — la misma cartera de arriba, leída por qué tan reciente y valioso compra cada quien.</p>
@@ -2121,15 +2130,20 @@ function tarjetaCliente(c, esDueno, ctx) {
   // FICHA COMPLETA (2026-07-23): contacto + notas + historial de eventos/tickets
   // ya capturados en Reservas de evento/clase y en la venta de tickets — la
   // idea es que el cliente nunca vuelva a re-teclear lo que ya escribió antes.
+  // Privacidad por rol (auditoria Hugo/Paco/Luis, JFC 2026-07-29): contacto,
+  // notas e historial de eventos/montos son datos del cliente que el
+  // empleado no necesita ver completos para hacer su trabajo — mismo
+  // criterio que ya aplicaba "dato" (compras/monto) unas lineas arriba,
+  // ahora extendido a telefono/email/notas/eventos.
   const contactoPartes = [];
-  if (c.telefono) contactoPartes.push(`${icoOC("telefono", "currentColor", 13) || "☎"} ${escHtml(c.telefono)}`);
-  if (c.email) contactoPartes.push(`✉ ${escHtml(c.email)}`);
+  if (esDueno && c.telefono) contactoPartes.push(`${icoOC("telefono", "currentColor", 13) || "☎"} ${escHtml(c.telefono)}`);
+  if (esDueno && c.email) contactoPartes.push(`✉ ${escHtml(c.email)}`);
   const lineaContacto = contactoPartes.length
     ? `<div style="font-size:14px;color:var(--ink-soft);margin-top:2px;">${contactoPartes.join(" · ")}</div>` : "";
-  const lineaNotas = c.notas
+  const lineaNotas = (esDueno && c.notas)
     ? `<div style="font-size:14px;color:var(--ink-soft);margin-top:2px;font-style:italic;">"${escHtml(c.notas)}"</div>` : "";
   const eventos = Array.isArray(c.eventos) ? c.eventos : [];
-  const historialEventos = eventos.length
+  const historialEventos = (esDueno && eventos.length)
     ? `<details style="margin-top:6px;">
         <summary style="cursor:pointer;font-size:14px;font-weight:700;color:var(--azul-medio,#2c4a68);list-style:none;">▸ ${eventos.length} evento(s)/ticket(s) registrados</summary>
         <div style="margin-top:4px;padding-left:4px;border-left:2px solid var(--linea,#D7E0E8);">
@@ -2137,7 +2151,7 @@ function tarjetaCliente(c, esDueno, ctx) {
             <strong>${escHtml(ev.nombreEvento || (ev.tipo === "ticket" ? "Ticket" : "Evento"))}</strong>${ev.fecha ? ` · ${escHtml(String(ev.fecha).slice(0, 10))}` : ""}${ev.monto != null ? ` · ${fmtMoney(ev.monto)}` : ""}${ev.quienRecibio ? ` · recibió: ${escHtml(ev.quienRecibio)}` : ""}${ev.notas ? `<br><span style="color:var(--ink-soft);font-style:italic;">"${escHtml(ev.notas)}"</span>` : ""}
           </div>`).join("")}
         </div>
-      </details>` : "";
+      </details>` : (eventos.length ? `<div style="font-size:13px;color:var(--ink-soft);margin-top:4px;">▸ ${eventos.length} evento(s) registrados (detalle visible solo para dueño/admin)</div>` : "");
   const editKey = "cliedit-" + c.id;
   const panelEditAbierto = window.OCClienteEditOpen && window.OCClienteEditOpen.has(editKey);
   const btnEditar = `<button onclick="toggleEditarContacto('${editKey}')" style="margin-top:8px;font-size:14px;padding:4px 12px;background:#F4F7FA;border:1.5px solid var(--azul-medio,#2E6278);border-radius:4px;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;cursor:pointer;">Editar contacto ✎</button>`;
@@ -2215,7 +2229,7 @@ function tarjetaCliente(c, esDueno, ctx) {
     <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
       <strong style="font-size:16px;color:#0F1923;">${escHtml(c.nombre)}</strong>
       <span style="font-family:var(--font-mono);font-size:14px;color:#2E6278;margin-left:6px;">${escHtml(c.codigo)}</span>
-      ${badgeComportamiento(ev)}${chipProm}${chipEstacion}
+      ${esDueno ? `${badgeComportamiento(ev)}${chipProm}${chipEstacion}` : ""}
     </div>
     ${dato}${lineaContacto}${lineaNotas}${historialEventos}
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">${controles}${btnVender}${btnEditar}${btnDespedir}</div>
@@ -2276,26 +2290,90 @@ async function irAVenderConCliente(id) {
 // que cargarClientes() corre; el filtrado en sí (renderListaViva) es 100%
 // local — cero fetch por cada letra que se escribe en la lupa.
 let _clientesVivosCache = [];
+// Orden por columna (2026-07-29) — complementa la lupa que ya existia.
+const COLUMNAS_CLIENTE_VIVO = [
+  { key: "nombre", label: "Nombre" },
+  { key: "codigo", label: "Código" },
+];
+let _ordenClienteVivo = { col: null, asc: true };
+function pintarBotonesOrdenCliente() {
+  const cont = document.getElementById("ordenClientes");
+  if (!cont) return;
+  const rolCli = window.OCAuth && window.OCAuth.rolActual && window.OCAuth.rolActual();
+  const esDueno = rolCli === "dueno" || rolCli === "admin";
+  // "Gasto 90 días" es dato financiero del cliente — ni se ofrece como
+  // opcion de orden si no se va a mostrar el numero (mismo criterio que
+  // el resto de la tarjeta).
+  const columnas = COLUMNAS_CLIENTE_VIVO.concat(esDueno ? [{ key: "monto", label: "Gasto 90 días" }] : []);
+  cont.innerHTML = "";
+  columnas.forEach((c) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.ordCliCol = c.key;
+    const activo = _ordenClienteVivo.col === c.key;
+    b.textContent = c.label + (activo ? (_ordenClienteVivo.asc ? " ↑" : " ↓") : "");
+    b.style.cssText = "font-size:13px;padding:4px 10px;border-radius:4px;border:1.5px solid var(--azul-medio,#2c4a68);cursor:pointer;" +
+      (activo ? "background:var(--azul-medio,#2c4a68);color:#fff !important;-webkit-text-fill-color:#fff !important;" : "background:transparent;color:var(--azul-medio,#2c4a68) !important;-webkit-text-fill-color:var(--azul-medio,#2c4a68) !important;");
+    cont.appendChild(b);
+  });
+  if (!cont.dataset.listo) {
+    cont.dataset.listo = "1";
+    cont.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-ord-cli-col]");
+      if (!b) return;
+      const key = b.dataset.ordCliCol;
+      if (_ordenClienteVivo.col === key) _ordenClienteVivo.asc = !_ordenClienteVivo.asc;
+      else { _ordenClienteVivo = { col: key, asc: true }; }
+      const buscarEl = document.getElementById("cliBuscar");
+      renderListaViva(buscarEl ? buscarEl.value : "");
+    });
+  }
+}
 function renderListaViva(query){
   const cont = document.getElementById("listaClientes");
   const conteo = document.getElementById("cliBuscarConteo");
   if (!cont) return;
   const rolCli = window.OCAuth && window.OCAuth.rolActual && window.OCAuth.rolActual();
   const esDueno = rolCli === "dueno" || rolCli === "admin";
+  pintarBotonesOrdenCliente();
   const q = normalizarTexto(query || "");
-  const filtrados = !q ? _clientesVivosCache : _clientesVivosCache.filter(c => {
+  // Modo restringido (auditoria Hugo/Paco/Luis, JFC 2026-07-29): el empleado
+  // no ve NADA hasta buscar algo real, y el resultado se capa — nunca puede
+  // hojear la cartera completa de un tiron. No es "seguridad dura" (esta
+  // app no tiene servidor que la imponga): es friccion deliberada y
+  // respetuosa, no un candado — el copy nunca acusa a nadie.
+  if (!esDueno && q.length < 2) {
+    cont.innerHTML = "";
+    if (conteo) conteo.textContent = "Escribe al menos 2 letras de un nombre o código para buscar un cliente.";
+    return;
+  }
+  let filtrados = !q ? _clientesVivosCache : _clientesVivosCache.filter(c => {
     const campos = [c.nombre, c.apodo, c.codigo, c.telefono, c.email];
     return campos.some(v => v && normalizarTexto(v).includes(q));
   });
+  if (_ordenClienteVivo.col) {
+    const col = _ordenClienteVivo.col;
+    filtrados = filtrados.slice().sort((a, b) => {
+      const va = a[col], vb = b[col];
+      let r;
+      if (typeof va === "number" && typeof vb === "number") r = (va || 0) - (vb || 0);
+      else r = String(va == null ? "" : va).localeCompare(String(vb == null ? "" : vb), "es", { sensitivity: "base", numeric: true });
+      return _ordenClienteVivo.asc ? r : -r;
+    });
+  }
+  let truncado = false;
+  if (!esDueno && filtrados.length > 8) { filtrados = filtrados.slice(0, 8); truncado = true; }
   cont.innerHTML = filtrados.length
     ? filtrados.map(c => tarjetaCliente(c, esDueno, "viva")).join("")
     : (_clientesVivosCache.length
         ? `<p style="font-size:16px;color:var(--ink-soft);">Ningún cliente coincide con "${escHtml(query)}".</p>`
         : '<p style="font-size:16px;">Todavía no hay clientes. Agrega el primero arriba.</p>');
   if (conteo) {
-    conteo.textContent = _clientesVivosCache.length
-      ? (q ? `Mostrando ${filtrados.length} de ${_clientesVivosCache.length} cliente(s).` : `${_clientesVivosCache.length} cliente(s) en total.`)
-      : "";
+    conteo.textContent = truncado
+      ? `Mostrando los primeros 8 resultados — afina la búsqueda para ver otros.`
+      : (_clientesVivosCache.length
+        ? (q ? `Mostrando ${filtrados.length} de ${_clientesVivosCache.length} cliente(s).` : `${_clientesVivosCache.length} cliente(s) en total.`)
+        : "");
   }
   // Pruning: elimina claves de OCRateOpen para paneles que ya no existen en el DOM.
   // Evita que el Set crezca indefinidamente con clientes eliminados o renombrados.
@@ -2837,6 +2915,55 @@ function renderBloom(estado, nivel){
   </div>`;
 }
 
+// Ordenar por columna (2026-07-29) — complementa la busqueda que ya existia.
+const COLUMNAS_INVENTARIO = [
+  { key: "nombre", label: "Nombre" },
+  { key: "stockActual", label: "Stock" },
+  { key: "precio", label: "Precio" },
+  { key: "categoria", label: "Categoría" },
+];
+let _ordenInv = { col: null, asc: true };
+function ordenarInventario(lista) {
+  if (!_ordenInv.col) return lista;
+  const col = _ordenInv.col;
+  return lista.slice().sort((a, b) => {
+    const va = a[col], vb = b[col];
+    let r;
+    if (typeof va === "number" && typeof vb === "number") r = va - vb;
+    else r = String(va == null ? "" : va).localeCompare(String(vb == null ? "" : vb), "es", { sensitivity: "base", numeric: true });
+    return _ordenInv.asc ? r : -r;
+  });
+}
+function pintarBotonesOrdenInventario() {
+  const cont = document.getElementById("ordenInventario");
+  if (!cont) return;
+  if (!cont.dataset.listo) {
+    cont.dataset.listo = "1";
+    COLUMNAS_INVENTARIO.forEach((c) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.ordInvCol = c.key;
+      b.style.cssText = "font-size:13px;padding:4px 10px;border-radius:6px;border:1.5px solid var(--azul-medio,#2c4a68);background:transparent;color:var(--azul-medio,#2c4a68) !important;-webkit-text-fill-color:var(--azul-medio,#2c4a68) !important;cursor:pointer;";
+      cont.appendChild(b);
+    });
+    cont.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-ord-inv-col]");
+      if (!b) return;
+      const key = b.dataset.ordInvCol;
+      if (_ordenInv.col === key) _ordenInv.asc = !_ordenInv.asc;
+      else { _ordenInv.col = key; _ordenInv.asc = true; }
+      cargarInventario();
+    });
+  }
+  cont.querySelectorAll("[data-ord-inv-col]").forEach((b) => {
+    const c = COLUMNAS_INVENTARIO.find((x) => x.key === b.dataset.ordInvCol);
+    const activo = _ordenInv.col === b.dataset.ordInvCol;
+    b.style.background = activo ? "var(--azul-medio,#2c4a68)" : "transparent";
+    b.style.color = activo ? "#fbf5e8" : "var(--azul-medio,#2c4a68)";
+    b.style.setProperty("-webkit-text-fill-color", activo ? "#fbf5e8" : "var(--azul-medio,#2c4a68)");
+    b.textContent = c.label + (activo ? (_ordenInv.asc ? " ↑" : " ↓") : "");
+  });
+}
 async function cargarInventario(){
   // El "+" de alta libre es del dueno; el empleado ni lo ve (dos capas).
   const btnAlta = document.getElementById("btnAltaProducto");
@@ -2865,6 +2992,8 @@ async function cargarInventario(){
   if (_q) productos = productos.filter(p => (p.nombre || "").toLowerCase().includes(_q) || (p.sku || "").toLowerCase().includes(_q));
   const esDuenoInv = window.OCAuth && window.OCAuth.rolActual() === "dueno";
   if (_q && productos.length === 0) { grid.innerHTML = `<p style="font-size:15px;color:var(--ink-soft);">Nada coincide con "${escHtml(_q)}".</p>`; return; }
+  productos = ordenarInventario(productos);
+  pintarBotonesOrdenInventario();
   grid.innerHTML = productos.map(p => `
     <div class="caja tag-card ${p.estado} n${calcularNivelBloom(p)}">
       ${p.estrella ? '<span class="estrella-badge">⭐</span>' : ''}
