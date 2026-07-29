@@ -1869,7 +1869,12 @@ async function cargarCierreLista(){
     productos = await (await fetch(`${API}/productos?ubicacionId=${ubicacionActual}`)).json();
     hoyMap = await (await fetch(`${API}/ventas/hoy?ubicacionId=${ubicacionActual}`)).json();
   } catch (_) { return; }
-  const conStock = productos.filter(p => p.stockActual > 0).sort((a, b) => a.nombre.localeCompare(b.nombre));
+  // Tickets/eventos quedan fuera del cierre en bloque (JFC 2026-07-29, misma
+  // familia del bug de comision con Idiomarte): su precio es distinto cada
+  // vez y este panel solo pide cantidad, nunca precio. El backend también
+  // los rechaza — este filtro es solo para no mostrar una opción que de
+  // todos modos va a fallar.
+  const conStock = productos.filter(p => p.stockActual > 0 && p.tipoProducto !== "ticket").sort((a, b) => a.nombre.localeCompare(b.nombre));
   const totalHoy = Object.values(hoyMap).reduce((a, b) => a + b, 0);
   // "hoy: N" = lo YA registrado (toques de arriba o cierres previos). Lo que
   // se teclea aquí es ADICIONAL — por eso nunca se pre-carga en el input.
