@@ -2155,11 +2155,19 @@ function tarjetaCliente(c, esDueno, ctx) {
   const editKey = "cliedit-" + c.id;
   const panelEditAbierto = window.OCClienteEditOpen && window.OCClienteEditOpen.has(editKey);
   const btnEditar = `<button onclick="toggleEditarContacto('${editKey}')" style="margin-top:8px;font-size:14px;padding:4px 12px;background:#F4F7FA;border:1.5px solid var(--azul-medio,#2E6278);border-radius:4px;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;cursor:pointer;">Editar contacto ✎</button>`;
+  // Privacidad (auditoria Hugo/Paco/Luis, 2026-07-29): para empleado/contador
+  // el panel de edicion NO trae precargado telefono/email/notas — verlos
+  // aqui seria el mismo leak que ya se cerro en la tarjeta, solo que via el
+  // formulario de edicion. Se omiten los campos por completo (en vez de
+  // dejarlos vacios pero editables) porque guardarContactoCliente() manda
+  // SIEMPRE los 3 campos al guardar: un campo vacio "porque no se veia" se
+  // habria guardado como borrado real del dato — el mismo bug de "un campo
+  // se vacía por una escritura pasiva" que ya mordió esta semana.
   const panelEditar = `<div id="oc-${editKey}" style="display:${panelEditAbierto ? "flex" : "none"};gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;padding:8px 10px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;">
       <input id="oc-edit-nombre-${c.id}" type="text" value="${escHtml(c.nombre || "")}" placeholder="Nombre" style="flex:1;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
-      <input id="oc-edit-tel-${c.id}" type="text" value="${escHtml(c.telefono || "")}" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:120px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
+      ${esDueno ? `<input id="oc-edit-tel-${c.id}" type="text" value="${escHtml(c.telefono || "")}" placeholder="Teléfono / WhatsApp" style="flex:1;min-width:120px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
       <input id="oc-edit-email-${c.id}" type="email" value="${escHtml(c.email || "")}" placeholder="Correo" style="flex:1;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
-      <input id="oc-edit-notas-${c.id}" type="text" value="${escHtml(c.notas || "")}" placeholder="Notas" style="flex:2;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">
+      <input id="oc-edit-notas-${c.id}" type="text" value="${escHtml(c.notas || "")}" placeholder="Notas" style="flex:2;min-width:140px;padding:7px;border:2px solid var(--azul-medio);border-radius:4px;font-size:16px;">` : ""}
       <button onclick="guardarContactoCliente('${c.id}')" class="ir" style="font-size:14px;padding:6px 12px;">Guardar</button>
     </div>`;
   const puedeEvaluar = window.OCAuth && window.OCAuth.rolActual && (window.OCAuth.rolActual() === "dueno" || window.OCAuth.rolActual() === "empleado" || window.OCAuth.rolActual() === "admin");
@@ -2244,12 +2252,19 @@ function toggleEditarContacto(key) {
   renderListaViva(buscarEl ? buscarEl.value : "");
 }
 async function guardarContactoCliente(id) {
+  // Empleado/contador no tienen los campos de telefono/email/notas en el
+  // DOM (panel de edicion recortado por privacidad) — solo se manda lo que
+  // exista, para no pisar con "" un dato que esta persona ni siquiera vio.
   const nombreEl = document.getElementById(`oc-edit-nombre-${id}`);
-  const nombre = nombreEl ? nombreEl.value : undefined;
-  const telefono = document.getElementById(`oc-edit-tel-${id}`).value;
-  const email = document.getElementById(`oc-edit-email-${id}`).value;
-  const notas = document.getElementById(`oc-edit-notas-${id}`).value;
-  const res = await fetch(`${API}/clientes/${id}/contacto`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre, telefono, email, notas }) });
+  const telEl = document.getElementById(`oc-edit-tel-${id}`);
+  const emailEl = document.getElementById(`oc-edit-email-${id}`);
+  const notasEl = document.getElementById(`oc-edit-notas-${id}`);
+  const body = {};
+  if (nombreEl) body.nombre = nombreEl.value;
+  if (telEl) body.telefono = telEl.value;
+  if (emailEl) body.email = emailEl.value;
+  if (notasEl) body.notas = notasEl.value;
+  const res = await fetch(`${API}/clientes/${id}/contacto`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (!res.ok) { const r = await res.json().catch(() => ({})); await ocAlert(r.error || "No se pudo guardar el contacto."); return; }
   cargarClientes();
 }
