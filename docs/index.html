@@ -158,6 +158,16 @@
   /* === fin FAILSAFE === */
 
   *{box-sizing:border-box;}
+  /* FIX (JFC 2026-07-28, "otra vez se estiro hacia arriba" en iPhone/Safari
+     sin refrescar): iOS Safari tiene un algoritmo de "text auto-sizing" que
+     agranda el texto por su cuenta despues de ciertos reflows (rotacion,
+     contenido que vuelve a quedar visible) — SIN que el usuario haga zoom.
+     Eso infla los botones de la nav (su alto sigue fijo por --nav-h, pero el
+     texto adentro crece y se desborda hacia arriba). -webkit-text-size-adjust
+     apaga ese auto-sizing; es la causa estandar y documentada de este patron
+     exacto en WebKit, no un parche mas sobre el fix de altura de nav ya
+     aplicado (994469b) — es una causa DISTINTA con el mismo sintoma visible. */
+  html{-webkit-text-size-adjust:100%; text-size-adjust:100%;}
   html{-webkit-tap-highlight-color:transparent;}
   /* ANTI-ZOOM-FANTASMA EN MOBIL (JFC 2026-07-23): el viewport NO tiene
      user-scalable=no (a proposito — bloquear el pinch-zoom es mal accesibilidad
@@ -1203,6 +1213,16 @@
 
   <!-- VISTA: HOY -->
   <section id="vista-hoy" class="vista activa">
+    <!-- Alerta de descuadre por sync (JFC 2026-07-28, "que no se pisen los pies"
+         en eventos con varios dispositivos a la vez). La sincronizacion de stock
+         ya es segura por diseno (deltas + idempotencia, ver mock-backend.js
+         aplicarOpRemota) — dos ventas simultaneas de las mismas ultimas unidades
+         SUMAN sus deltas en vez de pisarse, nunca se pierde una venta. Pero si
+         el resultado queda negativo (vendieron mas de lo que fisicamente habia),
+         eso es un sobrante real del mundo fisico que antes solo quedaba enterrado
+         en el log de Actividad, sin que nadie lo viera durante el evento. Este
+         banner lo saca al frente, en la primera vista que cualquiera ve. -->
+    <div id="descuadreBanner" style="display:none;"></div>
     <div id="heroSemaforo" class="hero-semaforo verde tag-card">
       <h2 id="heroTitulo">Cargando tu negocio...</h2>
       <p id="heroSubtitulo"></p>
@@ -2571,7 +2591,46 @@ function actualizarReloj(){
 }
 
 // --- VISTA HOY ---
+// Banner de descuadre por sync (JFC 2026-07-28) — ver comentario en el HTML
+// de vista-hoy. Solo LEE el log de actividad que ya existe; no toca sync ni
+// stock, cero riesgo para la mecanica de sincronizacion que ya funciona.
+const DESCUADRES_VISTOS_KEY = "amigable_descuadres_vistos";
+function _descuadresVistos(){
+  try { return new Set(JSON.parse(localStorage.getItem(DESCUADRES_VISTOS_KEY) || "[]")); }
+  catch (_) { return new Set(); }
+}
+function _marcarDescuadreVisto(id){
+  const s = _descuadresVistos(); s.add(id);
+  try { localStorage.setItem(DESCUADRES_VISTOS_KEY, JSON.stringify([...s].slice(-200))); } catch (_) {}
+}
+async function revisarDescuadres(){
+  const banner = document.getElementById("descuadreBanner");
+  if (!banner) return;
+  let items;
+  try {
+    const res = await fetch(`${API}/actividad`);
+    if (!res.ok) throw new Error(res.status);
+    items = await res.json();
+  } catch (_) { banner.style.display = "none"; return; } // fail-safe: si falla, no molesta
+
+  const vistos = _descuadresVistos();
+  const pendientes = (items || []).filter(it => it.tipo === "alerta-descuadre" && !vistos.has(it.id));
+  if (!pendientes.length){ banner.style.display = "none"; return; }
+
+  banner.style.display = "block";
+  banner.innerHTML = `<div class="tag-card" style="border:2px solid var(--rojo,#a3392a);background:var(--sim-rojo-bg,#FBEAE7);margin-bottom:14px;">` +
+    `<div style="font-weight:700;color:var(--rojo,#a3392a);margin-bottom:6px;">Vendieron más de lo que había (${pendientes.length})</div>` +
+    pendientes.map(it => {
+      const d = it.detalle || {};
+      return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;font-size:14px;flex-wrap:wrap;">` +
+        `<span>${escHtml(d.producto || "")} quedó en ${escHtml(String(d.stockActual != null ? d.stockActual : "?"))} — dos dispositivos vendieron casi al mismo tiempo.</span>` +
+        `<button onclick="_marcarDescuadreVisto('${escHtml(it.id)}');revisarDescuadres();" style="font-size:12px;padding:5px 10px;border:1.5px solid var(--rojo,#a3392a);border-radius:5px;background:transparent;color:var(--rojo,#a3392a);cursor:pointer;flex-shrink:0;">Visto</button>` +
+        `</div>`;
+    }).join("") +
+    `</div>`;
+}
 async function cargarHoy(){
+  revisarDescuadres(); // fire-and-forget: fail-safe, nunca bloquea la carga de Hoy
   // Microcirugia 3 (2026-07-08): guard contra respuesta 5xx o red cortada.
   // Sin esto, data.semaforoGeneral seria undefined => hero.className = '...undefined'.
   let res, data;
