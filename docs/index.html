@@ -2231,7 +2231,7 @@ async function guardarContactoCliente(id) {
   const email = document.getElementById(`oc-edit-email-${id}`).value;
   const notas = document.getElementById(`oc-edit-notas-${id}`).value;
   const res = await fetch(`${API}/clientes/${id}/contacto`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre, telefono, email, notas }) });
-  if (!res.ok) { const r = await res.json().catch(() => ({})); alert(r.error || "No se pudo guardar el contacto."); return; }
+  if (!res.ok) { const r = await res.json().catch(() => ({})); await ocAlert(r.error || "No se pudo guardar el contacto."); return; }
   cargarClientes();
 }
 // normalizarTexto: minusculas + sin acentos, para que buscar "jose" encuentre
@@ -4447,11 +4447,11 @@ async function cargarActividad(){
         body: JSON.stringify({ forzado: true, motivo: "Anulación supervisada desde Log de actividad" }),
       });
       const r = await res.json().catch(() => ({}));
-      if (!res.ok) { alert(r.error || "No se pudo anular."); btn.disabled = false; return; }
+      if (!res.ok) { await ocAlert(r.error || "No se pudo anular."); btn.disabled = false; return; }
       await cargarActividad();
       if (typeof cargarInventario === "function") cargarInventario();
       if (typeof cargarHoy === "function") cargarHoy();
-    } catch (e) { alert("Error de red: " + e.message); btn.disabled = false; }
+    } catch (e) { await ocAlert("Error de red: " + e.message); btn.disabled = false; }
   }));
 }
 
@@ -4512,7 +4512,7 @@ function renderListaPromotorasViva(query){
     const nombre = btn.dataset.nombrePromotora;
     if (!(await ocConfirm(`¿Archivar a ${nombre}? Se quitará de las perchas donde esté asignado/a (las comisiones ya calculadas no se ven afectadas).`))) return;
     try { await fetch(`${API}/promotoras/${btn.dataset.archivarPromotora}`, { method: "DELETE" }); }
-    catch (_) { alert("No se pudo archivar (sin conexión al motor local). Intenta de nuevo."); return; }
+    catch (_) { await ocAlert("No se pudo archivar (sin conexión al motor local). Intenta de nuevo."); return; }
     renderGestionPromotoras();
   }));
   cont.querySelectorAll("[data-abrir-promotora]").forEach(btn => btn.addEventListener("click", () => {
@@ -5238,13 +5238,19 @@ async function guardarReservaEvento(){
 // ahi para siempre" — el backend ya tenia DELETE /api/reservas-eventos/:id,
 // solo faltaba el boton en la tarjeta).
 async function borrarReservaEvento(id){
-  if (!confirm("Borrar esta reserva? No se puede deshacer.")) return;
+  // Bug encontrado en la cacería final pre-demo (JFC 2026-07-29): usaba
+  // confirm() nativo, que el navegador de WhatsApp/Instagram bloquea en
+  // silencio (devuelve false al instante, sin mostrar nada) — el boton de
+  // borrar reserva simplemente no hacia nada, sin explicar por que. Esta app
+  // ya trae ocConfirm() (modal propio, portado de friendly-123 2026-07-15)
+  // justo para esto: nunca depende de un dialogo nativo del navegador.
+  if (!(await ocConfirm("Borrar esta reserva? No se puede deshacer.", { confirmLabel: "Borrar", danger: true }))) return;
   try {
     const res = await fetch(`${API}/reservas-eventos/${encodeURIComponent(id)}`, { method: "DELETE" });
     const r = await res.json().catch(() => ({}));
-    if (!res.ok) { alert(r.error || "No se pudo borrar la reserva."); return; }
+    if (!res.ok) { await ocAlert(r.error || "No se pudo borrar la reserva."); return; }
     cargarReservasEventos();
-  } catch (_) { alert("No se pudo borrar (sin conexión al motor local). Intenta de nuevo."); }
+  } catch (_) { await ocAlert("No se pudo borrar (sin conexión al motor local). Intenta de nuevo."); }
 }
 async function cargarReservasEventos(){
   const cont = document.getElementById("resLista");
