@@ -1783,7 +1783,7 @@ function attachPerchaInlineCreate(selectEl){
   selectEl.dataset.ocPerchaInline = "1";
   selectEl.addEventListener("change", async () => {
     if (selectEl.value !== "__nueva__") return;
-    const nombre = (prompt("Nombre de la nueva percha:") || "").trim();
+    const nombre = ((await promptSeguro("Nombre de la nueva percha:")) || "").trim();
     if (!nombre) { selectEl.value = "todas"; return; }
     let res, r;
     try {
@@ -2542,7 +2542,7 @@ if (elLogoHeader) elLogoHeader.addEventListener("click", () => {
   btn.addEventListener("click", async () => {
     try {
       const actual = span.textContent.trim();
-      const nuevo = (prompt("Nombre de tu negocio (aparece aquí arriba):", actual === TITULO_DEFECTO ? "" : actual) || "").trim();
+      const nuevo = ((await promptSeguro("Nombre de tu negocio (aparece aquí arriba):", actual === TITULO_DEFECTO ? "" : actual)) || "").trim();
       if (!nuevo) return;
       const d = await (await fetch(`${API}/instancia/nombre`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nombre: nuevo }) })).json();
       if (d && d.ok) {
@@ -2885,11 +2885,18 @@ async function cargarInventario(){
   // Ajuste rápido +/- stock sin escanear. Pide motivo, deja log para el dueño.
   grid.querySelectorAll("[data-ajuste-menos],[data-ajuste-mas]").forEach(btn => {
     btn.addEventListener("click", async () => {
+      // Blindaje (JFC 2026-07-28, caza de bugs): el boton no se deshabilitaba
+      // durante el await — un doble-tap en pantalla tactil (facil de gatillar
+      // sin querer en medio de una venta apurada) mandaba DOS ajustes
+      // superpuestos y el stock quedaba descuadrado sin que nadie lo notara
+      // hasta el proximo conteo fisico.
+      if (btn.disabled) return;
+      btn.disabled = true;
       const esMenos = btn.hasAttribute("data-ajuste-menos");
       const id = esMenos ? btn.dataset.ajusteMenos : btn.dataset.ajusteMas;
       const delta = esMenos ? -1 : 1;
-      const motivo = (prompt(delta > 0 ? "Motivo del ingreso (+1):" : "Motivo del retiro (−1):") || "").trim();
-      if (!motivo) return;
+      const motivo = ((await promptSeguro(delta > 0 ? "Motivo del ingreso (+1):" : "Motivo del retiro (−1):")) || "").trim();
+      if (!motivo) { btn.disabled = false; return; }
       // Microcirugia 8 (2026-07-08): red cortada dejaba el boton como si nada.
       let res8, r8;
       try {
@@ -2898,9 +2905,9 @@ async function cargarInventario(){
           body: JSON.stringify({ delta, motivo })
         });
         r8 = await res8.json();
-      } catch (_) { await ocAlert('No se pudo ajustar el stock. Intenta de nuevo.'); return; }
-      if (!res8.ok){ await ocAlert(r8.error); return; }
-      cargarInventario();
+      } catch (_) { await ocAlert('No se pudo ajustar el stock. Intenta de nuevo.'); btn.disabled = false; return; }
+      if (!res8.ok){ await ocAlert(r8.error); btn.disabled = false; return; }
+      cargarInventario(); // repinta el grid: el boton (y su .disabled) se reconstruye solo
     });
   });
 
@@ -3077,7 +3084,7 @@ async function cargarPerchas(){
 
   // ---- Eventos sucursales ----
   grid.querySelectorAll('[data-suc-renombrar]').forEach(btn => btn.addEventListener('click', async () => {
-    const nuevo = (prompt('Nuevo nombre de la sucursal:') || '').trim();
+    const nuevo = ((await promptSeguro('Nuevo nombre de la sucursal:')) || '').trim();
     if (!nuevo) return;
     const res = await fetch(`${API}/sucursales/${btn.dataset.sucRenombrar}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ nombre: nuevo }) });
     if (res.ok) cargarPerchas();
@@ -3091,7 +3098,7 @@ async function cargarPerchas(){
 
   // ---- Eventos perchas ----
   grid.querySelectorAll('[data-percha-renombrar]').forEach(btn => btn.addEventListener('click', async () => {
-    const nuevo = (prompt('Nuevo nombre de la percha:') || '').trim();
+    const nuevo = ((await promptSeguro('Nuevo nombre de la percha:')) || '').trim();
     if (!nuevo) return;
     const res = await fetch(`${API}/ubicaciones/${btn.dataset.perchaRenombrar}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ nombre: nuevo }) });
     const r = await res.json(); if (!res.ok){ await ocAlert(r.error); return; }
@@ -3131,9 +3138,17 @@ async function cargarPerchas(){
   // Asignar promotor/a a la percha (alimenta el panel de fotos y comisiones)
   grid.querySelectorAll('[data-percha-promotor]').forEach(sel => sel.addEventListener('change', async () => {
     if (sel.value === '__nuevo__') {
-      const nombre = (prompt('Nombre del nuevo/a comisionista:') || '').trim();
+      const nombre = ((await promptSeguro('Nombre del nuevo/a comisionista:')) || '').trim();
       if (!nombre) { sel.value = ''; return; }
-      const comision = (prompt('Comisión que se lleva ese/a comisionista (%), ej: 10:', '10') || '').trim();
+      // Blindaje (JFC 2026-07-28, caza de bugs): cancelar este segundo prompt
+      // devuelve null -> "".trim() -> Number("")||0 -> comisionBase quedaba en
+      // 0% SIN AVISO, silenciosamente. Un dato financiero real (cuanto se
+      // lleva la persona de cada venta) no puede quedar en 0 por default; se
+      // cancela la creacion entera y se avisa, en vez de crear un registro a
+      // medias que nadie va a revisar hasta el dia de pagar comisiones.
+      const comisionTxt = await promptSeguro('Comisión que se lleva ese/a comisionista (%), ej: 10:', '10');
+      if (comisionTxt === null) { sel.value = ''; await ocAlert('Cancelado. No se creó el/la comisionista.'); return; }
+      const comision = comisionTxt.trim();
       const resProm = await fetch(`${API}/promotoras`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ nombre, comision }) });
       const rProm = await resProm.json();
       if (!resProm.ok) { await ocAlert(rProm.error); sel.value = ''; return; }
@@ -5568,6 +5583,27 @@ window.dialogosBloqueados = function () {
     return (performance.now() - t0) < 15 && r === false;
   } catch (_) { return true; }
 };
+// promptSeguro (JFC 2026-07-28, caza de bugs): dialogosBloqueados() ya
+// existia pero solo se usaba en 1 de 8 flujos con prompt() — renombrar
+// percha/sucursal, nueva percha, nombre de negocio, nuevo comisionista y
+// ajuste de stock +/- fallaban en TOTAL silencio (prompt() devuelve null al
+// instante) en el navegador interno de WhatsApp/Instagram — justo el canal
+// por el que este producto se comparte ("Compartir con mi equipo" manda un
+// link de WhatsApp). Un solo punto de entrada: todo flujo de texto vía
+// prompt() pasa por aquí, así no hay que repetir el chequeo en cada sitio.
+// OJO: mide el tiempo del propio prompt(), NO llama a dialogosBloqueados()
+// (que dispara un confirm() de verdad) — eso habria mostrado un segundo
+// dialogo cada vez que alguien cancela un prompt normalmente, molestando al
+// 99% de los casos (cancelar es una accion valida) para blindar el 1%.
+async function promptSeguro(texto, valorDefecto) {
+  const t0 = performance.now();
+  const r = prompt(texto, valorDefecto);
+  const instantaneo = (performance.now() - t0) < 15;
+  if (r === null && instantaneo) {
+    await ocAlert('Tu navegador bloquea los cuadros de texto (pasa en el navegador de WhatsApp/Instagram). Abre amigable-123 en Chrome o Safari para hacer esto.');
+  }
+  return r;
+}
 
 (function guardiaDobleCaja() {
   if (typeof BroadcastChannel === "undefined") return; // navegador viejo: sin guardia, igual que antes
