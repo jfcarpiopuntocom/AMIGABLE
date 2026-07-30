@@ -688,38 +688,43 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
     // "Unexpected token catch"), lo que apagaba en silencio el boton
     // "Ver capa contable" y cualquier otra cosa de Avanzado. Restaurado.
     try{const afPanel=document.createElement("div");afPanel.className="tag-card";afPanel.id="oc-antifraude-panel";afPanel.style.cssText="text-align:left;margin-top:22px;";afPanel.innerHTML=`\n        <h3 class="seccion" style="margin-top:0;">Control anti fraude</h3>\n        <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Integridad del historial y señales de riesgo del día. Cada movimiento va sellado: si alguien edita o borra el historial en este equipo, aquí se nota.</p>\n        <div id="oc-af-integridad" style="margin-bottom:14px;"></div>\n        <div id="oc-af-senales"></div>\n        <button id="oc-af-refrescar" class="ir" style="margin-top:12px;background:var(--azul-medio);color:var(--blanco-calido);border-color:var(--azul-oscuro);">Verificar ahora</button>\n        <p style="font-size:13px;color:var(--ink-soft);margin:10px 0 0;">El sello detecta manipulación casual del historial. No es a prueba de expertos (el equipo es local), pero deja evidencia de cualquier edición común.</p>`;vista.appendChild(afPanel);async function renderAntiFraude(){const cont=$("oc-af-integridad");if(cont){try{const d=await(await fetch("/api/integridad")).json();if(d.ok){cont.innerHTML=`<div style="padding:10px 12px;border-radius:8px;background:#e7f7ee;border:2px solid #1a6e3c;"><strong style="color:#1a6e3c;">✓ Historial íntegro</strong> <span style="color:#0F1923;font-size:14px;">— ${d.sellados} movimiento(s) sellado(s)${d.historico?", "+d.historico+" histórico(s) sin sello":""}.</span></div>`}else{const det=d.ruptura?`en la posición ${d.ruptura.index} (${escHtml(d.ruptura.tipo)} · ${escHtml(d.ruptura.usuarioNombre)} · ${escHtml(new Date(d.ruptura.fecha).toLocaleString())}) — ${escHtml(d.ruptura.motivo)}`:d.colaOk===false?"se recortó el final del historial":"inconsistencia detectada";cont.innerHTML=`<div style="padding:10px 12px;border-radius:8px;background:#fdecea;border:2px solid #a3392a;"><strong style="color:#a3392a;">⚠ El historial fue alterado</strong> <span style="color:#0F1923;font-size:14px;">— ${det}.</span></div>`}}catch(_){cont.innerHTML=""}}const sen=$("oc-af-senales");if(sen){try{const movs=await(await fetch("/api/actividad")).json();const hoy=(new Date).toISOString().slice(0,10);const delHoy=(Array.isArray(movs)?movs:[]).filter(m=>(m.fecha||"").slice(0,10)===hoy);const anul={},merma={};delHoy.forEach(m=>{const q=m.usuarioNombre||"Sistema";if(m.tipo==="anulacion")anul[q]=(anul[q]||0)+1;if(m.tipo==="ajuste"&&m.detalle&&Number(m.detalle.delta)<0)merma[q]=(merma[q]||0)+Math.abs(Number(m.detalle.delta))});const bloque=(titulo,obj,unidad)=>{const ents=Object.entries(obj);if(!ents.length)return`<p style="font-size:14px;color:var(--ink-soft);margin:6px 0;">${titulo}: sin actividad hoy.</p>`;return`<p style="font-size:14px;font-weight:700;color:var(--ink);margin:10px 0 2px;">${titulo}:</p>`+ents.map(([n,v])=>`<div style="font-size:14px;color:#0F1923;padding:2px 0;">• ${escHtml(n)}: <strong>${v}</strong> ${unidad}</div>`).join("")};sen.innerHTML=bloque("Anulaciones de venta por persona (hoy)",anul,"anulación(es)")+bloque("Unidades bajadas a mano / mermas por persona (hoy)",merma,"unidad(es)")}catch(_){sen.innerHTML=""}}}const btnAF=$("oc-af-refrescar");if(btnAF)btnAF.addEventListener("click",renderAntiFraude);renderAntiFraude();window.addEventListener("oc-login",renderAntiFraude)}catch(e){console.error("Panel anti fraude no cargó (aislado, no rompe Avanzado):",e)}const transfPanel=document.createElement("div");transfPanel.className="tag-card";transfPanel.style.cssText="text-align:left;margin-top:22px;";transfPanel.innerHTML=`\n      <h3 class="seccion" style="margin-top:0;">Transferencias entre ubicaciones</h3>\n      <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Solicitudes de traspaso de stock entre tus locales.</p>\n      <div id="oc-transf-lista"></div>`;vista.appendChild(transfPanel);renderTransferencias();window.__ocRenderTransferencias=renderTransferencias;const syncPanel=document.createElement("div");syncPanel.className="tag-card";syncPanel.style.cssText="text-align:left;margin-top:22px;";const pbUrlActual=localStorage.getItem("OC_PB_URL")||"";const conectado=!!window.OC_PB_CONNECTED;syncPanel.innerHTML=`\n      <h3 class="seccion" style="margin-top:0;">Sincronización remota (opcional)</h3>\n      <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">\n        Por defecto este negocio corre 100% local, sin depender de internet.\n        Solo si quieres recibir actualizaciones desde el panel central, pega\n        aquí la URL de tu PocketBase en Fly.io.\n      </p>\n      <p style="font-size:14px;font-weight:700;margin:8px 0;color:${conectado?"var(--sim-verde-dk)":"var(--ink)"};">\n        Estado: ${conectado?"🟢 Conectado":"⚪ Local (sin sync)"}\n      </p>\n      <input id="oc-pb-url" type="text" placeholder="https://tu-negocio.fly.dev" value="${escHtml(pbUrlActual)}" style="width:100%;max-width:340px;padding:8px;border:2px solid var(--azul-medio);border-radius:5px;">\n      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">\n        <button id="oc-pb-guardar" class="ir" style="background:var(--azul-medio);color:var(--blanco-calido);border-color:var(--azul-oscuro);">Guardar y conectar</button>\n        ${pbUrlActual?`<button id="oc-pb-quitar" class="ir" style="background:transparent;color:var(--rojo);border-color:var(--rojo);">Volver a local</button>`:""}\n      </div>\n      <p id="oc-pb-msg" style="font-size:14px;margin-top:8px;"></p>`;vista.appendChild(syncPanel);$("oc-pb-guardar").addEventListener("click",()=>{const url=$("oc-pb-url").value.trim();if(!url){msg("oc-pb-msg","Pega la URL de tu PocketBase primero.","var(--rojo)");return}localStorage.setItem("OC_PB_URL",url);msg("oc-pb-msg","Guardado. Recargando para conectar...","var(--sim-verde-dk)");setTimeout(()=>window.location.reload(),800)});const btnQuitar=document.getElementById("oc-pb-quitar");if(btnQuitar)btnQuitar.addEventListener("click",()=>{localStorage.removeItem("OC_PB_URL");msg("oc-pb-msg","Sync quitado. Recargando en modo local...","var(--ink)");setTimeout(()=>window.location.reload(),800)});const syncDevPanel=document.createElement("div");syncDevPanel.id="oc-syncdev-panel";syncDevPanel.className="tag-card";syncDevPanel.style.cssText="text-align:left;margin-top:22px;";vista.appendChild(syncDevPanel);pintarSyncDev();
-/* === RIEL DE CATEGORIAS (JFC 2026-07-30, opcion B) ==========================
-   Reemplaza el reorder simple anterior (Mi Equipo arriba / Acceso al
-   final). Reagrupa TODO en 4 categorias por modelo mental, sin
-   reconstruir ningun panel - solo reparenta nodos DOM ya vivos y con sus
-   listeners atados. Puramente generico via id/texto: no depende de que
-   variable JS este en este scope (bkMount/reMount/priv viven en otro
-   IIFE y NO son accesibles aqui, ver nota historica de arriba - por eso
-   esta version no usa ninguna variable, solo vista.children). Si algo
-   falla, los paneles ya armados quedan visibles tal cual estaban (cero
-   riesgo) - ver feedback_aislar_fallos_ui_nunca_datos ("pecado mortal"). */
+/* === RIEL DE CATEGORIAS (JFC 2026-07-30, sin categorias inventadas) =========
+   Cada seccion que ya existia (con su propio titulo real) es su propia
+   entrada del riel, con el mismo texto que siempre tuvo. Nada renombrado,
+   nada re-agrupado bajo un concepto inventado. Solo reparenta nodos DOM
+   ya vivos y con sus listeners atados. Si algo falla, los paneles ya
+   armados quedan visibles tal cual estaban (cero riesgo) - ver
+   feedback_aislar_fallos_ui_nunca_datos ("pecado mortal"). */
 (function(){
 try{
-  var MAPA_CATEGORIA={"oc-acct-lock":"dinero","oc-contable":"dinero","oc-edutip-contable":"dinero","listaActividad":"dinero","oc-tips-financieros":"dinero","oc-pl-titulo":"dinero","oc-periodo-pl":"dinero","oc-emp-panel":"gente","oc-mis-sincronizaciones":"tecnico","oc-respaldo-empleado-mount":"tecnico","oc-reconciliacion-mount":"tecnico","oc-syncdev-panel":"tecnico","oc-privacidad":"calma","oc-log-panel":"calma","oc-antifraude-panel":"calma","amg-geo-caja":"calma","oc-nov-switch-card":"calma"};
-  function categoriaDe(nodo){
-    if(MAPA_CATEGORIA[nodo.id])return MAPA_CATEGORIA[nodo.id];
-    var texto=(nodo.textContent||"").toLowerCase().slice(0,300);
-    if(/transfer|traspaso|sincronizaci.n remota|dispositivo a dispositivo|sin internet|mano|soporte|whatsapp para diagnosticar/.test(texto))return"tecnico";
-    if(/acceso|recuperaci.n|privacidad/.test(texto))return"calma";
-    if(/gastos|actividad reciente|p.rdidas y ganancias|en observaci.n/.test(texto))return"dinero";
-    return"calma";
+  var ETIQUETA_FIJA={"oc-acct-lock":"Capa contable"};
+  function tituloPropio(nodo){
+    if(ETIQUETA_FIJA[nodo.id])return ETIQUETA_FIJA[nodo.id];
+    if(/^H[1-6]$/.test(nodo.tagName))return nodo.textContent.trim();
+    var h=nodo.querySelector&&nodo.querySelector("h3,h4");
+    if(h)return h.textContent.trim();
+    if(nodo.tagName==="DETAILS"){var s=nodo.querySelector("summary");if(s)return s.textContent.trim()}
+    return null;
   }
-  var CATEGORIAS=[{id:"dinero",label:"💰 Mi dinero"},{id:"gente",label:"👥 Mi gente"},{id:"tecnico",label:"🔄 Mi equipo técnico"},{id:"calma",label:"🧘 Mi tranquilidad"}];
   var encabezado=Array.prototype.slice.call(vista.children,0,2);
   var resto=Array.prototype.slice.call(vista.children,2);
+  var secciones=[];
+  var actual=null;
+  resto.forEach(function(nodo){
+    var titulo=tituloPropio(nodo);
+    if(titulo){actual={id:"s"+secciones.length,label:titulo,nodos:[nodo]};secciones.push(actual)}
+    else if(actual){actual.nodos.push(nodo)}
+    else{actual={id:"s"+secciones.length,label:"General",nodos:[nodo]};secciones.push(actual)}
+  });
+  var CATEGORIAS=secciones.map(function(s){return{id:s.id,label:s.label}});
   var panes={};
-  CATEGORIAS.forEach(function(c){var p=document.createElement("div");p.id="oc-riel-"+c.id;p.style.display="none";panes[c.id]=p});
-  resto.forEach(function(nodo){panes[categoriaDe(nodo)].appendChild(nodo)});
-  /* JFC 2026-07-30 ("NOOOO, yo te aprobe B, el modelo de LISTA al lado
-     izquierdo para siempre ver la navegacion en texto, no esas tarjetitas
-     infantiles"): la primera version uso botones-pildora horizontales -
-     eso es la opcion C, no la B que el aprobo. Reconstruido como lista de
-     TEXTO fija a la izquierda + contenido a la derecha. */
+  secciones.forEach(function(s){
+    var p=document.createElement("div");
+    p.id="oc-riel-"+s.id;
+    p.style.display="none";
+    s.nodos.forEach(function(n){p.appendChild(n)});
+    panes[s.id]=p;
+  });
   var rielFila=document.createElement("div");
   rielFila.id="oc-riel-fila";
   rielFila.style.cssText="display:flex;gap:0;align-items:flex-start;margin:14px 0 18px;";
@@ -746,15 +751,29 @@ try{
     try{localStorage.setItem("amigable_riel_tab",id)}catch(_){}
   }
   rielNav.addEventListener("click",function(e){var b=e.target.closest("[data-riel-tab]");if(b)activarTab(b.dataset.rielTab)});
-  var tabInicial="dinero";
-  try{tabInicial=localStorage.getItem("amigable_riel_tab")||"dinero"}catch(_){}
-  if(!CATEGORIAS.some(function(c){return c.id===tabInicial}))tabInicial="dinero";
-  activarTab(tabInicial);
+  var idDefault=secciones.length?secciones[0].id:null;
+  var tabInicial=idDefault;
+  try{tabInicial=localStorage.getItem("amigable_riel_tab")||idDefault}catch(_){}
+  if(!CATEGORIAS.some(function(c){return c.id===tabInicial}))tabInicial=idDefault;
+  if(tabInicial)activarTab(tabInicial);
   var obs=new MutationObserver(function(muts){
     muts.forEach(function(m){
       m.addedNodes.forEach(function(n){
-        if(n.nodeType===1&&n.parentNode===vista&&n!==rielFila&&!CATEGORIAS.some(function(c){return panes[c.id]===n})){
-          panes[categoriaDe(n)].appendChild(n);
+        if(n.nodeType===1&&n.parentNode===vista&&n!==rielFila){
+          var titulo=tituloPropio(n)||"Más";
+          var id="s"+CATEGORIAS.length;
+          var p=document.createElement("div");
+          p.id="oc-riel-"+id;
+          p.style.display="none";
+          p.appendChild(n);
+          panes[id]=p;
+          CATEGORIAS.push({id:id,label:titulo});
+          var b=document.createElement("button");
+          b.type="button";b.dataset.rielTab=id;
+          b.style.cssText="display:block;width:100%;text-align:left;background:none;border:none;border-left:3px solid transparent;padding:10px 8px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink-soft,#5d5340) !important;-webkit-text-fill-color:var(--ink-soft,#5d5340) !important;";
+          b.textContent=titulo;
+          rielNav.appendChild(b);
+          rielContenido.appendChild(p);
         }
       });
     });
