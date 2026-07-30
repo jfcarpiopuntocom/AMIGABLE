@@ -5567,9 +5567,14 @@ setTimeout(() => {
 
 <script src="./crypto-store.js"></script>
 <script src="./email-recovery.js"></script>
+<script src="./device-identity.js"></script>
 <script src="./auth-ui.js"></script>
 <script src="./backup-scheduler.js"></script>
 <script src="./avanzado-extra.js"></script>
+<!-- geo-ping.js (portado de friendly-123, roadmap Fase 7): control de
+     ubicación del equipo. Va DESPUÉS de avanzado-extra.js porque se
+     engancha a #vista-avanzado, que ese archivo ya monta. -->
+<script src="./geo-ping.js"></script>
 <script src="./sync-realtime.js"></script>
 <!-- Novedades: gamificación experimental del empleado (FEATURE EXPERIMENTAL,
      JFC 2026-07-22). Módulo aparte, encendida por DEFECTO (el dueño puede
