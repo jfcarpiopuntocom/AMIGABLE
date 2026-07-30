@@ -1893,12 +1893,34 @@ function montarBuscadorVender(productos){
   const chipEstilo = (activo) => `font-size:13px;padding:6px 12px;border-radius:999px;border:2px solid var(--azul-medio,#2c4a68);cursor:pointer;background:${activo ? "var(--azul-medio,#2c4a68)" : "transparent"};color:${activo ? "#fff" : "var(--azul-medio,#2c4a68)"} !important;-webkit-text-fill-color:${activo ? "#fff" : "var(--azul-medio,#2c4a68)"} !important;`;
   chips.innerHTML = `<button type="button" data-chip-cat="" style="${chipEstilo(!_venderCategoriaActiva)}">Todas</button>` +
     categorias.map(c => `<button type="button" data-chip-cat="${escHtml(c)}" style="${chipEstilo(_venderCategoriaActiva === c)}">${escHtml(c)}</button>`).join("");
+  // Indice de busqueda tolerante a errores de tipeo (JFC 2026-07-30, "world
+  // standards"). MiniSearch esta vendorizado localmente. Se reconstruye
+  // cada vez que llega una lista nueva de productos (evita indice viejo) y
+  // SIEMPRE en try/catch: si falla, idx queda null y aplicarFiltro() cae
+  // sola al filtro por substring de siempre - ver
+  // feedback_aislar_fallos_ui_nunca_datos (JFC, "pecado mortal").
+  let idx = null;
+  try {
+    if (typeof MiniSearch === "function") {
+      idx = new MiniSearch({ fields: ["nombre", "categoria", "sku", "barcode"], idField: "id", searchOptions: { prefix: true, fuzzy: 0.2 } });
+      idx.addAll(productos);
+    }
+  } catch (_) { idx = null; }
   function aplicarFiltro(){
-    const q = (input.value || "").trim().toLowerCase();
+    const q = (input.value || "").trim();
+    let idsCoinciden = null;
+    if (q && idx) {
+      try { idsCoinciden = new Set(idx.search(q).map(r => r.id)); } catch (_) { idsCoinciden = null; }
+    }
+    const qLower = q.toLowerCase();
     document.querySelectorAll("#gridVender [data-vender-tile]").forEach(btn => {
       const p = _gridVenderProductosCache.find(x => x.id === btn.dataset.venderTile);
       if (!p) return;
-      const matchTexto = !q || p.nombre.toLowerCase().includes(q) || (p.categoria || "").toLowerCase().includes(q);
+      const matchTexto = !q
+        ? true
+        : idsCoinciden
+          ? idsCoinciden.has(p.id)
+          : (p.nombre.toLowerCase().includes(qLower) || (p.categoria || "").toLowerCase().includes(qLower));
       const matchCategoria = !_venderCategoriaActiva || p.categoria === _venderCategoriaActiva;
       btn.style.display = (matchTexto && matchCategoria) ? "" : "none";
     });
@@ -2398,6 +2420,27 @@ function pintarBotonesOrdenCliente() {
     });
   }
 }
+// Busqueda con tolerancia a errores de tipeo (JFC 2026-07-30: "world
+// standards", que hagan parecer amateur la lista actual). uFuzzy es
+// opcional y esta vendorizado localmente (./vendor/ufuzzy.min.js) - si no
+// cargo o lanza, cae SOLA al filtro por substring de siempre. Nunca debe
+// poder romper el resto de Clientes ni tocar datos - ver
+// feedback_aislar_fallos_ui_nunca_datos (JFC, "pecado mortal").
+function filtrarClientesConTolerancia(clientes, q){
+  try {
+    if (typeof uFuzzy !== "function") throw new Error("uFuzzy no cargado");
+    const haystack = clientes.map(c => [c.nombre, c.apodo, c.codigo, c.telefono, c.email].filter(Boolean).map(normalizarTexto).join(" "));
+    const uf = new uFuzzy({ intraMode: 1, intraIns: 1, intraSub: 1, intraTrn: 1, intraDel: 1 });
+    const idxs = uf.filter(haystack, q);
+    if (idxs == null) return [];
+    return Array.from(idxs).map(i => clientes[i]);
+  } catch (_) {
+    return clientes.filter(c => {
+      const campos = [c.nombre, c.apodo, c.codigo, c.telefono, c.email];
+      return campos.some(v => v && normalizarTexto(v).includes(q));
+    });
+  }
+}
 function renderListaViva(query){
   const cont = document.getElementById("listaClientes");
   const conteo = document.getElementById("cliBuscarConteo");
@@ -2416,10 +2459,7 @@ function renderListaViva(query){
     if (conteo) conteo.textContent = "Escribe al menos 2 letras de un nombre o código para buscar un cliente.";
     return;
   }
-  let filtrados = !q ? _clientesVivosCache : _clientesVivosCache.filter(c => {
-    const campos = [c.nombre, c.apodo, c.codigo, c.telefono, c.email];
-    return campos.some(v => v && normalizarTexto(v).includes(q));
-  });
+  let filtrados = !q ? _clientesVivosCache : filtrarClientesConTolerancia(_clientesVivosCache, q);
   if (_ordenClienteVivo.col) {
     const col = _ordenClienteVivo.col;
     filtrados = filtrados.slice().sort((a, b) => {
@@ -5625,10 +5665,19 @@ setTimeout(() => {
 <script src="./auth-ui.js"></script>
 <script src="./backup-scheduler.js"></script>
 <script src="./avanzado-extra.js"></script>
+<!-- uFuzzy (JFC 2026-07-30): busqueda tolerante a errores de tipeo para
+     Clientes (via lista-dinamica.js). Vendorizado localmente, MIT, sin
+     CDN, sin build step - si falta o falla, lista-dinamica.js cae sola al
+     filtro por substring de siempre (ver feedback_aislar_fallos_ui_nunca_datos). -->
+<script src="./vendor/ufuzzy.min.js"></script>
 <!-- lista-dinamica.js (portado de friendly-123, 2026-07-30): busqueda+orden
      generico, reusado por Clientes/Productos y ahora tambien por el panel
      de ubicaciones del equipo. Va antes de geo-ping.js, que lo consume. -->
 <script src="./lista-dinamica.js"></script>
+<!-- MiniSearch (JFC 2026-07-30): busqueda tolerante + filtro por categoria
+     para el grid tactil de Vendido. Mismo criterio de aislamiento: si
+     falla, el buscador cae al filtro por substring que ya existia. -->
+<script src="./vendor/minisearch.min.js"></script>
 <!-- geo-ping.js (portado de friendly-123, roadmap Fase 7): control de
      ubicación del equipo. Va DESPUÉS de avanzado-extra.js porque se
      engancha a #vista-avanzado, que ese archivo ya monta. -->
