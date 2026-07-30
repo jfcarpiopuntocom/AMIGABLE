@@ -554,8 +554,22 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
             if (!r.ok) { msg.textContent = data.error || "Error al guardar PIN."; return; }
             msg.style.color = "var(--sim-verde-dk,#1a6e3c)";
             msg.textContent = "PIN actualizado.";
+            // Entrega por correo (JFC 2026-07-30): mailto abre EL PROPIO cliente
+            // de correo del dueño con el mensaje listo — sin backend, sin nube,
+            // cumple la regla dura NUNCA CLOUD. El PIN nunca se guarda en claro
+            // en ningún servidor; solo pasa por esta URL local hacia el mailer.
+            const miembro = equipo.find((x) => x.id === id);
+            if (miembro && miembro.email) {
+              const asunto = encodeURIComponent(`Tu PIN de acceso — ${miembro.nombre}`);
+              const cuerpo = encodeURIComponent(`Hola ${miembro.nombre},\n\nTu nuevo PIN de acceso es: ${pin}\n\nGuárdalo en un lugar seguro.`);
+              const linkMail = document.createElement("a");
+              linkMail.href = `mailto:${miembro.email}?subject=${asunto}&body=${cuerpo}`;
+              linkMail.textContent = " Enviar por correo";
+              linkMail.style.cssText = "margin-left:8px;color:var(--azul-medio);font-weight:700;";
+              msg.appendChild(linkMail);
+            }
             if (inp) inp.value = "";
-            setTimeout(() => renderEmpleados(), 1500);
+            setTimeout(() => renderEmpleados(), 4000);
           } catch (_) { msg.textContent = "Error de red."; }
         });
       });
@@ -582,6 +596,15 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
         if (!r.ok) { msgEl.textContent = data.error || "Error al agregar miembro."; return; }
         msgEl.style.color = "var(--sim-verde-dk,#1a6e3c)";
         msgEl.textContent = `${data.rol === "admin" ? "Admin" : "Empleado"} "${data.nombre}" agregado.`;
+        if (email) {
+          const asunto = encodeURIComponent(`Tu PIN de acceso — ${data.nombre}`);
+          const cuerpo = encodeURIComponent(`Hola ${data.nombre},\n\nTu PIN de acceso es: ${pin}\n\nGuárdalo en un lugar seguro.`);
+          const linkMail = document.createElement("a");
+          linkMail.href = `mailto:${email}?subject=${asunto}&body=${cuerpo}`;
+          linkMail.textContent = " Enviar por correo";
+          linkMail.style.cssText = "margin-left:8px;color:var(--azul-medio);font-weight:700;";
+          msgEl.appendChild(linkMail);
+        }
         document.getElementById("oc-emp-nombre").value = "";
         document.getElementById("oc-emp-email").value  = "";
         document.getElementById("oc-emp-pin").value    = "";
