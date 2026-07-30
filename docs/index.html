@@ -1439,12 +1439,25 @@
     <details style="margin:-4px 0 12px;font-size:14px;">
       <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
       <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
-        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Elige el cliente (si aplica) en el selector de abajo.</p>
-        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Toca el producto: se descuenta una unidad del stock.</p>
-        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">3. Aparece un aviso azul abajo: tócalo en 5s si fue error.</p>
-        <p style="margin:0;font-size:14px;color:var(--ink);">4. Si no vendes en vivo, usa <strong>Cierre del día</strong> al final.</p>
+        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Busca el producto por nombre o filtra por categoría, arriba del todo.</p>
+        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Elige el cliente (si aplica) en el selector de abajo.</p>
+        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">3. Toca el producto: se descuenta una unidad del stock.</p>
+        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">4. Aparece un aviso azul abajo: tócalo en 5s si fue error.</p>
+        <p style="margin:0;font-size:14px;color:var(--ink);">5. Si no vendes en vivo, usa <strong>Cierre del día</strong> al final.</p>
       </div>
     </details>
+    <!-- Buscador/filtro rapido ANTES del grid tactil (JFC 2026-07-30: "que
+         ya salgan agrupados por perchas o por categorias o search box...
+         primero pon esas formas de rapido buscar, y Utilizar Botones
+         Tactiles quede como siguiente opcion enseguida despues"). Solo
+         filtra los botones ya renderizados por cargarGridVender() - no
+         toca esa logica ni el listener delegado de venta. -->
+    <div id="venderBuscador" style="margin-bottom:12px;">
+      <input id="venderBuscarInput" type="text" placeholder="Buscar por nombre o categoría..."
+        style="width:100%;box-sizing:border-box;padding:10px 12px;border:2px solid var(--azul-medio,#2c4a68);border-radius:6px;font-size:15px;margin-bottom:8px;">
+      <div id="venderCategoriaChips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+    </div>
+    <p style="font-size:14px;font-weight:700;color:var(--ink-soft);margin:0 0 8px;">Siguiente paso: toca un producto</p>
     <div id="gridVender" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:18px;"></div>
     <div class="panel-escaner tag-card">
       <h4 style="margin:0 0 6px;font-size:17px;">Escanear o buscar por código</h4>
@@ -1863,6 +1876,47 @@ async function cargarGridVender(){
       abrirPanelVentaInfo(id, !!(prod && prod.tipoProducto === "ticket"));
     });
   }
+  montarBuscadorVender(productos);
+}
+
+// Buscador + chips de categoria para el grid tactil de Vendido (JFC
+// 2026-07-30). Filtra por display:none los botones ya renderizados -
+// nunca vuelve a pedir datos ni toca el listener de venta.
+let _venderCategoriaActiva = "";
+function montarBuscadorVender(productos){
+  const chips = document.getElementById("venderCategoriaChips");
+  const input = document.getElementById("venderBuscarInput");
+  if (!chips || !input) return;
+  const categorias = Array.from(new Set(productos.map(p => (p.categoria || "").trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, "es"));
+  // Si la categoria activa ya no existe en este percha (cambio de ubicacion), se resetea.
+  if (_venderCategoriaActiva && !categorias.includes(_venderCategoriaActiva)) _venderCategoriaActiva = "";
+  const chipEstilo = (activo) => `font-size:13px;padding:6px 12px;border-radius:999px;border:2px solid var(--azul-medio,#2c4a68);cursor:pointer;background:${activo ? "var(--azul-medio,#2c4a68)" : "transparent"};color:${activo ? "#fff" : "var(--azul-medio,#2c4a68)"} !important;-webkit-text-fill-color:${activo ? "#fff" : "var(--azul-medio,#2c4a68)"} !important;`;
+  chips.innerHTML = `<button type="button" data-chip-cat="" style="${chipEstilo(!_venderCategoriaActiva)}">Todas</button>` +
+    categorias.map(c => `<button type="button" data-chip-cat="${escHtml(c)}" style="${chipEstilo(_venderCategoriaActiva === c)}">${escHtml(c)}</button>`).join("");
+  function aplicarFiltro(){
+    const q = (input.value || "").trim().toLowerCase();
+    document.querySelectorAll("#gridVender [data-vender-tile]").forEach(btn => {
+      const p = _gridVenderProductosCache.find(x => x.id === btn.dataset.venderTile);
+      if (!p) return;
+      const matchTexto = !q || p.nombre.toLowerCase().includes(q) || (p.categoria || "").toLowerCase().includes(q);
+      const matchCategoria = !_venderCategoriaActiva || p.categoria === _venderCategoriaActiva;
+      btn.style.display = (matchTexto && matchCategoria) ? "" : "none";
+    });
+  }
+  if (!chips.dataset.listenerListo) {
+    chips.dataset.listenerListo = "1";
+    chips.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-chip-cat]");
+      if (!b) return;
+      _venderCategoriaActiva = b.dataset.chipCat;
+      montarBuscadorVender(_gridVenderProductosCache);
+    });
+  }
+  if (!input.dataset.listenerListo) {
+    input.dataset.listenerListo = "1";
+    input.addEventListener("input", aplicarFiltro);
+  }
+  aplicarFiltro();
 }
 
 // ---- Cierre del dia ----
