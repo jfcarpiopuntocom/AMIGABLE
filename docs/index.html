@@ -5571,6 +5571,10 @@ setTimeout(() => {
 <script src="./auth-ui.js"></script>
 <script src="./backup-scheduler.js"></script>
 <script src="./avanzado-extra.js"></script>
+<!-- lista-dinamica.js (portado de friendly-123, 2026-07-30): busqueda+orden
+     generico, reusado por Clientes/Productos y ahora tambien por el panel
+     de ubicaciones del equipo. Va antes de geo-ping.js, que lo consume. -->
+<script src="./lista-dinamica.js"></script>
 <!-- geo-ping.js (portado de friendly-123, roadmap Fase 7): control de
      ubicación del equipo. Va DESPUÉS de avanzado-extra.js porque se
      engancha a #vista-avanzado, que ese archivo ya monta. -->

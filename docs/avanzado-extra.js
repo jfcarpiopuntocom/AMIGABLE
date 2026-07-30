@@ -46,7 +46,7 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
     <p style="font-size:13px;color:var(--sim-verde-dk,#1a6e3c);font-weight:700;margin-top:0;">
       Tus datos solo viajan cifrados entre los dispositivos de tu propio
       equipo. Nunca llegan a AMIGABLE ni a nadie más — ni siquiera nosotros
-      podemos leerlos. Es completamente opcional.
+      podemos leerlos.
     </p>
     <div id="oc-sync-estado" style="font-size:13px;font-weight:700;margin-bottom:10px;"></div>
     <div id="oc-sync-apagado" style="display:${salaActiva ? "none" : "flex"};gap:8px;flex-wrap:wrap;align-items:center;">

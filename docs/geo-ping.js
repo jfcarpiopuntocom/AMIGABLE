@@ -362,6 +362,9 @@
   function fmtFechaGeo(ts) {
     try { return new Date(ts).toLocaleString("es-EC"); } catch (_) { return String(ts); }
   }
+  // JFC 2026-07-30 ("esta muerta, la mataste"): era el unico panel sin
+  // busqueda ni orden, mientras Clientes/Productos ya tienen eso. Portado
+  // al mismo componente generico lista-dinamica.js que usa friendly-123.
   function renderPanel() {
     var mount = global.document.getElementById("amg-geo-panel");
     if (!mount) return;
@@ -370,23 +373,33 @@
         mount.innerHTML = '<p style="font-size:14px;color:var(--ink-soft,#6b7785);">Aún no hay pings registrados.</p>';
         return;
       }
-      var porPin = {};
-      pings.forEach(function (p) { (porPin[p.pin] = porPin[p.pin] || []).push(p); });
-      var html = "";
-      Object.keys(porPin).forEach(function (pin) {
-        var lista = porPin[pin];
-        html += '<div style="margin-bottom:16px;"><div style="font-weight:700;font-size:14px;margin-bottom:6px;">' +
-          escHtmlGeo(lista[0].nombre) + " · " + lista.length + " ping(s)</div>";
-        lista.slice(0, 20).forEach(function (p) {
+      if (!global.AMG || !global.AMG.ListaDinamica) {
+        // Degradacion segura: si lista-dinamica.js no cargo, no dejamos el
+        // panel en blanco - se ve la lista simple, sin buscador ni orden.
+        mount.innerHTML = pings.slice(0, 40).map(function (p) {
+          return '<div style="font-size:13px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.06);">' +
+            escHtmlGeo(p.nombre) + " — " + fmtFechaGeo(p.ts) + '</div>';
+        }).join("");
+        return;
+      }
+      global.AMG.ListaDinamica.crear({
+        contenedorId: "amg-geo-panel",
+        placeholderBusqueda: "Buscar por nombre...",
+        mensajeVacio: "Sin resultados.",
+        columnas: [
+          { key: "nombre", label: "Miembro", ordenable: true },
+          { key: "ts", label: "Cuándo", ordenable: true, valor: function (p) { return p.ts; } },
+          { key: "precision", label: "Precisión", ordenable: true, valor: function (p) { return p.precision == null ? -1 : p.precision; } }
+        ],
+        datos: function () { return pings; },
+        renderFila: function (p) {
           var linkMapa = (p.lat != null && p.lon != null)
             ? '<a href="https://www.google.com/maps?q=' + p.lat + "," + p.lon + '" target="_blank" rel="noopener" style="color:#2E6278;">ver en el mapa</a> (±' + (p.precision || "?") + "m, " + escHtmlGeo(p.fuente) + ")"
             : '<span style="color:var(--ink-soft,#6b7785);">sin ubicación (' + escHtmlGeo(p.fuente) + ')</span>';
-          html += '<div style="font-size:13px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,.06);">' +
-            fmtFechaGeo(p.ts) + " — " + linkMapa + "</div>";
-        });
-        html += "</div>";
+          return '<div style="font-size:13px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,.06);">' +
+            "<strong>" + escHtmlGeo(p.nombre) + "</strong> — " + fmtFechaGeo(p.ts) + " — " + linkMapa + "</div>";
+        }
       });
-      mount.innerHTML = html;
     }).catch(function () {
       mount.innerHTML = '<p style="font-size:14px;color:var(--rojo,#a3392a);">No se pudo leer el registro de ubicaciones.</p>';
     });
