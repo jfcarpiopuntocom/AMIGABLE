@@ -3921,6 +3921,7 @@ async function mostrarFormEditarProducto(id){
       <div id="ed-comision-wrap" style="margin-top:8px;display:${p.tipoProveedor === "consignacion" ? "block" : "none"};">
         <label style="display:block;font-size:14px;">Comisión al artista (%)<br>
           <input id="ed-comision-pct" type="number" min="0" max="100" step="1" value="${p.comisionProveedorPct || 0}" ${inp}></label>
+        <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 0;">Esto es solo una nota de referencia — NO se descuenta solo en la venta. La comisión que sí se calcula automático se configura por percha en Inventario → Perchas → 💰 Comisión.</p>
       </div>
       <label style="display:block;margin-top:10px;font-size:14px;">Tipo de producto<br>
         <select id="ed-tipo-producto" ${inp}>
@@ -4152,6 +4153,7 @@ async function abrirAltaProducto(){
       <div id="np-comision-wrap" style="display:none;margin-top:8px;">
         <label style="display:block;font-size:14px;">Comisión al artista (%)<br>
           <input id="np-comision-pct" type="number" min="0" max="100" step="1" placeholder="Ej: 30" ${inp}></label>
+        <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 0;">Esto es solo una nota de referencia — NO se descuenta solo en la venta. La comisión que sí se calcula automático se configura por percha en Inventario → Perchas → 💰 Comisión.</p>
       </div>
       <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:15px;font-weight:700;">
         <input id="np-perecible" type="checkbox" style="width:20px;height:20px;"> ¿Este producto expira?</label>
@@ -4204,7 +4206,7 @@ function pintarFicha(p){
       <div class="linea"><strong>SKU:</strong> ${escHtml(p.sku)}</div>
       <div class="linea"><strong>Código:</strong> ${escHtml(p.barcode)}</div>
       <div class="linea"><strong>Proveedor:</strong> ${escHtml(p.proveedor)}</div>
-      ${p.tipoProveedor === "consignacion" ? `<div class="linea"><strong>Relación:</strong> Consignación · ${p.comisionProveedorPct || 0}% al artista</div>` : ""}
+      ${p.tipoProveedor === "consignacion" ? `<div class="linea"><strong>Relación:</strong> Consignación · ${p.comisionProveedorPct || 0}% al artista (referencia — la comisión real se cobra por percha)</div>` : ""}
       ${p.ubicacionNombre && p.ubicacionNombre !== "todas" ? `<div class="linea"><strong>Percha:</strong> ${escHtml(p.ubicacionNombre)}</div>` : ""}
       ${(p.otrasPerchas && p.otrasPerchas.length) ? `<div class="linea"><strong>${icoOC("percha", "currentColor", 12)} También en:</strong> ${p.otrasPerchas.map(h => `<span data-ver-hermano="${h.id}" style="cursor:pointer;text-decoration:underline;">${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)</span>`).join(" · ")}</div>` : ""}
       ${esDuenoOAdminFicha ? `<div class="linea"><strong>Costo:</strong> ${fmtMoney(p.costo||0)} · Margen: ${fmtMoney((p.precio||0)-(p.costo||0))} (${p.precio > 0 ? Math.round(((p.precio-(p.costo||0))/p.precio)*100) : 0}%)</div>` : ""}
