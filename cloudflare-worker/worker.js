@@ -337,6 +337,55 @@ async function handleVerificarIdentidad(req, env) {
 }
 
 // ===========================================================================
+// UNA LICENCIA POR PERSONA (JFC 2026-07-30, incidente real)
+//
+// JFC se reidentifico, la caja de pegar la licencia le arruino el codigo, y
+// el flujo de activacion (789) le genero una licencia NUEVA sin avisarle —
+// termino con dos licencias para el mismo negocio. Su regla: "no solo
+// avisar, solo puede haber UNA licencia por correo y por cedula". Esto se
+// llama ANTES de generar/aceptar un codigo nuevo en la activacion: si el
+// correo o la cedula ya estan en otro registro, esa es la licencia real y
+// no se crea una segunda. Un correo/cedula vacio nunca cuenta como match
+// (evita que instancias sin esos datos se bloqueen entre si).
+// ===========================================================================
+async function handleBuscarDuplicado(req, env) {
+  const raw = await req.text();
+  if (raw.length > 512) return json({ error: "Payload too large" }, 413);
+  let body;
+  try { body = JSON.parse(raw); } catch (_) { return json({ duplicado: false, error: "Invalid JSON" }, 400); }
+
+  const email = normEmail(body.email);
+  const cedula = normCedula(body.cedula);
+  const instanceIdPropio = String(body.instanceId || "").slice(0, 120);
+  if (!email && !cedula) return json({ duplicado: false });
+
+  // Anti-enumeracion leve: rate-limit por IP, no por email/cedula (para no
+  // delatar que UN valor puntual esta o no registrado via timing/conteo).
+  try {
+    const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for") || "sin-ip";
+    const rlKey = `rl:dup:${ip}`;
+    const n = parseInt((await env.LICENCIAS.get(rlKey)) || "0", 10) || 0;
+    if (n >= 20) return json({ duplicado: false, error: "Demasiados intentos. Espera unos minutos." }, 429);
+    await env.LICENCIAS.put(rlKey, String(n + 1), { expirationTtl: 3600 });
+  } catch (_) { /* fail-open: un hipo de KV no debe bloquear una activacion legitima */ }
+
+  try {
+    const lista = await env.LICENCIAS.list({ prefix: "inst:" });
+    for (const k of lista.keys) {
+      let reg;
+      try { reg = JSON.parse(await env.LICENCIAS.get(k.name)); } catch (_) { continue; }
+      if (!reg || reg.instanceId === instanceIdPropio) continue;
+      const matchEmail = email && normEmail(reg.email) === email;
+      const matchCedula = cedula && normCedula(reg.cedula) === cedula;
+      if (matchEmail || matchCedula) {
+        return json({ duplicado: true, licenseCode: reg.licenseCode || "", instanceId: reg.instanceId, por: matchEmail ? "email" : "cedula" });
+      }
+    }
+  } catch (_) { return json({ duplicado: false }); } // fail-open: no bloquear si el KV.list falla
+  return json({ duplicado: false });
+}
+
+// ===========================================================================
 // EPIC "La Licencia Manda" (JFC 2026-07-24) — recuperación por licencia.
 // Sigue el manifiesto NO CLOUD: NO se guardan datos de negocio. Solo un código
 // efímero de liberación (TTL 1h, un solo uso) atado al instanceId, para que
@@ -485,6 +534,11 @@ export default {
     // Reidentificación self-service (licencia+cedula+correo) — público, rate-limited
     if (url.pathname === "/verificar-identidad" && req.method === "POST") {
       return handleVerificarIdentidad(req, env);
+    }
+
+    // Una licencia por correo/cedula (JFC 2026-07-30) — público, rate-limited
+    if (url.pathname === "/verificar-duplicado" && req.method === "POST") {
+      return handleBuscarDuplicado(req, env);
     }
 
     // Public checkin (activation + login heartbeat)
