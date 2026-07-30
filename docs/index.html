@@ -3936,11 +3936,16 @@ async function mostrarFormEditarProducto(id){
         </select></label>
       ${hermanos.length ? `<div style="margin-top:8px;font-size:14px;color:var(--ink-soft);">También en: ${hermanos.map(h => `${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)`).join(" · ")}</div>` : ""}
       ${(() => { const ocupadas = new Set([p.ubicacionId, ...hermanos.map(h => h.ubicacionId)]); const disponibles = perchas.filter(u => !ocupadas.has(u.id)); return disponibles.length ? `
-      <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <select id="ed-nueva-percha" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;font-size:14px;">
-          ${disponibles.map(u => `<option value="${escHtml(u.id)}">${escHtml(u.nombre)}</option>`).join("")}
-        </select>
-        <button type="button" id="ed-agregar-percha" style="font-size:14px;padding:8px 12px;">+ Agregar a esa percha</button>
+      <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--azul-suave,#dde5ec);">
+        <label style="display:block;font-size:14px;font-weight:700;color:var(--ink);">¿También en OTRA percha? (opcional, no reemplaza la de arriba)<br>
+          <span style="font-weight:400;font-size:13px;color:var(--ink-soft);">Esto crea una copia adicional de este producto en otra percha — la "Percha principal" de arriba no cambia.</span>
+        </label>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <select id="ed-nueva-percha" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;font-size:14px;">
+            ${disponibles.map(u => `<option value="${escHtml(u.id)}">${escHtml(u.nombre)}</option>`).join("")}
+          </select>
+          <button type="button" id="ed-agregar-percha" style="font-size:14px;padding:8px 12px;">+ Agregar a esa percha</button>
+        </div>
       </div>` : ""; })()}
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Umbral alerta roja<br><input id="ed-umbral-rojo" type="number" min="0" step="1" value="${p.umbralRojo || 0}" ${inp}></label>
