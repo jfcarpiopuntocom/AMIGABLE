@@ -715,19 +715,33 @@ try{
   var panes={};
   CATEGORIAS.forEach(function(c){var p=document.createElement("div");p.id="oc-riel-"+c.id;p.style.display="none";panes[c.id]=p});
   resto.forEach(function(nodo){panes[categoriaDe(nodo)].appendChild(nodo)});
-  var rielNav=document.createElement("div");
+  /* JFC 2026-07-30 ("NOOOO, yo te aprobe B, el modelo de LISTA al lado
+     izquierdo para siempre ver la navegacion en texto, no esas tarjetitas
+     infantiles"): la primera version uso botones-pildora horizontales -
+     eso es la opcion C, no la B que el aprobo. Reconstruido como lista de
+     TEXTO fija a la izquierda + contenido a la derecha. */
+  var rielFila=document.createElement("div");
+  rielFila.id="oc-riel-fila";
+  rielFila.style.cssText="display:flex;gap:0;align-items:flex-start;margin:14px 0 18px;";
+  var rielNav=document.createElement("nav");
   rielNav.id="oc-riel-nav";
-  rielNav.style.cssText="display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 18px;position:sticky;top:0;background:var(--blanco-calido,#fbf5e8);z-index:5;padding:8px 0;border-bottom:2px solid var(--azul-suave,#dde5ec);";
-  rielNav.innerHTML=CATEGORIAS.map(function(c){return'<button type="button" data-riel-tab="'+c.id+'" style="font-size:14px;font-weight:700;padding:9px 14px;border-radius:8px;border:2px solid var(--azul-medio,#2c4a68);background:transparent;color:var(--azul-medio,#2c4a68) !important;-webkit-text-fill-color:var(--azul-medio,#2c4a68) !important;cursor:pointer;">'+c.label+"</button>"}).join("");
-  vista.appendChild(rielNav);
-  CATEGORIAS.forEach(function(c){vista.appendChild(panes[c.id])});
+  rielNav.style.cssText="flex:0 0 auto;width:132px;display:flex;flex-direction:column;position:sticky;top:8px;border-right:2px solid var(--azul-suave,#dde5ec);padding-right:10px;margin-right:14px;";
+  rielNav.innerHTML=CATEGORIAS.map(function(c){return'<button type="button" data-riel-tab="'+c.id+'" style="display:block;width:100%;text-align:left;background:none;border:none;border-left:3px solid transparent;padding:10px 8px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink-soft,#5d5340) !important;-webkit-text-fill-color:var(--ink-soft,#5d5340) !important;">'+c.label+"</button>"}).join("");
+  var rielContenido=document.createElement("div");
+  rielContenido.id="oc-riel-contenido";
+  rielContenido.style.cssText="flex:1 1 0%;min-width:0;";
+  CATEGORIAS.forEach(function(c){rielContenido.appendChild(panes[c.id])});
+  rielFila.appendChild(rielNav);
+  rielFila.appendChild(rielContenido);
+  vista.appendChild(rielFila);
   function activarTab(id){
     CATEGORIAS.forEach(function(c){panes[c.id].style.display=c.id===id?"":"none"});
     rielNav.querySelectorAll("[data-riel-tab]").forEach(function(b){
       var activo=b.dataset.rielTab===id;
-      b.style.background=activo?"var(--azul-medio,#2c4a68)":"transparent";
-      b.style.color=activo?"#fff":"var(--azul-medio,#2c4a68)";
-      b.style.setProperty("-webkit-text-fill-color",activo?"#fff":"var(--azul-medio,#2c4a68)");
+      b.style.borderLeftColor=activo?"var(--azul-medio,#2c4a68)":"transparent";
+      b.style.background=activo?"var(--azul-suave,#dde5ec)":"none";
+      b.style.color=activo?"var(--azul-medio,#2c4a68)":"var(--ink-soft,#5d5340)";
+      b.style.setProperty("-webkit-text-fill-color",activo?"var(--azul-medio,#2c4a68)":"var(--ink-soft,#5d5340)");
     });
     try{localStorage.setItem("amigable_riel_tab",id)}catch(_){}
   }
@@ -739,7 +753,7 @@ try{
   var obs=new MutationObserver(function(muts){
     muts.forEach(function(m){
       m.addedNodes.forEach(function(n){
-        if(n.nodeType===1&&n.parentNode===vista&&n!==rielNav&&!CATEGORIAS.some(function(c){return panes[c.id]===n})){
+        if(n.nodeType===1&&n.parentNode===vista&&n!==rielFila&&!CATEGORIAS.some(function(c){return panes[c.id]===n})){
           panes[categoriaDe(n)].appendChild(n);
         }
       });
