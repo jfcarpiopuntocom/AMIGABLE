@@ -37,12 +37,23 @@ function guardarEstadoLocal(){
     ocultarAvisoRecorte();
     return
   }catch(_){}
+  try{
+    const rmFotos=[];
+    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.indexOf("vp_foto_percha_")===0)rmFotos.push(k)}
+    if(rmFotos.length){
+      rmFotos.forEach(k=>{try{localStorage.removeItem(k)}catch(_){}});
+      localStorage.setItem(claveBuffer(destino),JSON.stringify(completo));
+      localStorage.setItem(OC_STATE_PTR,destino);
+      ocultarAvisoRecorte();
+      return
+    }
+  }catch(_){}
   const viejos=completo.movimientos.slice(0,-300);
   const recortado={...completo,movimientos:completo.movimientos.slice(-300)};
   try{
     localStorage.setItem(claveBuffer(destino),JSON.stringify(recortado));
     localStorage.setItem(OC_STATE_PTR,destino);
-    if(window.OCArchivo)window.OCArchivo.archivarLote(viejos);
+    if(window.OCArchivo)window.OCArchivo.archivarLote(viejos).catch(()=>{});
     avisoRecorteActividad(viejos.length);
     return
   }catch(_){avisoMemoriaLlena()}
