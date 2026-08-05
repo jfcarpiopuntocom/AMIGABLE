@@ -710,30 +710,16 @@
      Sin gradiente interno, sin box-shadow de color. Mismo color siempre,
      solo cambia el tono. Sin clase n* cae al look n2 (retrocompatible).
      Negro sigue la misma escalera plana (ya no tiene vinieta radial). */
+  /* === 1 TONO PLANO POR ESTADO (JFC 2026-08-05) ===
+     Se retiraron los overrides .n1/.n2/.n3: pintaban la misma tarjeta mas
+     clara o mas oscura segun intensidad (el Sinclair Bloom retirado), y n3
+     usaba -dk de relleno, que ahora es sombra. Un estado = un color plano;
+     -dk solo pinta borde/bisel. NO reintroducir niveles de color. */
   .caja.verde{background:var(--sim-verde); border-color:var(--sim-verde-dk);}
-  .caja.verde.n1{background:var(--sim-verde-bg); border-color:var(--sim-verde);}
-  .caja.verde.n2{background:var(--sim-verde); border-color:var(--sim-verde-dk);}
-  .caja.verde.n3{background:var(--sim-verde-dk); border-color:var(--sim-verde-dk);}
   .caja.amarillo{background:var(--sim-amarillo); border-color:var(--sim-amarillo-dk);}
-  .caja.amarillo.n1{background:var(--sim-amarillo-bg); border-color:var(--sim-amarillo);}
-  .caja.amarillo.n2{background:var(--sim-amarillo); border-color:var(--sim-amarillo-dk);}
-  .caja.amarillo.n3{background:var(--sim-amarillo-dk); border-color:var(--sim-amarillo-dk);}
   .caja.rojo{background:var(--sim-rojo); border-color:var(--sim-rojo-dk); animation:pulsoEmergencia 2.2s ease-in-out infinite;}
-  .caja.rojo.n1{background:var(--sim-rojo-bg); border-color:var(--sim-rojo); animation:none;}
-  .caja.rojo.n2{background:var(--sim-rojo); border-color:var(--sim-rojo-dk);}
-  .caja.rojo.n3{background:var(--sim-rojo-dk); border-color:var(--sim-rojo-dk);}
   .caja.naranja{background:var(--sim-naranja); border-color:var(--sim-naranja-dk);}
-  .caja.naranja.n1{background:var(--sim-naranja-bg); border-color:var(--sim-naranja);}
-  .caja.naranja.n2{background:var(--sim-naranja); border-color:var(--sim-naranja-dk);}
-  .caja.naranja.n3{background:var(--sim-naranja-dk); border-color:var(--sim-naranja-dk);}
-  .caja.azul{background:var(--sim-azul); border-color:var(--sim-azul-dk);}
-  .caja.azul.n1{background:var(--sim-azul-bg); border-color:var(--sim-azul);}
-  .caja.azul.n2{background:var(--sim-azul); border-color:var(--sim-azul-dk);}
-  .caja.azul.n3{background:var(--sim-azul-dk); border-color:var(--sim-azul-dk);}
   .caja.negro{background:var(--sim-negro); border-color:var(--sim-negro-dk);}
-  .caja.negro.n1{background:var(--sim-negro-bg); border-color:var(--sim-negro);}
-  .caja.negro.n2{background:var(--sim-negro); border-color:var(--sim-negro-dk);}
-  .caja.negro.n3{background:var(--sim-negro-dk); border-color:var(--sim-negro-dk);}
   /* Amarillo-dk (#B8860B, dorado oscuro) ya no es lo bastante claro para
      tinta oscura como el resto de niveles amarillo — sube a texto blanco
      SOLO en n3, igual que el resto de colores oscurecidos. */
@@ -744,12 +730,12 @@
     50%{box-shadow:0 0 0 8px #EF8EA4, 0 4px 8px #CBCCCE;}
   }
   /* Fondos oscuros: texto blanco */
-  .caja.verde .nombre,.caja.rojo .nombre,.caja.azul .nombre,.caja.naranja .nombre,.caja.negro .nombre{color:#FFFFFF !important;}
-  .caja.verde .detalle,.caja.rojo .detalle,.caja.azul .detalle,.caja.naranja .detalle,.caja.negro .detalle{color:rgba(255,255,255,1) !important;}
-  .caja.verde .stock,.caja.rojo .stock,.caja.azul .stock,.caja.naranja .stock,.caja.negro .stock{color:#FFFFFF !important;}
-  .caja.verde [data-ajuste-menos],.caja.rojo [data-ajuste-menos],.caja.azul [data-ajuste-menos],.caja.naranja [data-ajuste-menos],.caja.negro [data-ajuste-menos],
-  .caja.verde [data-ajuste-mas],.caja.rojo [data-ajuste-mas],.caja.azul [data-ajuste-mas],.caja.naranja [data-ajuste-mas],.caja.negro [data-ajuste-mas],
-  .caja.verde [data-estrella-toggle],.caja.rojo [data-estrella-toggle],.caja.azul [data-estrella-toggle],.caja.naranja [data-estrella-toggle],.caja.negro [data-estrella-toggle]
+  .caja.verde .nombre,.caja.rojo .nombre,.caja.naranja .nombre,.caja.negro .nombre{color:#FFFFFF !important;}
+  .caja.verde .detalle,.caja.rojo .detalle,.caja.naranja .detalle,.caja.negro .detalle{color:rgba(255,255,255,1) !important;}
+  .caja.verde .stock,.caja.rojo .stock,.caja.naranja .stock,.caja.negro .stock{color:#FFFFFF !important;}
+  .caja.verde [data-ajuste-menos],.caja.rojo [data-ajuste-menos],.caja.naranja [data-ajuste-menos],.caja.negro [data-ajuste-menos],
+  .caja.verde [data-ajuste-mas],.caja.rojo [data-ajuste-mas],.caja.naranja [data-ajuste-mas],.caja.negro [data-ajuste-mas],
+  .caja.verde [data-estrella-toggle],.caja.rojo [data-estrella-toggle],.caja.naranja [data-estrella-toggle],.caja.negro [data-estrella-toggle]
   {color:#FFFFFF !important; border-color:#FFFFFF !important;}
   /* Dorado=oportunidad: tinta oscura (el amarillo nunca soporta texto blanco) */
   .caja.amarillo .nombre{color:#0F1923 !important;}
@@ -814,7 +800,6 @@
   .filtros-estado button[data-estado="rojo"]::before{background:var(--sim-rojo);}
   .filtros-estado button[data-estado="amarillo"]::before{background:var(--sim-amarillo);}
   .filtros-estado button[data-estado="verde"]::before{background:var(--sim-verde);}
-  .filtros-estado button[data-estado="azul"]::before{background:var(--sim-azul);}
   .filtros-estado button[data-estado="naranja"]::before{background:var(--sim-naranja);}
   .filtros-estado button[data-estado="negro"]::before{background:var(--sim-negro);}
   .filtros-estado button[data-estado=""]{padding-left:14px;}
@@ -922,7 +907,6 @@
      parpadeo. Un fade corto en el contenedor suaviza AMBOS casos a la vez. */
   @keyframes ocGridFadeIn{ from{ opacity:0; } to{ opacity:1; } }
   .oc-grid-fade{ animation:ocGridFadeIn 180ms ease-out; }
-  .badge-estado.azul{background:var(--sim-azul); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;}
 
   .acciones-rapidas{
     display:flex;
@@ -3010,15 +2994,6 @@ function calcularNivelBloom(p){
     // marcar "azul" — aquí solo graduamos QUÉ TAN bueno es ese margen.
     // Si p.costo aún no llega del backend, cae al nivel 2 fijo de antes
     // (no rompe nada mientras se completa esa parte en mock-backend.js).
-    case "azul": {
-      const precio = Number(p.precio);
-      const costo = Number(p.costo);
-      if (Number.isFinite(costo) && costo >= 0 && precio > 0) {
-        const margen = (precio - costo) / precio;
-        return margen >= 0.70 ? 3 : margen >= 0.55 ? 2 : 1;
-      }
-      return 2;
-    }
     // Negro = producto dormido: mide DÍAS SIN VENTA de verdad, ya no un
     // gris fijo. Confirmado JFC 2026-07-04. p.diasSinVenta === null quiere
     // decir "nunca se ha vendido" — el estado más muerto que existe, más
@@ -3047,7 +3022,6 @@ function captionBloom(estado, nivel){
     amarillo: ["Empieza a pensar en reponer", "Se acerca la hora de reponer", "Última unidad — no esperes más"],
     naranja:  ["Vigílalo, aún hay tiempo", "Que no se te pase", "Se vence ya — dale salida"],
     rojo:     ["Actúa hoy", "Actúa hoy", "Emergencia: sin stock"],
-    azul:     ["Buen margen", "Margen jugoso", "Tu joya de más rentabilidad"],
     negro:    ["Se está enfriando", "Lleva un buen tiempo dormido", "Nadie lo ha tocado en meses"],
   };
   const arr = FRASES[estado];
@@ -3061,7 +3035,7 @@ function captionBloom(estado, nivel){
 // aplica como clase n1/n2/n3 de .caja (ver CSS de encendidos). Para
 // re-habilitar: volver a llamar renderBloom() en el template de tarjeta.
 function renderBloom(estado, nivel){
-  const estadosValidos = ["verde","amarillo","naranja","rojo","azul","negro"];
+  const estadosValidos = ["verde","amarillo","naranja","rojo","negro"];
   if (!estadosValidos.includes(estado)) return "";
   const stops = ["bg", "", "dk"];
   const caption = captionBloom(estado, nivel);
