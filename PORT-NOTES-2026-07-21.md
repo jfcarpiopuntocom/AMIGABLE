@@ -7,7 +7,7 @@
 
 ## Hecho esta noche (verificado en navegador, con demo PIN 456)
 
-1. **Sistema de color Sinclair Bloom — plano, sin glow** (`index.html`,
+1. **Sistema de color semaforo de colores — plano, sin glow** (`index.html`,
    `manual-maestro.html`). Mismo fix exacto que en friendly-123: los 3
    niveles de intensidad (n1/n2/n3) ahora son tonos sólidos y planos
    (`-bg`/base/`-dk`), sin degradé interno ni `box-shadow` de color. El

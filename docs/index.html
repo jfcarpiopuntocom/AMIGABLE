@@ -110,19 +110,19 @@
     --nav-h:58px;
     --sidebar-w:248px;
     --header-h:104px;
-    /* === SISTEMA SIMON — Sinclair Bloom × Kyoto Muted, aprobado JFC 2026-07-03 ===
+    /* === SISTEMA SIMON — paleta oficial, aprobado JFC 2026-07-03 ===
        Inventario (core):  Verde · Amarillo · Naranja · Rojo · Azul · Negro
        Accents Sinclair:   Cyan · Magenta  (uso contable / secundario; lavanda
        se elimino 2026-07-04 por ser duplicado exacto de azul, 0 usos reales)
        CORREGIDO 2026-07-04: "amarillo" usaba --sim-plata (gris) por error — la plata
        es el chasis metálico Timex Sinclair (chrome de fotos, menús, bordes UI),
        NUNCA el estado de inventario. Amarillo ahora es amarillo real.
-       3 grados por color = Escala Sinclair Bloom: -bg (tenue) · base (medio) · -dk (encendido)
+       3 grados por color = semaforo de colores: -bg (tenue) · base (medio) · -dk (encendido)
        Cada tarjeta enciende 1-3 grados de SU PROPIO color según intensidad real — nunca
        un color nuevo, solo más o menos profundo. */
 
     /* — Inventario Simon core — */
-    /* === 1 TONO POR ESTADO (JFC 2026-08-05) — Sinclair Bloom retirado ===
+    /* === 1 TONO POR ESTADO (JFC 2026-08-05) — semaforo de colores retirado ===
        -X y -X-bg son EL MISMO tono plano: la tarjeta esta prendida o no, ya
        no hay 3 grados de encendido. -X-dk es sombra del mismo matiz y sirve
        SOLO para bordes/biseles/sombras: nunca relleno, nunca texto sobre ese
@@ -755,7 +755,7 @@
      mas que naranja (urgente pero no emergencia). Negro es la excepcion:
      nada de degradé de color, solo un vinieta hacia el negro absoluto —
      "oscuridad que se traga todo". */
-  /* ============ ESCALA SINCLAIR BLOOM — plana, sin glow (JFC 2026-07-21) ====
+  /* ============ SEMAFORO DE COLORES — un tono plano por estado (JFC 2026-08-05) ====
      Portado desde friendly-123 (2026-07-21): la version anterior usaba
      degrade interno (135deg base->dk) y un halo de box-shadow color-glow en
      n3 — "eso del glow no sirve". El dueño no quiere brillo ni degrade
@@ -773,7 +773,7 @@
      Negro sigue la misma escalera plana (ya no tiene vinieta radial). */
   /* === 1 TONO PLANO POR ESTADO (JFC 2026-08-05) ===
      Se retiraron los overrides .n1/.n2/.n3: pintaban la misma tarjeta mas
-     clara o mas oscura segun intensidad (el Sinclair Bloom retirado), y n3
+     clara o mas oscura segun intensidad (el semaforo de colores retirado), y n3
      usaba -dk de relleno, que ahora es sombra. Un estado = un color plano;
      -dk solo pinta borde/bisel. NO reintroducir niveles de color. */
   .caja.verde{background:var(--sim-verde); border-color:var(--sim-verde-dk);}
@@ -3025,7 +3025,7 @@ document.getElementById("filtrosEstado")?.addEventListener("click", (e) => {
   cargarInventario();
 });
 
-// Escala Sinclair Bloom: 3 grados DENTRO de cada color (nunca un color nuevo).
+// semaforo de colores: 3 grados DENTRO de cada color (nunca un color nuevo).
 // Ojo dueno: esto es una heuristica con lo unico que el cliente ya recibe
 // (stockActual, perecible, fechaCaducidad). Si el backend algun dia expone
 // un campo real (p.ej. p.nivelBloom, o dias sin venta en el producto), esta
