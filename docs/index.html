@@ -3565,6 +3565,8 @@ async function abrirEditorComision(id, u){
           <label style="flex:1;font-size:14px;">Comisión base %<br><input id="oc-com-base" type="number" min="0" max="100" step="1" value="${Number(u.comisionSocio)||0}" ${inp}></label>
           <label style="flex:1;font-size:14px;">Meta mensual $<br><input id="oc-com-meta" type="number" min="0" step="1" value="${Number(u.metaMensual)||0}" ${inp}></label>
         </div>
+        <label style="display:block;margin-top:10px;font-size:14px;">Contrib. fija por evento $ <span style="font-weight:400;color:var(--ink-soft);">(costo o aporte fijo que se resta ANTES de aplicar el % — ej. gastos del venue)</span><br><input id="oc-com-fija" type="number" min="0" step="1" value="${Number(u.contribFija)||0}" ${inp}></label>
+        <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 0;">La contribución fija y los tramos de comisión no se combinan — usa uno u otro por percha/evento.</p>
         <div style="margin-top:14px;font-size:14px;font-weight:700;">Tramos de comisión (opcional)</div>
         <div id="oc-com-barra">${_comisionBarraHtml(escalas)}</div>
         <div id="oc-com-filas">${escalas.map((e, i) => _comisionFilaHtml(e.hasta, e.comision, i)).join('')}</div>
@@ -3596,6 +3598,7 @@ async function abrirEditorComision(id, u){
     const body = {
       comisionSocio: document.getElementById('oc-com-base').value,
       metaMensual: document.getElementById('oc-com-meta').value,
+      contribFija: document.getElementById('oc-com-fija').value,
       escalasComision: filas
     };
     if (chkPropia) body.usarComisionPropia = chkPropia.checked;
@@ -5222,9 +5225,11 @@ async function cargarComisiones(){
       ${f.promotorNombre ? `<div style="font-size:14px;color:var(--ink-soft);margin-top:4px;">Promotor/a: <button type="button" data-abrir-promotora="${f.promotoraId}" style="background:transparent;border:none;padding:0;cursor:pointer;font-weight:700;color:var(--azul-medio,#2c4a68);text-decoration:underline;">${escHtml(f.promotorNombre)}</button>${f.origenComision === "percha" ? ' <span style="font-size:14px;color:var(--ink-soft);">(usando comisión estándar de esta percha, no la del comisionista)</span>' : ""}</div>` : ""}
       <table style="width:100%;margin-top:10px;font-size:14px;">
         <tr><td>Ventas del mes</td><td style="text-align:right;">${fmtMoney(f.ventasBrutas)}</td></tr>
+        ${f.contribFija > 0 ? `<tr><td>Contrib. fija</td><td style="text-align:right;">−${fmtMoney(f.contribFija)}</td></tr>` : ""}
         <tr><td><strong>Comisión de la promotor/a</strong></td><td style="text-align:right;"><strong>${fmtMoney(f.comisionSocio)}</strong></td></tr>
         <tr><td>Neto para el dueño</td><td style="text-align:right;">${fmtMoney(f.netoDueno)}</td></tr>
       </table>
+      ${f.contribFijaSuperaVentas ? `<p style="font-size:14px;font-weight:700;color:#B0183E;margin:8px 0 0;">⚠️ El aporte fijo ($${f.contribFija}) supera las ventas del mes — revisa el monto o el período.</p>` : ""}
       ${(f.detallePendientes && f.detallePendientes.length) ? `
       <details style="margin-top:8px;">
         <summary style="font-size:14px;font-weight:700;cursor:pointer;color:var(--azul-medio,#2c4a68);user-select:none;">¿De qué ventas es este pago? →</summary>
