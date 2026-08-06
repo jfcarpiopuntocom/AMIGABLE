@@ -520,13 +520,13 @@
   nav{
     display:flex;
     gap:4px;
-    /* Aluminio cepillado: microrayas verticales + gradiente vertical suave. */
+    /* Case plateado liso (JFC 2026-08-05): FUERA la veta/microrayas verticales
+       — leian como lineas zebra y agregaban ruido. La chapa del case es un
+       gradiente vertical limpio; el relieve metalico ahora vive en los BOTONES
+       (teclas del case), no en una textura de fondo. NO reintroducir el
+       repeating-linear-gradient aqui. */
     background-color:var(--plata);
-    /* Veta vertical finisima hecha con SOLIDOS (sin opacidad) + gradiente de
-       rango amplio para que la plata refleje. Rayas horizontales aqui NUNCA:
-       eso lee como scanline de monitor viejo. */
     background-image:
-      repeating-linear-gradient(90deg, var(--plata-claro) 0 1px, var(--plata) 1px 3px),
       linear-gradient(180deg, var(--plata-brillo) 0%, var(--plata-claro) 22%, var(--plata) 60%, var(--plata-media) 100%);
     border-top:2px solid var(--bisel-sombra);
     box-shadow:inset 0 1px 0 var(--bisel-luz);
@@ -572,17 +572,22 @@
     letter-spacing:0.01em;
     padding:4px 2px;
     min-height:44px;
-    background:transparent;
-    border:none;
-    box-shadow:none;
-    color:var(--ink-soft);
-    border-radius:4px;
-    transition:background-color .15s ease, color .15s ease;
+    /* TECLA METALICA 2.5D (JFC 2026-08-05): cada boton del menu es una tecla
+       del case — luz arriba, cuerpo plata, canto oscuro abajo. Reemplaza el
+       fondo transparente que dejaba ver la textura del riel. Solidos, cero
+       opacidad. El estado .activo (mas abajo) pinta la tecla con su color. */
+    background-image:linear-gradient(180deg, var(--plata-brillo) 0%, var(--plata-claro) 42%, var(--plata) 100%);
+    border:1px solid var(--plata-honda);
+    border-top-color:var(--plata-brillo);
+    box-shadow:0 2px 0 var(--plata-canto), 0 2px 4px rgba(0,0,0,.16);
+    color:var(--ink);
+    border-radius:6px;
+    transition:filter .12s ease, transform .08s ease, color .15s ease;
   }
   nav button svg{ width:18px; height:18px; transition:transform .15s ease; }
   nav button span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
   @media (hover:hover){
-    nav button:not(.activo):hover{ background:#EAECEE; color:var(--ink); }
+    nav button:not(.activo):hover{ background-image:linear-gradient(180deg, #FFFFFF 0%, var(--plata-brillo) 45%, var(--plata-claro) 100%); color:var(--ink); }
   }
   nav button svg{ width:18px; height:18px; }
   nav button[data-vista="hoy"].activo{background:var(--sim-verde);color:#fff;}
@@ -1166,7 +1171,7 @@
       left:0; top:0; bottom:0; right:auto;
       width:var(--sidebar-w);
       height:auto;
-      padding:calc(var(--header-h) + 16px) 12px 16px;
+      padding:var(--riel-top, calc(var(--header-h) + 16px)) 12px 16px;
       border-top:none;
       border-right:2px solid var(--ink);
       gap:6px;
@@ -5991,6 +5996,27 @@ async function promptSeguro(texto, valorDefecto) {
   }
   return r;
 }
+
+// --- Alto real del header -> --riel-top (JFC 2026-08-05) ---
+// BUG "se tapa el HOY": el header es position:sticky y su alto REAL crece al
+// envolver en pantallas angostas, pero el riel lateral (position:fixed) se
+// desplazaba con --header-h fija (104px) y el header tapaba HOY. Se sincroniza
+// --riel-top (variable SEPARADA de --header-h, que tambien es el min-height del
+// header — escribir ahi crea un bucle de realimentacion).
+(function sincronizarAltoHeader() {
+  var header = document.querySelector("header");
+  if (!header) return;
+  function ajustar() {
+    var real = Math.ceil(header.offsetTop + header.offsetHeight) + 16;
+    if (!real) return;
+    var actual = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--riel-top"), 10) || 0;
+    if (Math.abs(real - actual) > 1) document.documentElement.style.setProperty("--riel-top", real + "px");
+  }
+  ajustar();
+  try { new ResizeObserver(ajustar).observe(header); } catch (_) { window.addEventListener("resize", ajustar); }
+  window.addEventListener("orientationchange", function () { setTimeout(ajustar, 120); });
+  window.addEventListener("oc-login", function () { setTimeout(ajustar, 60); });
+})();
 
 (function guardiaDobleCaja() {
   if (typeof BroadcastChannel === "undefined") return; // navegador viejo: sin guardia, igual que antes
