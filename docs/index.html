@@ -2262,20 +2262,21 @@ function badgeComportamiento(ev) {
   const svgFlag    = `<svg width="13" height="14" viewBox="0 0 13 14" fill="#C0392B" style="vertical-align:middle;"><rect x="1" y="0" width="1.5" height="14"/><polygon points="2.5,0 12,3 2.5,7"/></svg>`;
   const svgEye     = `<svg width="16" height="11" viewBox="0 0 16 11" fill="none" stroke="#E86040" stroke-width="1.4" style="vertical-align:middle;"><ellipse cx="8" cy="5.5" rx="7" ry="4.5"/><circle cx="8" cy="5.5" r="2" fill="#E86040" stroke="none"/></svg>`;
   const svgCase    = `<svg width="14" height="13" viewBox="0 0 14 13" fill="none" stroke="#2E6278" stroke-width="1.4" style="vertical-align:middle;"><rect x="1" y="4" width="12" height="8" rx="2"/><path d="M5 4V2.5A1.5 1.5 0 0 1 9 2.5V4"/></svg>`;
-  const svgThumbUp = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#009A5A" stroke-width="1.5" style="vertical-align:middle;"><path d="M4 13V7L7 1l1 .5V5h4l-1 6H4z"/><path d="M4 7H1v6h3"/></svg>`;
-  const svgThumbDn = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#C0392B" stroke-width="1.5" style="vertical-align:middle;"><path d="M10 1v6L7 13l-1-.5V9H2l1-6h7z"/><path d="M10 7h3V1h-3"/></svg>`;
-  const svgShield  = `<svg width="13" height="14" viewBox="0 0 13 14" fill="none" stroke="#009A5A" stroke-width="1.4" style="vertical-align:middle;"><path d="M6.5 1 L12 3.5 V7 C12 10.5 6.5 13 6.5 13 C6.5 13 1 10.5 1 7 V3.5 Z"/><polyline points="4,7 6,9 9.5,5" stroke-width="1.6"/></svg>`;
-  const svgWarn    = `<svg width="14" height="13" viewBox="0 0 14 13" fill="none" style="vertical-align:middle;"><polygon points="7,1 13.5,12.5 0.5,12.5" fill="#E8A020"/><text x="7" y="11.2" text-anchor="middle" font-size="8" font-weight="700" fill="#0F1923">!</text></svg>`;
+  // JFC 2026-08-06: fuera manitos/escudo/triangulo de advertencia. El unico
+  // sistema de calificar en TODAS las apps es estrella=confiabilidad,
+  // corazon=trato, 1-5 (ver filaRate/svgStarR/svgHeartR mas arriba). Estos
+  // 4 chips de senal parcial ahora reusan esos mismos glifos, llenos u
+  // vacios segun sea positivo o negativo.
   const chip = (icon, txt, bg, color) =>
     `<span title="${txt}" style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:2px 7px;border-radius:4px;font-size:14px;font-weight:700;background:${bg};color:${color} !important;-webkit-text-fill-color:${color} !important;">${icon}${txt}</span>`;
   if (t === 1 && cv === 1)   return chip(svgStar,  "VIP",           "#FEF6E0", "#8A5A00");
   if (t === -1 && cv === -1) return chip(svgFlag,  "Alerta",        "#FDECEA", "#C0392B");
   if (t === 1 && cv === -1)  return chip(svgEye,   "Ojo",           "#FFF3EE", "#E86040");
   if (t === -1 && cv === 1)  return chip(svgCase,  "Difícil",       "#EBF4F9", "#2E6278");
-  if (t === 1)               return chip(svgThumbUp,"Buen trato",   "#EDFAF4", "#006B3C");
-  if (t === -1)              return chip(svgThumbDn,"Trato difícil","#FDECEA", "#C0392B");
-  if (cv === 1)              return chip(svgShield, "Confiable",    "#EDFAF4", "#006B3C");
-  if (cv === -1)             return chip(svgWarn,   "Precaución",   "#FEF6E0", "#8A5A00");
+  if (t === 1)               return chip(svgHeartR(true, 14),"Buen trato",   "#EDFAF4", "#006B3C");
+  if (t === -1)              return chip(svgHeartR(false, 14),"Trato difícil","#FDECEA", "#C0392B");
+  if (cv === 1)              return chip(svgStarR(true, 14), "Confiable",    "#EDFAF4", "#006B3C");
+  if (cv === -1)             return chip(svgStarR(false, 14),"Precaución",   "#FEF6E0", "#8A5A00");
   return "";
 }
 
