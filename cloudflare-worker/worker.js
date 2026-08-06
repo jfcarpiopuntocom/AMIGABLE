@@ -89,6 +89,15 @@ async function handleCheckin(req, env) {
   // Determine product
   const producto = body.producto === "amigable" ? "amigable-123" : "friendly-123";
 
+  // BLOQUEO DE ADMIN (JFC 2026-08-06): si JFC corrigio un campo desde el panel
+  // (/editar-correo marca lock[campo]=true), el checkin AUTOMATICO del cliente
+  // ya NO puede sobreescribirlo — antes el cliente reenviaba su valor viejo/
+  // con typo en cada heartbeat y revertia la correccion (caso idiomartvuenca).
+  // campo(): valor autoritativo del admin si esta bloqueado; si no, el valor
+  // nuevo no-vacio del cliente, y si no, lo que ya existia.
+  const lock = existente.adminLock || {};
+  const campo = (k, val) => (lock[k] ? (existente[k] || "") : (val || existente[k] || ""));
+
   const registro = {
     instanceId,
     producto,
@@ -98,16 +107,17 @@ async function handleCheckin(req, env) {
     // deliberado: nunca debe poder vaciar un campo, solo completarlo si esta
     // vacio o traer un valor nuevo no-vacio. Vaciar un campo a proposito es
     // trabajo del endpoint /editar-licencia (accion explicita del panel).
-    nombreNegocio: body.nombreNegocio || existente.nombreNegocio || "",
-    email: body.email || existente.email || "",
+    nombreNegocio: campo("nombreNegocio", body.nombreNegocio),
+    email: campo("email", body.email),
     licenseCode: body.licenseCode || existente.licenseCode || "",
     // Mejora #5 (JFC 2026-07-16): telefono de contacto del dueno, para el
     // link clickeable a wa.me en panel.html. Contacto deliberadamente
     // unidireccional (JFC -> dueno) — ver copy en avanzado-extra.js.
-    whatsapp: (body.whatsapp ? String(body.whatsapp).replace(/\D/g, "").slice(0, 15) : "") || existente.whatsapp || "", // Fix-11: strip non-digits so wa.me link always works; nunca vacia un whatsapp ya guardado (mismo bug que nombreNegocio/email arriba)
-    nombre: body.nombre || existente.nombre || "",
-    apellido: body.apellido || existente.apellido || "",
-    cedula: body.cedula || existente.cedula || "",
+    whatsapp: campo("whatsapp", body.whatsapp ? String(body.whatsapp).replace(/\D/g, "").slice(0, 15) : ""), // Fix-11: strip non-digits so wa.me link always works; nunca vacia un whatsapp ya guardado (mismo bug que nombreNegocio/email arriba)
+    nombre: campo("nombre", body.nombre),
+    apellido: campo("apellido", body.apellido),
+    cedula: campo("cedula", body.cedula),
+    adminLock: existente.adminLock || undefined, // preserva los bloqueos entre checkins
     // Toda instancia nueva arranca en "minima": el plan gratuito es el piso,
     // no un castigo. JFC la sube a "full" desde el panel cuando el cliente paga.
     estado: normalizarEstado(existente.estado),
@@ -457,27 +467,43 @@ async function handleEditarCorreo(req, env) {
   const raw = await env.LICENCIAS.get(`inst:${instanceId}`);
   if (!raw) return json({ error: "Instancia no encontrada" }, 404);
   const reg = JSON.parse(raw);
+  // BLOQUEO DE ADMIN (JFC 2026-08-06, incidente: corrigio idiomartvuenca ->
+  // idiomartcuenca 2 veces y el checkin del cliente lo revertia). Cada campo
+  // que JFC edita aqui queda MARCADO como autoritativo; handleCheckin ya NO lo
+  // sobreescribe con lo que mande el cliente automaticamente. El panel es la
+  // fuente de verdad una vez que se toca un campo. Datos ajenos = sagrados.
+  const lock = reg.adminLock || (reg.adminLock = {});
 
   if (body.email !== undefined) {
     const email = String(body.email).slice(0, 240).trim();
     if (!email) return json({ error: "El correo no puede quedar vacio." }, 400);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: "Correo inválido" }, 400);
-    reg.email = email;
+    reg.email = email; lock.email = true;
   }
   if (body.nombre !== undefined) {
     const nombre = String(body.nombre).slice(0, 120).trim();
     if (!nombre) return json({ error: "El nombre no puede quedar vacio." }, 400);
-    reg.nombre = nombre;
+    reg.nombre = nombre; lock.nombre = true;
   }
   if (body.apellido !== undefined) {
     const apellido = String(body.apellido).slice(0, 120).trim();
     if (!apellido) return json({ error: "El apellido no puede quedar vacio." }, 400);
-    reg.apellido = apellido;
+    reg.apellido = apellido; lock.apellido = true;
   }
   if (body.nombreNegocio !== undefined) {
     const nombreNegocio = String(body.nombreNegocio).slice(0, 240).trim();
     if (!nombreNegocio) return json({ error: "El nombre del negocio no puede quedar vacio." }, 400);
-    reg.nombreNegocio = nombreNegocio;
+    reg.nombreNegocio = nombreNegocio; lock.nombreNegocio = true;
+  }
+  if (body.whatsapp !== undefined) {
+    const wa = String(body.whatsapp).replace(/\D/g, "").slice(0, 15);
+    if (!wa) return json({ error: "El WhatsApp no puede quedar vacio." }, 400);
+    reg.whatsapp = wa; lock.whatsapp = true;
+  }
+  if (body.cedula !== undefined) {
+    const cedula = String(body.cedula).slice(0, 40).trim();
+    if (!cedula) return json({ error: "La cédula no puede quedar vacia." }, 400);
+    reg.cedula = cedula; lock.cedula = true;
   }
 
   await guardarConHistorial(env, instanceId, reg);
