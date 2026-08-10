@@ -337,6 +337,13 @@
       // tecleara el usuario, silencioso y confuso si alguien no usaba mayus.
       const codigoNorm = normalizarCodigo(codigo);
       if (codigoNorm.length < 6) return { ok: false, error: "El código debe tener al menos 6 caracteres." };
+      // Blindaje (2026-08-10): la mascara de escritura ya sugiere el formato,
+      // pero no lo obligaba — un codigo truncado/mal tecleado con 6+ caracteres
+      // pasaba y unia el dispositivo a una sala vacia, sin error, desincronizado
+      // en silencio. Mismo formato que exige la activacion de licencia.
+      if (!/^AMG-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(codigoNorm)) {
+        return { ok: false, error: "Código inválido — revisa el formato AMG-XXXX-XXXX-XXXX." };
+      }
       try { localStorage.setItem(ROOM_KEY, JSON.stringify({ codigo: codigoNorm })); } catch (_) {}
       reintentoMs = 1000;
       intentosSeguidos = 0;
