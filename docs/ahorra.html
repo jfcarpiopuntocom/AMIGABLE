@@ -261,6 +261,66 @@
 
   /* ---------- Implicacion (costo de no resolverlo) ---------- */
   .implicacion{ background:var(--card); border-top:1px solid var(--hairline); border-bottom:1px solid var(--hairline); }
+  /* ---------- Microelementos de conversion (JFC 2026-08-11) ---------- */
+  .hero-atajo{ font-size:14px; margin-top:16px; }
+  .hero-atajo a{ color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; text-decoration:underline; }
+
+  .campo-ref{ font-size:13px; margin-top:10px; line-height:1.45; }
+  .campo-ref strong{ color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important; }
+
+  .barras{ margin:20px 0 4px; display:flex; flex-direction:column; gap:10px; }
+  .barra-fila{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:8px; }
+  .barra-label{ font-size:13px; text-align:left; white-space:nowrap; }
+  .barra-riel{ height:14px; background:var(--hairline); border-radius:999px; overflow:hidden; }
+  .barra-fill{ height:100%; border-radius:999px; transition:width .35s ease; }
+  .barra-antes{ background:var(--rojo); }
+  .barra-despues{ background:var(--verde); }
+  .barra-cifra{ font-family:var(--font-display); font-weight:700; font-size:14px; white-space:nowrap; color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important; }
+
+  .calc-cta{ display:flex; width:100%; margin-top:20px; }
+  .calc-wa-link{ display:block; margin-top:12px; font-size:14px; color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; text-decoration:underline; }
+
+  .flecha-abajo{ text-align:center; font-size:14px; margin-top:28px; }
+
+  .victoria{ background:var(--card); border-top:1px solid var(--hairline); border-bottom:1px solid var(--hairline); }
+  .victoria h2{ text-align:center; font-size:24px; font-size:clamp(22px,5vw,28px); margin-bottom:14px; }
+  .victoria .lead{ text-align:center; font-size:17px; max-width:560px; margin:0 auto; }
+
+  .plan h2{ text-align:center; font-size:24px; font-size:clamp(22px,5vw,28px); margin-bottom:28px; }
+  .pasos{ display:grid; grid-template-columns:1fr; gap:16px; max-width:640px; margin:0 auto; }
+  @media (min-width:640px){ .pasos{ grid-template-columns:repeat(3,1fr); } }
+  .paso{ background:var(--card); border:1px solid var(--hairline); border-radius:12px; padding:20px; text-align:center; }
+  .paso-num{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:36px; height:36px; border-radius:50%; background:var(--verde);
+    color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important;
+    font-family:var(--font-display); font-weight:700; font-size:18px; margin-bottom:12px;
+  }
+  .paso h3{ font-size:17px; margin-bottom:8px; }
+  .paso p{ font-size:14px; }
+
+  .fundador{ max-width:640px; margin:0 auto 28px; background:var(--canvas); border:1px solid var(--hairline); border-radius:12px; padding:20px; }
+  .fundador h3{ font-size:17px; margin-bottom:10px; }
+  .fundador p{ font-size:15px; margin-bottom:10px; }
+
+  .objeciones{ display:grid; grid-template-columns:1fr; gap:16px; max-width:640px; margin:0 auto 28px; }
+  @media (min-width:600px){ .objeciones{ grid-template-columns:1fr 1fr; } }
+  .objecion{ background:var(--card); border:1px solid var(--hairline); border-radius:12px; padding:20px; }
+  .objecion h3{ font-size:16px; margin-bottom:8px; }
+  .objecion p{ font-size:14px; }
+
+  .demo-pin{ border:1px solid var(--hairline); cursor:pointer; font-family:inherit; width:100%; }
+  .demo-pin-copiar{ font-size:12px; color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; margin-top:4px; }
+
+  .salida-secundaria{ font-size:14px; margin-top:14px; }
+  .salida-secundaria a{ color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; text-decoration:underline; }
+
+  .inversion-lista{ text-align:left; margin:0 0 20px; padding-left:20px; }
+  .inversion-lista li{ font-size:14px; margin-bottom:7px; line-height:1.45; }
+  .inversion-garantia{ font-size:13px; margin-top:14px; line-height:1.5; }
+  .inversion-garantia a{ color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; text-decoration:underline; }
+  .inversion-cupo{ font-size:13px; margin-top:12px; line-height:1.5; padding-top:12px; border-top:1px solid var(--hairline); }
+
   .implicacion h2{ text-align:center; font-size:24px; font-size:clamp(22px,5vw,28px); margin-bottom:14px; }
   .implicacion .lead{ text-align:center; font-size:17px; max-width:560px; margin:0 auto; }
 
@@ -457,11 +517,11 @@
   <section class="hero wrap">
     <span class="eyebrow">Calculadora de 10 segundos</span>
     <h1>¿Cuántas horas al año te está costando <span class="hl">llevar el inventario a mano</span>?</h1>
-    <p class="sub">Cuaderno, libreta, memoria, o el WhatsApp al dueño preguntando si algo se está por agotar. Da igual si vendes ropa, comida, artesanía o servicios: calcula abajo cuánto tiempo real te cuesta hoy, y cuánto recuperas con amigable-123.</p>
+    <p class="sub">El cuaderno es monodimensional: anota, pero no piensa, no avisa, no suma. Da igual si vendes ropa, comida, artesanía o servicios: calcula abajo cuánto tiempo real te cuesta hoy, y cuánto recuperas con amigable-123.</p>
     <div class="cta-row">
       <a href="#calculadora" class="btn btn-primary">Calcular mi ahorro</a>
-      <a href="./manual-maestro.html" class="btn btn-ghost">Ver el manual completo</a>
     </div>
+    <p class="hero-atajo">¿Ya te hablaron de amigable-123? <a href="#probar">Salta directo a la demo</a>.</p>
   </section>
 
   <section class="problema section">
@@ -503,8 +563,11 @@
             <div class="rango-labels"><span>1h</span><span>20h</span></div>
           </div>
           <div class="campo">
-            <label for="valorhora">¿Cuánto vale tu hora? (tu estimado, en $)</label>
-            <input type="number" id="valorhora" value="3" min="0" step="0.5" inputmode="decimal">
+            <label for="valorhora">¿Cuánto vale tu hora?</label>
+            <div class="valor-grande">$<span id="valorhora-out">4</span> por hora</div>
+            <input type="range" id="valorhora" min="2" max="15" value="4" step="0.5">
+            <div class="rango-labels"><span>$2</span><span>$15</span></div>
+            <p class="campo-ref">Referencia: un dueño-gerente de negocio pequeño en Latinoamérica suele estar entre <strong>$3 y $6</strong> la hora, contando sueldo y beneficios. Ajústalo a tu realidad.</p>
           </div>
         </div>
 
@@ -512,6 +575,20 @@
           <div class="r-label">Recuperas al año</div>
           <div class="r-num" id="horas-ano">156 horas</div>
           <div class="r-detalle">con amigable-123 vs. hacerlo a mano*</div>
+
+          <div class="barras">
+            <div class="barra-fila">
+              <span class="barra-label">Hoy, a mano</span>
+              <div class="barra-riel"><div class="barra-fill barra-antes" id="barra-antes"></div></div>
+              <span class="barra-cifra" id="barra-antes-cifra">312 h</span>
+            </div>
+            <div class="barra-fila">
+              <span class="barra-label">Con amigable-123</span>
+              <div class="barra-riel"><div class="barra-fill barra-despues" id="barra-despues"></div></div>
+              <span class="barra-cifra" id="barra-despues-cifra">156 h</span>
+            </div>
+          </div>
+
           <div class="resultado-grid">
             <div class="mini-resultado">
               <div class="m-num" id="dias-recuperados">19.5 días</div>
@@ -522,10 +599,14 @@
               <div class="m-label">valor de ese tiempo, a tu propia tarifa</div>
             </div>
           </div>
+
+          <a href="#probar" class="btn btn-primary calc-cta">Ver esto funcionando en la demo</a>
+          <a href="#" id="calc-wa" class="calc-wa-link">Enviarme este cálculo por WhatsApp</a>
         </div>
       </div>
       <p class="calc-nota">*Basado en el 50% de reducción de tiempo que reportan los negocios que migran del cuaderno/memoria a amigable-123. Tu resultado real depende de tu negocio.</p>
     </div>
+    <p class="flecha-abajo" aria-hidden="true">↓ Y esto es lo que ves cuando abres la app</p>
   </section>
 
   <section class="solucion section">
@@ -623,7 +704,7 @@
           <span class="bcg-item">Sombrero de Paja Toquilla · $90.00</span>
         </div>
       </div>
-      
+      <p class="flecha-abajo" aria-hidden="true">↓ Pero el inventario es solo la mitad del cuento</p>
     </div>
   </section>
 
@@ -631,6 +712,39 @@
     <div class="wrap">
       <h2>Lo que ese tiempo te está costando de verdad</h2>
       <p class="lead">No es solo el rato contando. Es el cliente al que le dijiste "no hay" cuando sí había, en la bodega, sin que lo supieras. Es la venta que se fue a otro local porque tardaste en confirmar. Es el domingo que no fue domingo. Si algo de esto te pasó esta semana, ya sabes por qué sigues leyendo.</p>
+      <div class="cta-row" style="margin-top:26px;">
+        <a href="#probar" class="btn btn-primary">Probar la demo ahora</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="victoria section">
+    <div class="wrap">
+      <h2>Cómo se siente el domingo cuando esto ya no pasa</h2>
+      <p class="lead">Cierras el local un sábado y ya sabes qué falta, qué sobra y cuánto ganaste. No hay recuento, no hay calculadora, no hay "el lunes lo reviso". El domingo vuelve a ser domingo.</p>
+    </div>
+  </section>
+
+  <section class="plan section">
+    <div class="wrap">
+      <h2>Tres pasos, nada más</h2>
+      <div class="pasos">
+        <div class="paso">
+          <span class="paso-num">1</span>
+          <h3>Pruébala</h3>
+          <p>Abres la demo con un código, sin registro ni tarjeta. Diez segundos.</p>
+        </div>
+        <div class="paso">
+          <span class="paso-num">2</span>
+          <h3>Actívala</h3>
+          <p>Con el código 789 arrancas tu propia instancia, gratis, con tus productos reales.</p>
+        </div>
+        <div class="paso">
+          <span class="paso-num">3</span>
+          <h3>Cierra el cuaderno</h3>
+          <p>Cuando el negocio crezca, pagas una vez y sigues. El cuaderno queda de adorno.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -660,7 +774,22 @@
         </div>
       </div>
 
-      <p class="hecho-por">Un proyecto de <a href="https://jfcarpio.com" target="_blank" rel="noopener">jfcarpio.com</a> y <a href="https://avatiun.com" target="_blank" rel="noopener">avatiun.com</a>.</p>
+      <div class="fundador">
+        <h3>Quién está detrás</h3>
+        <p>He investigado cientos de negocios y asesorado a decenas, de pequeños a medianos. De ahí salió esto: prefiero especializarme y hacer pocas cosas bien antes que prometerte una suite que hace todo a medias.</p>
+        <p class="hecho-por">Un proyecto de <a href="https://jfcarpio.com" target="_blank" rel="noopener">jfcarpio.com</a> y <a href="https://avatiun.com" target="_blank" rel="noopener">avatiun.com</a>.</p>
+      </div>
+
+      <div class="objeciones">
+        <div class="objecion">
+          <h3>"Ya probé una app y era complicadísima"</h3>
+          <p>La mayoría te pide configurar categorías, impuestos y flujos antes de dejarte ver nada. Aquí abres, ves colores, y ya entendiste. Si en diez minutos no le agarraste el hilo, no era para ti y no perdiste ni un dólar averiguándolo.</p>
+        </div>
+        <div class="objecion">
+          <h3>Para quién NO es esto</h3>
+          <p>Si necesitas facturación electrónica con el SRI, cadena de varias sucursales con bodega central, o integración con tu contador en tiempo real, esto se te va a quedar corto. Es un cuaderno digital compartido, no un ERP. Mejor te lo digo ahora.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -671,33 +800,45 @@
     <div class="demo-box">
       <div class="demo-box-titulo">Entra a la demo con cualquiera de estos códigos</div>
       <div class="demo-pines">
-        <div class="demo-pin">
+        <button type="button" class="demo-pin" data-copiar="888">
           <span class="demo-pin-num">8-8-8</span>
           <span class="demo-pin-rol">Dueño/a — control general, en detalle</span>
-        </div>
-        <div class="demo-pin">
+          <span class="demo-pin-copiar">Tocar para copiar</span>
+        </button>
+        <button type="button" class="demo-pin" data-copiar="260">
           <span class="demo-pin-num">2-6-0</span>
           <span class="demo-pin-rol">Empleado/a — vende y cuenta stock</span>
-        </div>
-        <div class="demo-pin">
+          <span class="demo-pin-copiar">Tocar para copiar</span>
+        </button>
+        <button type="button" class="demo-pin" data-copiar="357">
           <span class="demo-pin-num">3-5-7</span>
           <span class="demo-pin-rol">Contador/a — la capa contable</span>
-        </div>
+          <span class="demo-pin-copiar">Tocar para copiar</span>
+        </button>
       </div>
     </div>
     <div class="cta-row">
       <a href="./index.html" class="btn btn-primary">Entrar a la demo ahora</a>
-      <a href="./manual-maestro.html" class="btn btn-ghost">Leer el manual completo</a>
     </div>
+    <p class="salida-secundaria"><a href="./manual-maestro.html">O lee el manual completo primero</a></p>
 
     <div class="separador-o">o</div>
 
     <p class="lead" style="margin-bottom:18px;">Ya la probaste y te convenció. Un pago único, licencia de 5 años, tuyo desde hoy.</p>
     <div class="inversion-box">
       <div class="inversion-monto"><span class="inversion-signo">$</span>199</div>
-      <p class="inversion-detalle">Tu inversión única, precio Latinoamérica. <strong>Licencia de 5 años</strong>, soporte y actualizaciones incluidos todo ese tiempo. Sin suscripción ni pagos mensuales ni publicidad fastidiosa.</p>
-      <a href="#" class="btn btn-primary btn-comprar" id="btn-comprar-paypal" data-pago="paypal">Comprar ahora — $199</a>
+      <p class="inversion-detalle">Tu inversión única, precio Latinoamérica.</p>
+      <ul class="inversion-lista">
+        <li>Licencia de 5 años, sin suscripción ni pagos mensuales</li>
+        <li>Soporte directo por WhatsApp con quien la construyó</li>
+        <li>Actualizaciones incluidas los 5 años completos</li>
+        <li>Productos, ventas y empleados sin tope</li>
+        <li>Tus datos siempre en tu dispositivo, exportables cuando quieras</li>
+      </ul>
+      <a href="#" class="btn btn-primary btn-comprar" id="btn-comprar-paypal" data-pago="paypal">Sí, quiero mi licencia de 5 años</a>
       <p class="inversion-metodos">Pago con PayPal. Próximamente Stripe y Bitcoin.</p>
+      <p class="inversion-cupo">Acompaño personalmente la puesta en marcha de los primeros negocios de cada mes. Mientras sea yo solo quien da soporte, ese acompañamiento uno a uno tiene cupo real.</p>
+      <p class="inversion-garantia">Si algo no te cuadra, me escribes por WhatsApp y lo resolvemos. Trato directo con <a href="https://jfcarpio.com" target="_blank" rel="noopener">jfcarpio.com</a>, no con un call center.</p>
     </div>
   </section>
 
@@ -723,13 +864,20 @@
   var horasInput = document.getElementById("horas");
   var valorHoraInput = document.getElementById("valorhora");
   var horasOut = document.getElementById("horas-out");
+  var valorHoraOut = document.getElementById("valorhora-out");
   var horasAno = document.getElementById("horas-ano");
   var diasRecuperados = document.getElementById("dias-recuperados");
   var valorAhorrado = document.getElementById("valor-ahorrado");
+  var barraAntes = document.getElementById("barra-antes");
+  var barraDespues = document.getElementById("barra-despues");
+  var barraAntesCifra = document.getElementById("barra-antes-cifra");
+  var barraDespuesCifra = document.getElementById("barra-despues-cifra");
+  var calcWa = document.getElementById("calc-wa");
 
   var TASA_AHORRO = 0.5; // 50%, mismo numero que ya usa la app en help-ui.js ("Te ahorra 50% de tu tiempo")
   var SEMANAS_ANO = 52;
   var HORAS_JORNADA = 8;
+  var _ultimo = null; // ultimo calculo, para el envio por WhatsApp
 
   function fmtMoney(n){
     try { return "$" + n.toLocaleString("es-EC", { maximumFractionDigits: 0 }); }
@@ -740,26 +888,85 @@
     var horasSemana = parseFloat(horasInput.value) || 0;
     var valorHora = parseFloat(valorHoraInput.value) || 0;
 
-    var horasAhorradasSemana = horasSemana * TASA_AHORRO;
-    var horasAhorradasAnoNum = horasAhorradasSemana * SEMANAS_ANO;
+    var horasAnoActual = horasSemana * SEMANAS_ANO;
+    var horasAhorradasAnoNum = horasAnoActual * TASA_AHORRO;
+    var horasAnoConApp = horasAnoActual - horasAhorradasAnoNum;
     var diasNum = horasAhorradasAnoNum / HORAS_JORNADA;
     var valorNum = horasAhorradasAnoNum * valorHora;
 
     horasOut.textContent = horasSemana;
+    valorHoraOut.textContent = valorHora % 1 === 0 ? valorHora : valorHora.toFixed(1).replace(".", ",");
     horasAno.textContent = Math.round(horasAhorradasAnoNum).toLocaleString("es-EC") + " horas";
     diasRecuperados.textContent = diasNum.toFixed(1).replace(".", ",") + " días";
     valorAhorrado.textContent = fmtMoney(valorNum);
+
+    // Barras: "hoy" siempre al 100% del riel, "con la app" proporcional.
+    barraAntes.style.width = "100%";
+    barraDespues.style.width = (100 * (1 - TASA_AHORRO)) + "%";
+    barraAntesCifra.textContent = Math.round(horasAnoActual).toLocaleString("es-EC") + " h";
+    barraDespuesCifra.textContent = Math.round(horasAnoConApp).toLocaleString("es-EC") + " h";
+
+    _ultimo = {
+      horasSemana: horasSemana,
+      horasAno: Math.round(horasAhorradasAnoNum),
+      dias: diasNum.toFixed(1).replace(".", ","),
+      valor: fmtMoney(valorNum)
+    };
   }
 
   horasInput.addEventListener("input", calcular);
   valorHoraInput.addEventListener("input", calcular);
   calcular();
 
+  // Compartir el calculo por WhatsApp (JFC: "para persuadir a mi esposa/o o
+  // socio(s)"). Abre el compositor de WhatsApp del propio usuario con el
+  // resultado ya escrito -- no manda nada a ningun servidor nuestro.
+  if (calcWa) {
+    calcWa.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      if (!_ultimo) return;
+      var txt = "Mira lo que calculé para nuestro negocio:\n\n"
+        + "Hoy se nos van ~" + _ultimo.horasSemana + " horas por semana llevando el inventario a mano.\n"
+        + "Con amigable-123 recuperaríamos ~" + _ultimo.horasAno + " horas al año "
+        + "(" + _ultimo.dias + " días completos), que a nuestra tarifa son " + _ultimo.valor + ".\n\n"
+        + "La demo es gratis y sin registro: https://jfcarpiopuntocom.github.io/AMIGABLE/ahorra.html";
+      window.open("https://wa.me/?text=" + encodeURIComponent(txt), "_blank", "noopener");
+    });
+  }
+
   // Boton de compra (JFC 2026-08-11): PayPal se conecta aparte, en las
   // proximas 24h -- despues Stripe y Bitcoin. Hasta que eso este listo,
   // el boton no debe hacer nada roto (un href="#" solo saltaria al tope
   // de la pagina). Para conectar PayPal: reemplazar este handler por el
   // boton/checkout real de PayPal (o cambiar el <a> por su botón nativo).
+  // Copiar el PIN de un toque: al cambiar de pestaña hacia la app, tener el
+  // codigo en el portapapeles evita memorizarlo.
+  Array.prototype.forEach.call(document.querySelectorAll("[data-copiar]"), function (btn) {
+    btn.addEventListener("click", function () {
+      var pin = btn.getAttribute("data-copiar");
+      var aviso = btn.querySelector(".demo-pin-copiar");
+      function ok(){ if (aviso) { aviso.textContent = "Copiado"; setTimeout(function(){ aviso.textContent = "Tocar para copiar"; }, 1600); } }
+      // Fallback real: si la Clipboard API existe pero rechaza (permisos,
+      // contexto no seguro, Safari quisquilloso), hay que caer al metodo
+      // viejo — no dejar el boton mudo.
+      function copiarViejo(){
+        try {
+          var tmp = document.createElement("input");
+          tmp.value = pin; document.body.appendChild(tmp); tmp.select();
+          tmp.setSelectionRange(0, 99);
+          document.execCommand("copy"); document.body.removeChild(tmp); ok();
+        } catch (_) {}
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(pin).then(ok, copiarViejo);
+          return;
+        }
+      } catch (_) {}
+      copiarViejo();
+    });
+  });
+
   var btnComprar = document.getElementById("btn-comprar-paypal");
   if (btnComprar) {
     btnComprar.addEventListener("click", function (ev) {
