@@ -268,7 +268,6 @@
   /* ---------- Galeria: recreaciones de pantallas reales ---------- */
   .galeria h2{ text-align:center; margin-bottom:12px; font-size:26px; font-size:clamp(24px,5vw,30px); }
   .galeria .lead{ text-align:center; font-size:16px; max-width:520px; margin:0 auto 28px; }
-  .galeria-nota{ text-align:center; font-size:13px; margin-top:18px; }
 
   .galeria-grid{ display:grid; grid-template-columns:1fr; gap:14px; max-width:640px; margin:0 auto; }
   @media (min-width:640px){ .galeria-grid{ grid-template-columns:1fr 1fr; } }
@@ -290,6 +289,8 @@
   .mini-verde *{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
   .mini-dorado{ background:var(--amarillo); }
   .mini-dorado *{ color:#3D2E00 !important; -webkit-text-fill-color:#3D2E00 !important; }
+  .mini-negro{ background:var(--negro); }
+  .mini-negro *{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
 
   .bcg-grid{ display:grid; grid-template-columns:1fr; gap:14px; max-width:640px; margin:0 auto; }
   @media (min-width:640px){ .bcg-grid{ grid-template-columns:1fr 1fr; } }
@@ -533,7 +534,7 @@
   <section class="galeria section">
     <div class="wrap">
       <h2>Así se ve tu inventario</h2>
-      <p class="lead">Tarjetas reales de la demo. Cada color te dice qué hacer antes de que lo pienses.</p>
+      <p class="lead">Cada color te dice qué hacer antes de que lo pienses.</p>
       <div class="galeria-grid">
         <div class="mini-card mini-rojo">
           <span class="mini-estado">Urgente</span>
@@ -559,8 +560,14 @@
           <span class="mini-stock">25</span>
           <span class="mini-detalle">Stock saludable</span>
         </div>
+        <div class="mini-card mini-negro">
+          <span class="mini-estado">Dormido</span>
+          <span class="mini-nombre">Ajedrez Tallado en Madera</span>
+          <span class="mini-stock">5</span>
+          <span class="mini-detalle">Sin ventas hace 128 días — tu dinero está descansando ahí</span>
+        </div>
       </div>
-      <p class="galeria-nota">Recreación fiel de la pantalla Inventario, con datos reales de la demo — no es una captura de pantalla.</p>
+      
 
       <h2 style="margin-top:48px;">Sabe cuáles productos te dan de comer</h2>
       <p class="lead">Matriz BCG automática: ventas de los últimos 60 días, sin que armes una sola fórmula.</p>
@@ -590,7 +597,7 @@
           <span class="bcg-item">Sombrero de Paja Toquilla · $90.00</span>
         </div>
       </div>
-      <p class="galeria-nota">Recreación fiel de la Matriz BCG, con datos reales de la demo — no es una captura de pantalla.</p>
+      
     </div>
   </section>
 
