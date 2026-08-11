@@ -90,18 +90,18 @@
     <h3>Propiedad y actualizaciones</h3>
     <p style="font-size:14px;line-height:1.6;margin:0 0 14px;">
       Tus datos viven en este dispositivo — ningún servidor los tiene, ninguna suscripción
-      te los puede quitar. La activación desbloquea productos y exportaciones ilimitadas.
-      Incluye <b>2 años de parches y actualizaciones</b> — el estándar del sector es 1.
+      te los puede quitar. La activación desbloquea productos y exportaciones ilimitadas,
+      con parches y actualizaciones incluidos durante toda la <b>licencia de 5 años</b>.
     </p>
     <h3>La promesa</h3>
     <ul style="font-size:14px;line-height:1.6;">
       <li>Te ahorra <b>50% de tu tiempo</b> comparado con hacerlo a mano.</li>
       <li>Se aprende <b>en 10 minutos</b> — sin manual necesario.</li>
-      <li>Construida para <b>durar 10 años</b>, con <b>2 años de soporte directo incluidos</b>.</li>
+      <li><b>Licencia de 5 años</b>, con soporte directo incluido todo ese tiempo.</li>
     </ul>
     <h3>Tu licencia</h3>
     <p style="font-size:14px;line-height:1.6;margin:0 0 14px;">
-      Licencia privada: uso permanente de la app, con cumplimiento consensuado
+      Licencia privada de 5 años, con cumplimiento consensuado
       y sin invocar propiedad intelectual en tu contra. La app en sí vive en
       nuestro sitio web — pero todo lo que tú ingresas se mantiene solamente
       en tus dispositivos. Nunca sube a ninguna "nube" ni servidor central.
