@@ -127,3 +127,5 @@ Ver [PRIVACY.md](./PRIVACY.md) — versión corta: tus datos de negocio nunca sa
 ## Licencia
 
 Propietaria. Ver `LICENSE`.
+
+**Licencia comercial de uso:** 5 años desde la activación, con soporte y actualizaciones incluidos durante todo ese período. Sin suscripción.

@@ -6,12 +6,12 @@ amigable-123 es local-first por diseño. Productos, ventas, clientes, inventario
 
 ## La única excepción: la activación de la licencia
 
-Para vender licencias y desbloquear la app completa a quienes ya pagaron, operamos un pequeño Worker de Cloudflare que rastrea *instancias*, no *negocios*. Cuando activas (PIN 789) o entras, tu dispositivo envía:
+Para vender licencias y desbloquear la app completa a quienes ya pagaron, operamos un pequeño Worker de Cloudflare que rastrea *instancias*, no *negocios*. La licencia comercial es válida por **5 años** desde la activación. Cuando activas (PIN 789) o entras, tu dispositivo envía:
 
 - `instanceId` — un ID aleatorio generado en tu dispositivo, no ligado a nada más
 - Tu nombre, correo y código de licencia — solo si decidiste ingresarlos durante la activación, para recuperar tu acceso
 - Tu número de WhatsApp — solo si decidiste agregarlo, para que podamos contactarte directamente además de por correo
-- Estado de activación (activa / observada / limitada / bloqueada)
+- Estado de activación (full / mínima / bloqueada)
 
 Esa es la lista completa. Nada sobre tus productos, ventas, clientes o inventario va incluido en este registro, en ningún momento, bajo ninguna funcionalidad.
 
