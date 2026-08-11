@@ -252,8 +252,18 @@
       // navigator.share exige un File; comprobamos canShare con el archivo real
       // (algunos navegadores dicen tener share pero no aceptan archivos).
       const file = new File([info.texto], info.nombre, { type: "application/json" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        const canalTxt = prefs.canalWhatsapp && !prefs.canalEmail ? "WhatsApp" : "correo o WhatsApp";
+      // BUG REAL (JFC 2026-08-11, "whatsapp adjunta, el correo no"): cuando
+      // los DOS canales estan activos, un solo navigator.share() abre UN
+      // dialogo nativo — el dueno elige una sola app ahi. El otro canal
+      // configurado nunca se dispara, en silencio, porque la API no dice
+      // cual app se eligio (no hay forma de saberlo para completar el que
+      // falta despues). Con dos canales activos NO usamos Web Share: vamos
+      // directo al camino de abajo, que sí abre wa.me Y mailto por separado,
+      // garantizando que los dos canales configurados de verdad ocurran.
+      const soloUnCanal = (prefs.canalEmail ? 1 : 0) + (prefs.canalWhatsapp ? 1 : 0) === 1;
+      if (soloUnCanal && navigator.canShare && navigator.canShare({ files: [file] })) {
+        // soloUnCanal ya garantiza que es uno u otro, nunca ambos ni ninguno.
+        const canalTxt = prefs.canalWhatsapp ? "WhatsApp" : "correo";
         await navigator.share({
           files: [file],
           title: titulo,
