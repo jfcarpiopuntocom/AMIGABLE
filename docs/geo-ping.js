@@ -123,8 +123,8 @@
         var caja = global.document.createElement("div");
         caja.style.cssText = "background:#F8F9FB;border-radius:12px;padding:22px 20px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.5);";
         caja.innerHTML =
-          '<h3 style="margin:0 0 10px;font-size:18px;color:#0F1923;">Este negocio registra tu ubicación aproximada</h3>' +
-          '<p style="margin:0 0 14px;font-size:14px;line-height:1.5;color:#2C3E50;">Mientras uses esta app con tu sesión abierta, se guarda tu ubicación aproximada cada 15 minutos — sirve para coordinar el equipo y verificar cumplimiento. No se registra nada cuando cierras sesión, y 15 minutos da margen para un descanso sin quedar marcado.</p>' +
+          '<h3 style="margin:0 0 10px;font-size:18px;color:#0F1923;">Ubicación aproximada mientras trabajas</h3>' +
+          '<p style="margin:0 0 14px;font-size:14px;line-height:1.5;color:#2C3E50;">Cada 15 minutos, solo con la sesión abierta. Esta app no te sigue a ti — solo marca dónde fue utilizada ella: control, sin incomodar ni invadir. Se apaga sola al cerrar sesión.</p>' +
           '<button id="amg-geo-ok" style="width:100%;padding:12px;border-radius:8px;border:none;background:#E86040;color:#fff;font-weight:700;font-size:15px;cursor:pointer;">Entendido</button>';
         overlay.appendChild(caja);
         global.document.body.appendChild(overlay);
