@@ -161,7 +161,7 @@
   .hero::before{
     /* Efecto dinámico 2: gradiente semáforo en movimiento continuo (sin opacity) */
     content:""; position:absolute; inset:-40%;
-    background:conic-gradient(from 0deg, var(--sim-verde), var(--sim-amarillo), var(--sim-naranja), var(--sim-rojo), var(--sim-azul), var(--sim-verde));
+    background:conic-gradient(from 0deg, var(--sim-verde), var(--sim-amarillo), var(--sim-naranja), var(--sim-rojo), var(--sim-negro), var(--sim-verde));
     animation:girarSemaforo 18s linear infinite;
     -webkit-mask:radial-gradient(circle, #000 0%, transparent 62%);
     mask:radial-gradient(circle, #000 0%, transparent 62%);
@@ -473,7 +473,7 @@
       <p style="margin:0;font-size:16px;">Cada producto tiene un color y una intensidad. Tú no memorizas reportes: el color ya te dice si vender, reponer, promover o dejar dormir.</p>
     </div>
     <div class="tarjeta tilt revela">
-      <h4 style="margin-top:0;color:var(--sim-azul-dk);">Funciona sin internet</h4>
+      <h4 style="margin-top:0;color:var(--rust-deep);">Funciona sin internet</h4>
       <p style="margin:0;font-size:16px;">Es una PWA local-first: se instala en el celular o tablet, guarda todo en el dispositivo y sincroniza cuando hay señal.</p>
     </div>
   </div>
@@ -514,7 +514,7 @@
       <p style="margin:0;font-size:16px;">El color hace el trabajo de interpretar — no hace falta manual para empezar a usarla.</p>
     </div>
     <div class="tarjeta tilt revela">
-      <h4 style="margin-top:0;color:var(--sim-azul-dk);">Licencia de 5 años</h4>
+      <h4 style="margin-top:0;color:var(--rust-deep);">Licencia de 5 años</h4>
       <p style="margin:0;font-size:16px;">Sin suscripción ni pagos mensuales ni publicidad fastidiosa. Soporte directo incluido durante los 5 años completos.</p>
     </div>
   </div>
@@ -578,7 +578,6 @@
       <tr><td style="color:var(--sim-amarillo-dk);font-weight:700;">🟡 Amarillo</td><td>Oportunidad</td><td>Stock sano y no dormido (menos de 45 días sin ventas), y margen ≥ 50%</td><td>Empújalo: está dejando plata sobre la mesa</td></tr>
       <tr><td style="color:var(--sim-naranja-dk);font-weight:700;">🟠 Naranja</td><td>Urgente-pronto</td><td>Stock entre el umbral rojo y el amarillo, o vence en 4–7 días</td><td>Véndelo primero / prográmalo para reposición esta semana</td></tr>
       <tr><td style="color:var(--sim-rojo-dk);font-weight:700;">🔴 Rojo</td><td>Emergencia</td><td>Stock en cero o por debajo del umbral rojo, vencido o vence en ≤3 días</td><td>Actúa hoy: repón, transfiere o retira</td></tr>
-      <tr><td style="color:var(--sim-azul-dk);font-weight:700;">🔵 Azul</td><td>Dato contable</td><td>Margen mayor a 0% pero menor a 25% (precio pegado al costo)</td><td>Revisa el precio o negocia el costo con el proveedor</td></tr>
       <tr><td style="color:#FFFFFF;font-weight:700;background:var(--sim-negro);border-radius:4px;">⚫ Negro</td><td>Capital dormido</td><td>45 días o más sin ninguna venta, con stock sano</td><td>Libera ese dinero: descuento, combo o retíralo del catálogo</td></tr>
     </table>
   </div>
@@ -595,7 +594,6 @@
       <button class="estado-btn" data-estado="amarillo" style="background:var(--sim-amarillo);border-color:var(--sim-amarillo-dk);">Amarillo</button>
       <button class="estado-btn" data-estado="naranja" style="background:var(--sim-naranja);border-color:var(--sim-naranja-dk);color:#fff;">Naranja</button>
       <button class="estado-btn" data-estado="rojo" style="background:var(--sim-rojo);border-color:var(--sim-rojo-dk);color:#fff;">Rojo</button>
-      <button class="estado-btn" data-estado="azul" style="background:var(--sim-azul);border-color:var(--sim-azul-dk);color:#fff;">Azul</button>
       <button class="estado-btn" data-estado="negro" style="background:var(--sim-negro);border-color:#000;color:#fff;">Negro</button>
     </div>
     <div class="demo-caja" id="demoCaja">
@@ -823,8 +821,8 @@
       <h4 style="color:var(--sim-amarillo-dk);">☀️ Verano — en plena cosecha</h4>
       <p>Compran seguido y fuerte. Cuídalos como oro: son tu ingreso más estable.</p>
     </div>
-    <div class="celda-matriz" style="background:var(--sim-azul-bg);border-color:var(--sim-azul);">
-      <h4 style="color:var(--sim-azul-dk);">❄️ Invierno — dormidos</h4>
+    <div class="celda-matriz" style="background:#E4E4E8;border-color:var(--sim-negro);">
+      <h4 style="color:var(--sim-negro);">❄️ Invierno — dormidos</h4>
       <p>Sin señales de vida. Un mensaje personalizado puede despertarlos.</p>
     </div>
     <div class="celda-matriz" style="background:var(--sim-verde-bg);border-color:var(--sim-verde);">
@@ -892,8 +890,8 @@
   <p class="lead">Basada en ventas de los últimos 60 días, clasifica automáticamente cada producto en uno de cuatro cuadrantes clásicos de gestión de portafolio — sin que tengas que calcular nada.</p>
 
   <div class="matriz2x2">
-    <div class="celda-matriz" style="background:var(--sim-azul-bg);border-color:var(--sim-azul);">
-      <h4 style="color:var(--sim-azul-dk);">❓ Promesas</h4>
+    <div class="celda-matriz" style="background:var(--sim-naranja-bg);border-color:var(--sim-naranja);">
+      <h4 style="color:var(--sim-naranja-dk);">❓ Promesas</h4>
       <p>Venden poco pero van subiendo. Dales vitrina y espacio para crecer.</p>
     </div>
     <div class="celda-matriz" style="background:var(--sim-verde-bg);border-color:var(--sim-verde);">
