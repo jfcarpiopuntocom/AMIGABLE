@@ -332,17 +332,26 @@ async function handleVerificarIdentidad(req, env) {
     await env.LICENCIAS.put(rlKey, String(n + 1), { expirationTtl: 3600 });
   } catch (_) { /* fail-open: si el KV falla, no bloqueamos una verificación legítima */ }
 
+  // Fortificacion (JFC 2026-08-10, "listo para 100-1000 licencias"): esto era
+  // un for-loop con un await por licencia, uno a la vez. A 1000 licencias
+  // eso es 1000 round-trips seguidos a KV: varios segundos, con riesgo real
+  // de que el Worker se corte por timeout justo en la recuperacion de un
+  // dueno legitimo. Promise.all() dispara todos los GET en paralelo, igual
+  // que ya hace el endpoint GET /licencias del panel (mismo patron, misma
+  // razon). Con miles de licencias esto choca con el limite de subrequests
+  // por invocacion de Cloudflare Workers (1000 en plan pagado) — si se llega
+  // a esa escala, la proxima fortificacion real es paginar con list(cursor)
+  // en vez de traer todo de una vez.
   const lista = await env.LICENCIAS.list({ prefix: "inst:" });
-  for (const k of lista.keys) {
-    let reg;
-    try { reg = JSON.parse(await env.LICENCIAS.get(k.name)); } catch (_) { continue; }
-    if (!reg) continue;
-    if (normLicencia(reg.licenseCode) === licenseCode
-      && normCedula(reg.cedula) === cedula
-      && normEmail(reg.email) === email) {
-      return json({ ok: true, instanceId: reg.instanceId });
-    }
-  }
+  const registros = (await Promise.all(
+    lista.keys.map((k) => env.LICENCIAS.get(k.name).then((v) => { try { return JSON.parse(v); } catch (_) { return null; } }))
+  )).filter(Boolean);
+  const match = registros.find((reg) =>
+    normLicencia(reg.licenseCode) === licenseCode
+    && normCedula(reg.cedula) === cedula
+    && normEmail(reg.email) === email
+  );
+  if (match) return json({ ok: true, instanceId: match.instanceId });
   return json({ ok: false, error: "Los datos no coinciden con ninguna licencia registrada. Revisa mayúsculas y espacios." }, 404);
 }
 
@@ -379,17 +388,24 @@ async function handleBuscarDuplicado(req, env) {
     await env.LICENCIAS.put(rlKey, String(n + 1), { expirationTtl: 3600 });
   } catch (_) { /* fail-open: un hipo de KV no debe bloquear una activacion legitima */ }
 
+  // Fortificacion (JFC 2026-08-10): mismo cambio de for-loop secuencial a
+  // Promise.all que en verificarIdentidad() arriba — esto corre en CADA
+  // intento de activacion, asi que a 1000 licencias era el punto donde mas
+  // dolia (cada cliente nuevo esperando un timeout en vez de activar).
   try {
     const lista = await env.LICENCIAS.list({ prefix: "inst:" });
-    for (const k of lista.keys) {
-      let reg;
-      try { reg = JSON.parse(await env.LICENCIAS.get(k.name)); } catch (_) { continue; }
-      if (!reg || reg.instanceId === instanceIdPropio) continue;
+    const registros = (await Promise.all(
+      lista.keys.map((k) => env.LICENCIAS.get(k.name).then((v) => { try { return JSON.parse(v); } catch (_) { return null; } }))
+    )).filter(Boolean);
+    const match = registros.find((reg) => {
+      if (reg.instanceId === instanceIdPropio) return false;
       const matchEmail = email && normEmail(reg.email) === email;
       const matchCedula = cedula && normCedula(reg.cedula) === cedula;
-      if (matchEmail || matchCedula) {
-        return json({ duplicado: true, licenseCode: reg.licenseCode || "", instanceId: reg.instanceId, por: matchEmail ? "email" : "cedula" });
-      }
+      return matchEmail || matchCedula;
+    });
+    if (match) {
+      const matchEmail = email && normEmail(match.email) === email;
+      return json({ duplicado: true, licenseCode: match.licenseCode || "", instanceId: match.instanceId, por: matchEmail ? "email" : "cedula" });
     }
   } catch (_) { return json({ duplicado: false }); } // fail-open: no bloquear si el KV.list falla
   return json({ duplicado: false });
