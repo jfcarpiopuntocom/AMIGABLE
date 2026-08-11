@@ -39,6 +39,10 @@
     --on-primary:#FFFFFF;
     --font-display:'Space Grotesk',Inter,-apple-system,'Helvetica Neue',sans-serif;
     --font-body:Inter,-apple-system,'Helvetica Neue',sans-serif;
+    /* Familia mono: la misma que usa la app para cifras y etiquetas de
+       dato. La landing no la declaraba y por eso se sentia de otro
+       producto distinto al que vende. */
+    --font-mono:'JetBrains Mono','Cascadia Code',Consolas,monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
   html{-webkit-text-size-adjust:100%;}
@@ -70,6 +74,18 @@
     .card{ background:var(--card) !important; }
     .card p, .card li, .card span{ color:var(--body-c) !important; -webkit-text-fill-color:var(--body-c) !important; }
   }
+  /* Piso de calidad: foco visible por teclado. No existia ninguno, asi que
+     navegar con Tab era invisible. Se dibuja con el verde de accion, que aqui
+     si significa algo (es el color de "adelante" en el sistema Simon). */
+  a:focus-visible, button:focus-visible, input:focus-visible{
+    outline:3px solid var(--verde-dk);
+    outline-offset:3px;
+    border-radius:6px;
+  }
+  /* Los navegadores viejos sin :focus-visible igual reciben algo. */
+  a:focus, button:focus, input:focus{ outline:3px solid var(--verde-dk); outline-offset:3px; }
+  a:focus:not(:focus-visible), button:focus:not(:focus-visible), input:focus:not(:focus-visible){ outline:none; }
+
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
   }
@@ -112,13 +128,13 @@
     margin-bottom:18px;
   }
   .hero h1{
-    font-size:32px;font-size:clamp(28px,7vw,48px);
-    line-height:1.12;letter-spacing:-0.02em;
+    font-size:34px;font-size:clamp(30px,7.5vw,54px);
+    line-height:1.08;letter-spacing:-0.03em;
     margin-bottom:16px;
   }
   .hero h1 .hl{ color:var(--verde-dk) !important; -webkit-text-fill-color:var(--verde-dk) !important; }
   .hero .sub{
-    font-size:17px;line-height:1.55;max-width:520px;margin:0 auto 28px;
+    font-size:18px;line-height:1.55;max-width:540px;margin:0 auto 28px;
   }
   .hero .cta-row{ display:flex; flex-direction:column; gap:10px; align-items:center; }
   @media (min-width:480px){ .hero .cta-row{ flex-direction:row; justify-content:center; } }
@@ -170,9 +186,9 @@
 
   .campo{ margin-bottom:22px; }
   .campo:last-child{ margin-bottom:0; }
-  .campo label{ display:block; font-size:.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-bottom:10px; color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important; }
+  .campo label{ display:block; font-size:.9rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-bottom:10px; color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important; }
   .campo .valor-grande{
-    font-family:var(--font-display); font-weight:700; font-size:30px;
+    font-family:var(--font-display); font-weight:700; font-size:30px; font-variant-numeric:tabular-nums;
     color:var(--verde-dk) !important; -webkit-text-fill-color:var(--verde-dk) !important;
     margin-bottom:10px;
   }
@@ -217,9 +233,9 @@
     padding:22px;
     text-align:center;
   }
-  .resultado .r-label{ font-size:.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--verde-dk) !important; -webkit-text-fill-color:var(--verde-dk) !important; margin-bottom:8px; }
+  .resultado .r-label{ font-size:.9rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--verde-dk) !important; -webkit-text-fill-color:var(--verde-dk) !important; margin-bottom:8px; }
   .resultado .r-num{
-    font-family:var(--font-display); font-weight:700;
+    font-family:var(--font-display); font-weight:700; font-variant-numeric:tabular-nums;
     font-size:40px; font-size:clamp(34px,9vw,52px);
     color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important;
     line-height:1.05; margin-bottom:6px;
@@ -231,7 +247,7 @@
     background:var(--card); border:1px solid var(--hairline); border-radius:12px; padding:14px;
   }
   .mini-resultado .m-num{
-    font-family:var(--font-display); font-weight:700; font-size:24px;
+    font-family:var(--font-display); font-weight:700; font-size:24px; font-variant-numeric:tabular-nums;
     color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important;
   }
   .mini-resultado .m-label{ font-size:13px; margin-top:2px; }
@@ -263,6 +279,27 @@
   .implicacion{ background:var(--card); border-top:1px solid var(--hairline); border-bottom:1px solid var(--hairline); }
   /* ---------- Microelementos de conversion (JFC 2026-08-11) ---------- */
   .hero-atajo{ font-size:14px; margin-top:16px; }
+
+  /* Tesis en el primer viewport: lo mas caracteristico de este producto es que
+     el inventario habla en colores. Antes eso recien aparecia varias secciones
+     abajo, asi que la portada podia ser la de cualquier software. Aqui el color
+     se usa con su significado real (es el semaforo Simon, no decoracion). */
+  .tesis{ margin-top:30px; padding-top:22px; border-top:1px solid var(--hairline); }
+  .tesis-linea{ font-size:15px; margin-bottom:12px; }
+  .tesis-chips{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+  .tchip{
+    font-family:var(--font-mono); font-size:14px; font-weight:700;
+    letter-spacing:.03em; padding:7px 13px; border-radius:8px;
+  }
+  .tchip-verde{ background:var(--verde); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+  .tchip-dorado{ background:var(--amarillo); color:#3D2E00 !important; -webkit-text-fill-color:#3D2E00 !important; }
+  .tchip-naranja{ background:var(--naranja); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+  .tchip-rojo{ background:var(--rojo); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+  .tchip-negro{ background:var(--negro); color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+  @media (prefers-color-scheme: dark){
+    .tchip-verde,.tchip-naranja,.tchip-rojo,.tchip-negro{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+    .tchip-dorado{ color:#3D2E00 !important; -webkit-text-fill-color:#3D2E00 !important; }
+  }
   .hero-atajo a{ color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; text-decoration:underline; }
 
   .campo-ref{ font-size:13px; margin-top:10px; line-height:1.45; }
@@ -275,7 +312,7 @@
   .barra-fill{ height:100%; border-radius:999px; transition:width .35s ease; }
   .barra-antes{ background:var(--rojo); }
   .barra-despues{ background:var(--verde); }
-  .barra-cifra{ font-family:var(--font-display); font-weight:700; font-size:14px; white-space:nowrap; color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important; }
+  .barra-cifra{ font-family:var(--font-mono); font-weight:700; font-size:15px; font-variant-numeric:tabular-nums; white-space:nowrap; color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important; }
 
   .calc-cta{ display:flex; width:100%; margin-top:20px; }
   .calc-wa-link{ display:block; margin-top:12px; font-size:14px; color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; text-decoration:underline; }
@@ -310,7 +347,7 @@
   .objecion p{ font-size:14px; }
 
   .demo-pin{ border:1px solid var(--hairline); cursor:pointer; font-family:inherit; width:100%; }
-  .demo-pin-copiar{ font-size:12px; color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; margin-top:4px; }
+  .demo-pin-copiar{ font-size:14px; color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; margin-top:4px; }
 
   .salida-secundaria{ font-size:14px; margin-top:14px; }
   .salida-secundaria a{ color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; text-decoration:underline; }
@@ -362,9 +399,9 @@
     display:flex; flex-direction:column; gap:4px;
     box-shadow:0 2px 0 rgba(0,0,0,.08);
   }
-  .mini-estado{ font-size:.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; opacity:1; }
+  .mini-estado{ font-size:.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
   .mini-nombre{ font-family:var(--font-display); font-weight:700; font-size:16px; margin-top:4px; }
-  .mini-stock{ font-family:var(--font-display); font-weight:700; font-size:32px; line-height:1.1; margin-top:6px; }
+  .mini-stock{ font-family:var(--font-display); font-weight:700; font-size:32px; font-variant-numeric:tabular-nums; line-height:1.1; margin-top:6px; }
   .mini-detalle{ font-size:13px; margin-top:2px; }
 
   .mini-rojo{ background:var(--rojo); }
@@ -422,7 +459,7 @@
     padding:12px; display:flex; flex-direction:column; gap:4px; align-items:center; text-align:center;
   }
   .demo-pin-num{
-    font-family:var(--font-display);font-weight:700;font-size:20px;
+    font-family:var(--font-mono);font-weight:700;font-size:22px;font-variant-numeric:tabular-nums;
     color:var(--ink) !important;-webkit-text-fill-color:var(--ink) !important;
     letter-spacing:.02em;
   }
@@ -448,7 +485,7 @@
     padding:12px; display:flex; flex-direction:column; gap:4px; align-items:center;
   }
   .community-pin-num{
-    font-family:var(--font-display);font-weight:700;font-size:22px;
+    font-family:var(--font-mono);font-weight:700;font-size:24px;font-variant-numeric:tabular-nums;
     color:var(--azul-dk) !important;-webkit-text-fill-color:var(--azul-dk) !important;
     letter-spacing:.02em;
   }
@@ -466,7 +503,7 @@
   }
   .inversion-box-titulo{ font-size:14px; margin-bottom:10px; }
   .inversion-monto{
-    font-family:var(--font-display); font-weight:700;
+    font-family:var(--font-display); font-weight:700; font-variant-numeric:tabular-nums;
     font-size:52px;
     color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important;
     line-height:1; margin-bottom:14px;
@@ -475,7 +512,7 @@
   .inversion-detalle{ font-size:14px; margin-bottom:20px; }
   .inversion-detalle strong{ color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important; }
   .btn-comprar{ width:100%; font-size:18px; min-height:54px; padding:15px 26px; }
-  .inversion-metodos{ font-size:12px; margin-top:12px; }
+  .inversion-metodos{ font-size:14px; margin-top:12px; }
 
   .separador-o{
     max-width:200px; margin:28px auto; text-align:center; position:relative;
@@ -522,12 +559,23 @@
       <a href="#calculadora" class="btn btn-primary">Calcular mi ahorro</a>
     </div>
     <p class="hero-atajo">¿Ya te hablaron de amigable-123? <a href="#probar">Salta directo a la demo</a>.</p>
+
+    <div class="tesis">
+      <p class="tesis-linea">Adentro, cada producto se enciende solo:</p>
+      <div class="tesis-chips">
+        <span class="tchip tchip-verde">Sano</span>
+        <span class="tchip tchip-dorado">Oportunidad</span>
+        <span class="tchip tchip-naranja">Revisar</span>
+        <span class="tchip tchip-rojo">Urgente</span>
+        <span class="tchip tchip-negro">Dormido</span>
+      </div>
+    </div>
   </section>
 
   <section class="problema section">
     <div class="wrap">
       <h2>El costo real no es el tiempo. Es el desgaste.</h2>
-      <p class="lead">No es solo contar. Es cargar en la cabeza qué falta, qué sobra y qué se vence — todo el día, todos los días.</p>
+      <p class="lead">No es solo contar. Es cargar en la cabeza qué falta, qué sobra y qué se vence, todo el día, todos los días.</p>
       <div class="checks">
         <div class="item">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#E8365D" stroke-width="1.6"/><path d="M7 7l6 6M13 7l-6 6" stroke="#E8365D" stroke-width="1.8" stroke-linecap="round"/></svg>
