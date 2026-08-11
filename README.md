@@ -58,7 +58,7 @@ Si eres desarrollador y alguna vez viste a un dueño de negocio pequeño luchand
 
 ## Precio
 
-**$399 USD — pago único, precio global.** Sin suscripción. Sin cobro por usuario. Pagas una vez, usas para siempre.
+**$399 USD — pago único, precio global.** Sin suscripción ni pagos mensuales ni publicidad fastidiosa. Sin cobro por usuario. Pagas una vez por una **licencia de 5 años**, soporte y actualizaciones incluidos todo ese tiempo.
 
 **Precio regional Latinoamérica: $199 USD**, verificado por identificación (cédula o documento nacional equivalente) de un país latinoamericano. Mismo producto, mismas actualizaciones, mismo soporte — el ajuste refleja el poder adquisitivo de la región, no una versión reducida.
 
