@@ -265,6 +265,52 @@
   .implicacion .lead{ text-align:center; font-size:17px; max-width:560px; margin:0 auto; }
 
   /* ---------- Oferta / CTA final ---------- */
+  /* ---------- Galeria: recreaciones de pantallas reales ---------- */
+  .galeria h2{ text-align:center; margin-bottom:12px; font-size:26px; font-size:clamp(24px,5vw,30px); }
+  .galeria .lead{ text-align:center; font-size:16px; max-width:520px; margin:0 auto 28px; }
+  .galeria-nota{ text-align:center; font-size:13px; margin-top:18px; }
+
+  .galeria-grid{ display:grid; grid-template-columns:1fr; gap:14px; max-width:640px; margin:0 auto; }
+  @media (min-width:640px){ .galeria-grid{ grid-template-columns:1fr 1fr; } }
+  .mini-card{
+    border-radius:14px; padding:16px;
+    display:flex; flex-direction:column; gap:4px;
+    box-shadow:0 2px 0 rgba(0,0,0,.08);
+  }
+  .mini-estado{ font-size:.82rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; opacity:1; }
+  .mini-nombre{ font-family:var(--font-display); font-weight:700; font-size:16px; margin-top:4px; }
+  .mini-stock{ font-family:var(--font-display); font-weight:700; font-size:32px; line-height:1.1; margin-top:6px; }
+  .mini-detalle{ font-size:13px; margin-top:2px; }
+
+  .mini-rojo{ background:var(--rojo); }
+  .mini-rojo *{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+  .mini-naranja{ background:var(--naranja); }
+  .mini-naranja *{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+  .mini-verde{ background:var(--verde); }
+  .mini-verde *{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+  .mini-dorado{ background:var(--amarillo); }
+  .mini-dorado *{ color:#3D2E00 !important; -webkit-text-fill-color:#3D2E00 !important; }
+
+  .bcg-grid{ display:grid; grid-template-columns:1fr; gap:14px; max-width:640px; margin:0 auto; }
+  @media (min-width:640px){ .bcg-grid{ grid-template-columns:1fr 1fr; } }
+  .bcg-cuad{
+    border-radius:14px; padding:18px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .bcg-titulo{ font-family:var(--font-display); font-weight:700; font-size:18px; }
+  .bcg-sub{ font-size:13px; margin-bottom:8px; }
+  .bcg-item{ font-size:14px; font-weight:600; background:rgba(255,255,255,.18); border-radius:8px; padding:6px 10px; }
+
+  .bcg-azul{ background:var(--azul); }
+  .bcg-azul *{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+  .bcg-verde{ background:var(--verde); }
+  .bcg-verde *{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+  .bcg-dorado{ background:var(--amarillo); }
+  .bcg-dorado *{ color:#3D2E00 !important; -webkit-text-fill-color:#3D2E00 !important; }
+  .bcg-dorado .bcg-item{ background:rgba(61,46,0,.10); }
+  .bcg-gris{ background:#5C6B7A; }
+  .bcg-gris *{ color:#FFFFFF !important; -webkit-text-fill-color:#FFFFFF !important; }
+
   .oferta{ text-align:center; padding:56px 0; }
   .oferta h2{ font-size:28px; font-size:clamp(24px,6vw,36px); margin-bottom:14px; }
   .oferta .lead{ font-size:17px; max-width:500px; margin:0 auto 28px; }
@@ -484,6 +530,70 @@
     </div>
   </section>
 
+  <section class="galeria section">
+    <div class="wrap">
+      <h2>Así se ve tu inventario</h2>
+      <p class="lead">Tarjetas reales de la demo. Cada color te dice qué hacer antes de que lo pienses.</p>
+      <div class="galeria-grid">
+        <div class="mini-card mini-rojo">
+          <span class="mini-estado">Urgente</span>
+          <span class="mini-nombre">Camiseta Iron Maiden — The Trooper</span>
+          <span class="mini-stock">4</span>
+          <span class="mini-detalle">Quedan 4 — reponer urgente</span>
+        </div>
+        <div class="mini-card mini-naranja">
+          <span class="mini-estado">Revisar</span>
+          <span class="mini-nombre">Camiseta Led Zeppelin — Icarus</span>
+          <span class="mini-stock">12</span>
+          <span class="mini-detalle">Quedan 12 — revisar pronto</span>
+        </div>
+        <div class="mini-card mini-dorado">
+          <span class="mini-estado">Oportunidad</span>
+          <span class="mini-nombre">Aretes de Filigrana Chordeleg</span>
+          <span class="mini-stock">15</span>
+          <span class="mini-detalle">Buen margen — hay dinero esperándote</span>
+        </div>
+        <div class="mini-card mini-verde">
+          <span class="mini-estado">Sano</span>
+          <span class="mini-nombre">Agenda Rock 2026 Tapa Dura</span>
+          <span class="mini-stock">25</span>
+          <span class="mini-detalle">Stock saludable</span>
+        </div>
+      </div>
+      <p class="galeria-nota">Recreación fiel de la pantalla Inventario, con datos reales de la demo — no es una captura de pantalla.</p>
+
+      <h2 style="margin-top:48px;">Sabe cuáles productos te dan de comer</h2>
+      <p class="lead">Matriz BCG automática: ventas de los últimos 60 días, sin que armes una sola fórmula.</p>
+      <div class="bcg-grid">
+        <div class="bcg-cuad bcg-azul">
+          <span class="bcg-titulo">Promesas</span>
+          <span class="bcg-sub">Venden poco pero van subiendo. Dales vitrina.</span>
+          <span class="bcg-item">Vinilo Soda Estéreo — Canción Animal · $40.00</span>
+          <span class="bcg-item">Miel de Abeja del Cajas 300g · $17.00</span>
+        </div>
+        <div class="bcg-cuad bcg-verde">
+          <span class="bcg-titulo">Estrellas</span>
+          <span class="bcg-sub">Venden mucho y van subiendo. Protege su stock.</span>
+          <span class="bcg-item">Vinilo The Clash — London Calling · $192.00</span>
+          <span class="bcg-item">Camiseta Pink Floyd — The Dark Side · $132.00</span>
+        </div>
+        <div class="bcg-cuad bcg-gris">
+          <span class="bcg-titulo">Pesos muertos</span>
+          <span class="bcg-sub">Sin movimiento en 60 días. Libera ese capital.</span>
+          <span class="bcg-item">Aretes de Filigrana Chordeleg · $22.00</span>
+          <span class="bcg-item">Camiseta Metallica — Master of Puppets · $—</span>
+        </div>
+        <div class="bcg-cuad bcg-dorado">
+          <span class="bcg-titulo">Vacas lecheras</span>
+          <span class="bcg-sub">Venden mucho, estables. Financian todo lo demás.</span>
+          <span class="bcg-item">Bolsa de Tela Rock Estampada · $136.00</span>
+          <span class="bcg-item">Sombrero de Paja Toquilla · $90.00</span>
+        </div>
+      </div>
+      <p class="galeria-nota">Recreación fiel de la Matriz BCG, con datos reales de la demo — no es una captura de pantalla.</p>
+    </div>
+  </section>
+
   <section class="implicacion section">
     <div class="wrap">
       <h2>Lo que ese tiempo te está costando de verdad</h2>
@@ -493,18 +603,8 @@
 
   <section class="oferta wrap" id="probar">
     <h2>Deja de adivinar. Empieza a ver.</h2>
-    <p class="lead">Un pago único. Licencia de 5 años. Tuyo desde hoy.</p>
+    <p class="lead">Pruébala primero, sin registro ni tarjeta, en 10 segundos.</p>
 
-    <div class="inversion-box">
-      <div class="inversion-monto"><span class="inversion-signo">$</span>199</div>
-      <p class="inversion-detalle">Tu inversión única, precio Latinoamérica. <strong>Licencia de 5 años</strong>, soporte y actualizaciones incluidos todo ese tiempo. Sin suscripción ni pagos mensuales ni publicidad fastidiosa.</p>
-      <a href="#" class="btn btn-primary btn-comprar" id="btn-comprar-paypal" data-pago="paypal">Comprar ahora — $199</a>
-      <p class="inversion-metodos">Pago con PayPal. Próximamente Stripe y Bitcoin.</p>
-    </div>
-
-    <div class="separador-o">o</div>
-
-    <p class="lead" style="margin-bottom:18px;">Pruébala primero, sin registro ni tarjeta, en 10 segundos.</p>
     <div class="demo-box">
       <div class="demo-box-titulo">Entra a la demo con cualquiera de estos códigos</div>
       <div class="demo-pines">
@@ -523,8 +623,18 @@
       </div>
     </div>
     <div class="cta-row">
-      <a href="./index.html" class="btn btn-ghost">Entrar a la demo</a>
+      <a href="./index.html" class="btn btn-primary">Entrar a la demo ahora</a>
       <a href="./manual-maestro.html" class="btn btn-ghost">Leer el manual completo</a>
+    </div>
+
+    <div class="separador-o">o</div>
+
+    <p class="lead" style="margin-bottom:18px;">Ya la probaste y te convenció. Un pago único, licencia de 5 años, tuyo desde hoy.</p>
+    <div class="inversion-box">
+      <div class="inversion-monto"><span class="inversion-signo">$</span>199</div>
+      <p class="inversion-detalle">Tu inversión única, precio Latinoamérica. <strong>Licencia de 5 años</strong>, soporte y actualizaciones incluidos todo ese tiempo. Sin suscripción ni pagos mensuales ni publicidad fastidiosa.</p>
+      <a href="#" class="btn btn-primary btn-comprar" id="btn-comprar-paypal" data-pago="paypal">Comprar ahora — $199</a>
+      <p class="inversion-metodos">Pago con PayPal. Próximamente Stripe y Bitcoin.</p>
     </div>
   </section>
 
