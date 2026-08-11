@@ -268,8 +268,6 @@
   .oferta{ text-align:center; padding:56px 0; }
   .oferta h2{ font-size:28px; font-size:clamp(24px,6vw,36px); margin-bottom:14px; }
   .oferta .lead{ font-size:17px; max-width:500px; margin:0 auto 28px; }
-  .oferta .precio-nota{ font-size:15px; margin-top:16px; max-width:520px; margin-left:auto; margin-right:auto; }
-  .oferta .precio-nota strong{ color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important; }
 
   .demo-box{
     background:var(--canvas);
@@ -296,6 +294,69 @@
     letter-spacing:.02em;
   }
   .demo-pin-rol{ font-size:13px; }
+
+  .community-box{
+    background:var(--canvas);
+    border:2px solid var(--azul);
+    border-radius:16px;
+    padding:20px;
+    max-width:560px;
+    margin:0 auto 20px;
+    text-align:center;
+  }
+  .community-box-titulo{
+    font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--azul-dk) !important;-webkit-text-fill-color:var(--azul-dk) !important;
+    margin-bottom:10px;
+  }
+  .community-box-texto{ font-size:15px; margin-bottom:16px; }
+  .community-pin{
+    background:var(--card); border:1px solid var(--hairline); border-radius:10px;
+    padding:12px; display:flex; flex-direction:column; gap:4px; align-items:center;
+  }
+  .community-pin-num{
+    font-family:var(--font-display);font-weight:700;font-size:22px;
+    color:var(--azul-dk) !important;-webkit-text-fill-color:var(--azul-dk) !important;
+    letter-spacing:.02em;
+  }
+  .community-pin-rol{ font-size:13px; }
+
+  .inversion-box{
+    background:var(--card);
+    border:2px solid var(--verde);
+    border-radius:20px;
+    padding:28px 22px;
+    max-width:420px;
+    margin:0 auto;
+    text-align:center;
+    box-shadow:0 4px 0 var(--hairline);
+  }
+  .inversion-box-titulo{ font-size:14px; margin-bottom:10px; }
+  .inversion-monto{
+    font-family:var(--font-display); font-weight:700;
+    font-size:52px;
+    color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important;
+    line-height:1; margin-bottom:14px;
+  }
+  .inversion-signo{ font-size:28px; vertical-align:top; position:relative; top:8px; }
+  .inversion-detalle{ font-size:14px; margin-bottom:20px; }
+  .inversion-detalle strong{ color:var(--ink) !important; -webkit-text-fill-color:var(--ink) !important; }
+  .btn-comprar{ width:100%; font-size:18px; min-height:54px; padding:15px 26px; }
+  .inversion-metodos{ font-size:12px; margin-top:12px; }
+
+  .separador-o{
+    max-width:200px; margin:28px auto; text-align:center; position:relative;
+    font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--body-c) !important; -webkit-text-fill-color:var(--body-c) !important;
+  }
+  .separador-o::before, .separador-o::after{
+    content:""; position:absolute; top:50%; width:70px; height:1px; background:var(--hairline);
+  }
+  .separador-o::before{ left:-84px; }
+  .separador-o::after{ right:-84px; }
+
+  .community-section{ padding:32px 0 56px; }
+  .community-section .community-box{ max-width:460px; padding:18px; border-color:var(--hairline); }
 
   footer{
     border-top:1px solid var(--hairline);
@@ -432,8 +493,18 @@
 
   <section class="oferta wrap" id="probar">
     <h2>Deja de adivinar. Empieza a ver.</h2>
-    <p class="lead">Pruébala ahora mismo, sin registro, sin tarjeta, en 10 segundos. Entra al modo demo y muévete libre por toda la app.</p>
+    <p class="lead">Un pago único. Licencia de 5 años. Tuyo desde hoy.</p>
 
+    <div class="inversion-box">
+      <div class="inversion-monto"><span class="inversion-signo">$</span>199</div>
+      <p class="inversion-detalle">Tu inversión única, precio Latinoamérica. <strong>Licencia de 5 años</strong>, soporte y actualizaciones incluidos todo ese tiempo. Sin suscripción ni pagos mensuales ni publicidad fastidiosa.</p>
+      <a href="#" class="btn btn-primary btn-comprar" id="btn-comprar-paypal" data-pago="paypal">Comprar ahora — $199</a>
+      <p class="inversion-metodos">Pago con PayPal. Próximamente Stripe y Bitcoin.</p>
+    </div>
+
+    <div class="separador-o">o</div>
+
+    <p class="lead" style="margin-bottom:18px;">Pruébala primero, sin registro ni tarjeta, en 10 segundos.</p>
     <div class="demo-box">
       <div class="demo-box-titulo">Entra a la demo con cualquiera de estos códigos</div>
       <div class="demo-pines">
@@ -451,12 +522,21 @@
         </div>
       </div>
     </div>
-
     <div class="cta-row">
-      <a href="./index.html" class="btn btn-primary">Entrar a la demo ahora</a>
+      <a href="./index.html" class="btn btn-ghost">Entrar a la demo</a>
       <a href="./manual-maestro.html" class="btn btn-ghost">Leer el manual completo</a>
     </div>
-    <p class="precio-nota">Gratis hasta 25 productos, 100 ventas al mes y 1 empleado. Cuando tu negocio crezca, activas con un pago único: <strong>licencia de 5 años</strong>, soporte y actualizaciones incluidos todo ese tiempo. Sin suscripción ni pagos mensuales ni publicidad fastidiosa.</p>
+  </section>
+
+  <section class="community-section wrap">
+    <div class="community-box">
+      <div class="community-box-titulo">Servicio a la comunidad</div>
+      <p class="community-box-texto">Gratis para todos los negocios que apenas arrancan, para que puedan manejar hasta 25 productos, 100 ventas al mes y 1 empleado.</p>
+      <div class="community-pin">
+        <span class="community-pin-num">7-8-9</span>
+        <span class="community-pin-rol">Empezar a usar — activa tu propia instancia gratuita</span>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -501,6 +581,19 @@
   horasInput.addEventListener("input", calcular);
   valorHoraInput.addEventListener("input", calcular);
   calcular();
+
+  // Boton de compra (JFC 2026-08-11): PayPal se conecta aparte, en las
+  // proximas 24h -- despues Stripe y Bitcoin. Hasta que eso este listo,
+  // el boton no debe hacer nada roto (un href="#" solo saltaria al tope
+  // de la pagina). Para conectar PayPal: reemplazar este handler por el
+  // boton/checkout real de PayPal (o cambiar el <a> por su botón nativo).
+  var btnComprar = document.getElementById("btn-comprar-paypal");
+  if (btnComprar) {
+    btnComprar.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      // TODO(JFC): reemplazar por window.location a PayPal checkout real.
+    });
+  }
 })();
 </script>
 
