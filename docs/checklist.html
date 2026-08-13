@@ -165,6 +165,25 @@
   /* La barra fija tapa el pie; se compensa solo cuando esta visible. */
   body.con-barra-demo{ padding-bottom:78px; }
 
+  /* Mision y vision, version corta. Mobile-first: los tamanos base son los de
+     320px y crecen con min-width. Colores solidos, cero opacidad. */
+  .mision-corta{ margin:32px 0 6px; padding:22px 20px; background:var(--card);
+    border:1px solid var(--hairline); border-radius:16px; }
+  .mision-et{ font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:#B54E0A !important; -webkit-text-fill-color:#B54E0A !important; margin:0 0 14px; }
+  .mision-frase{ font-family:var(--font-display); font-size:19px; line-height:1.4; font-weight:700;
+    color:#0F1923 !important; -webkit-text-fill-color:#0F1923 !important;
+    border-left:4px solid #F97316; padding-left:14px; margin:0 0 16px; }
+  .mision-frase-v{ border-left-color:#00C87A; margin-bottom:0; }
+  @media (min-width:600px){ .mision-frase{ font-size:22px; } }
+  /* iOS Safari y los navegadores de WhatsApp/Telegram reinterpretan los colores
+     en modo oscuro aunque el CSS diga otra cosa. Repetir cada regla de texto con
+     !important es lo unico que gana. NO borrar este bloque. */
+  @media (prefers-color-scheme: dark){
+    .mision-corta{ background:var(--card) !important; }
+    .mision-et{ color:#B54E0A !important; -webkit-text-fill-color:#B54E0A !important; }
+    .mision-frase{ color:#0F1923 !important; -webkit-text-fill-color:#0F1923 !important; }
+  }
   .pie{ text-align:center; font-size:14px; padding:6px 0 40px; }
   .pie a{ color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; text-decoration:underline; }
 
@@ -203,6 +222,17 @@
     <p class="salida-demo-txt">¿Prefieres verla antes de responder nada?</p>
     <a href="https://jfcarpiopuntocom.github.io/AMIGABLE/index.html" class="btn btn-primary">Entrar a la demo ahora</a>
     <p class="salida-demo-pins">Códigos: <strong>888</strong> dueño/a · <strong>260</strong> empleado/a · <strong>357</strong> contador/a</p>
+  </section>
+
+  <!-- MISION Y VISION (version corta)
+       Fuente unica: MISION-VISION.md en la raiz del repo. Aqui va SIN los parrafos
+       de desarrollo: este archivo se manda por WhatsApp y tiene que seguir siendo
+       corto. Si cambia el texto en MISION-VISION.md, cambia aqui, en manifiesto.html
+       y en manual-maestro.html. -->
+  <section class="mision-corta">
+    <p class="mision-et">Por qué existe</p>
+    <p class="mision-frase">Que ningún negocio pequeño dependa de que una sola persona lo recuerde todo.</p>
+    <p class="mision-frase mision-frase-v">Un negocio propio que no cueste la vida propia.</p>
   </section>
 
   <p class="pie">Hecho por <a href="https://jfcarpio.com" target="_blank" rel="noopener">jfcarpio.com</a> · <a href="https://jfcarpiopuntocom.github.io/AMIGABLE/ahorra.html">amigable-123</a></p>

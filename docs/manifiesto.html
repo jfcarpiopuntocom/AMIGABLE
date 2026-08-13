@@ -92,12 +92,13 @@
     padding:3px;background:#0F1923;
     font-size:13px;font-weight:600;
   }
-  .lang-toggle button{
+  .lang-toggle a,.lang-toggle span{text-decoration:none;display:inline-flex;align-items:center;}
+  .lang-toggle button,.lang-toggle a,.lang-toggle span{
     border:0;background:transparent;padding:6px 14px;border-radius:999px;
     cursor:pointer;color:#CCCCCC;font-weight:600;
     transition:all .25s ease;
   }
-  .lang-toggle button.active{background:#FFC700;color:#0F1923}
+  .lang-toggle span.active,.lang-toggle button.active{background:#FFC700;color:#0F1923}
 
   .hero{
     position:relative;
@@ -126,7 +127,7 @@
   .hero-inner{position:relative;z-index:1;max-width:980px;margin:0 auto}
   .eyebrow{
     display:inline-block;
-    font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+    font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
     color:var(--accent);
     padding:8px 18px;border:1px solid #D4ECF5;border-radius:999px;
     background:#EAF4F8;
@@ -433,9 +434,12 @@
     <a href="#colores">El lenguaje del color</a>
     <a href="#audiencias">Para quién</a>
   </div>
+  <!-- El EN no traduce esta pagina: lleva a friendly-123, que ES el producto en
+       ingles, con su propio precio y su propia licencia (F123-XXXX-XXXX). Una
+       sola fuente por idioma, cero copias que sincronizar a mano. -->
   <div class="lang-toggle" role="group">
-    <button data-lang="es" class="active">ES</button>
-    <button data-lang="en">EN</button>
+    <span class="active">ES</span>
+    <a href="https://jfcarpiopuntocom.github.io/friendly-123/manifiesto.html">EN</a>
   </div>
 </nav>
 
@@ -740,83 +744,6 @@
 </footer>
 
 <script>
-// Language switcher (safe in sandboxed environments)
-let currentLang = 'es';
-
-// Translations for key visible parts (manifesto style)
-const translations = {
-  es: {
-    eyebrow: "Un manifiesto contra el software que extrae valor de quienes venden",
-    heroTitle: "Mi negocio no necesita<br><em>otra suscripción eterna.</em><br>Necesita claridad y control.",
-    heroLead: "I am tired of unstable internet, monthly fees for something I use every day, and someone else owning my sales data. I want a system that works offline, is truly encrypted, and explains itself through six clear colors.",
-    probTitle: "El software moderno está diseñado<br>para <em>extraer</em>, no para servir."
-  },
-  en: {
-    eyebrow: "A manifesto against software that extracts value from those who sell",
-    heroTitle: "My business doesn’t need<br><em>another endless subscription.</em><br>It needs clarity and control.",
-    heroLead: "I'm tired of depending on unstable internet. I'm tired of being charged every month for something I use every day. I'm tired of someone else owning my sales and inventory data. Instead, I want a system that works offline, is truly encrypted, and explains itself through six clear colors.",
-    probTitle: "Modern software is designed<br>to <em>extract</em>, not to serve."
-  }
-};
-
-function applyLang(lang) {
-  currentLang = lang;
-  document.documentElement.lang = lang;
-
-  // Toggle active button
-  document.querySelectorAll(".lang-toggle button").forEach(b => {
-    b.classList.toggle("active", b.dataset.lang === lang);
-  });
-
-  // Translate key elements
-  const t = translations[lang] || translations.es;
-
-  // Hero eyebrow
-  const eyebrowEl = document.getElementById('hero-eyebrow');
-  if (eyebrowEl) eyebrowEl.textContent = t.eyebrow;
-
-  // Hero title
-  const titleEl = document.getElementById('hero-title');
-  if (titleEl) titleEl.innerHTML = t.heroTitle;
-
-  // Hero lead
-  const leadEl = document.getElementById('hero-lead');
-  if (leadEl) leadEl.textContent = t.heroLead;
-
-  // Problem title (example)
-  const probTitle = document.querySelector('#problema h2');
-  if (probTitle) probTitle.innerHTML = t.probTitle;
-
-  // Safe localStorage
-  try {
-    localStorage.setItem("f123_lang", lang);
-  } catch (e) {}
-}
-
-// Add IDs to elements we want to translate
-document.addEventListener('DOMContentLoaded', () => {
-  // Add IDs if they don't exist
-  const title = document.querySelector('.hero h1');
-  if (title && !title.id) title.id = 'hero-title';
-
-  const lead = document.querySelector('.hero .lead');
-  if (lead && !lead.id) lead.id = 'hero-lead';
-
-  // Initial language
-  let savedLang = 'es';
-  try {
-    const saved = localStorage.getItem("f123_lang");
-    if (saved === 'es' || saved === 'en') savedLang = saved;
-  } catch (e) {}
-
-  applyLang(savedLang);
-
-  // Attach click handlers
-  document.querySelectorAll(".lang-toggle button").forEach(b => {
-    b.addEventListener("click", () => applyLang(b.dataset.lang));
-  });
-});
-
 // Reveal on scroll
 const io = new IntersectionObserver((entries) => {
   entries.forEach(e => {
