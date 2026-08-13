@@ -317,6 +317,28 @@
   .calc-cta{ display:flex; width:100%; margin-top:20px; }
   .calc-wa-link{ display:block; margin-top:12px; font-size:14px; color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; text-decoration:underline; }
 
+  .factoids{
+    display:grid; grid-template-columns:1fr; gap:12px;
+    max-width:640px; margin:34px auto 0;
+  }
+  @media (min-width:600px){ .factoids{ grid-template-columns:1fr 1fr; } }
+  .factoid{
+    background:var(--card); border:1px solid var(--hairline); border-radius:12px;
+    padding:18px; text-align:center;
+  }
+  .factoid-n{
+    display:block; font-family:var(--font-display); font-weight:700; font-size:32px;
+    font-variant-numeric:tabular-nums; line-height:1.1; margin-bottom:6px;
+    color:var(--verde-dk) !important; -webkit-text-fill-color:var(--verde-dk) !important;
+  }
+  .factoid-l{ display:block; font-size:14px; line-height:1.45; }
+  .factoid-usa{ text-align:center; font-size:15px; margin-top:16px; }
+  .factoid-usa a{ color:var(--azul-dk) !important; -webkit-text-fill-color:var(--azul-dk) !important; text-decoration:underline; }
+
+  .checklist-cta{ text-align:center; padding:8px 0 4px; }
+  .checklist-cta-txt{ font-size:16px; margin-bottom:14px; }
+  .checklist-cta .btn{ display:inline-flex; }
+
   .flecha-abajo{ text-align:center; font-size:14px; margin-top:28px; }
 
   .victoria{ background:var(--card); border-top:1px solid var(--hairline); border-bottom:1px solid var(--hairline); }
@@ -558,7 +580,7 @@
     <div class="cta-row">
       <a href="#calculadora" class="btn btn-primary">Calcular mi ahorro</a>
     </div>
-    <p class="hero-atajo">¿Ya te hablaron de amigable-123? <a href="#probar">Salta directo a la demo</a>.</p>
+    <p class="hero-atajo">¿Ya te hablaron de amigable-123? <a href="#probar">Salta directo a la demo</a>.<br>¿Prefieres saber primero si te sirve? <a href="./checklist.html">Responde 12 preguntas en 2 minutos</a>.</p>
 
     <div class="tesis">
       <p class="tesis-linea">Adentro, cada producto se enciende solo:</p>
@@ -654,6 +676,25 @@
       </div>
       <p class="calc-nota">*Basado en el 50% de reducción de tiempo que reportan los negocios que migran del cuaderno/memoria a amigable-123. Tu resultado real depende de tu negocio.</p>
     </div>
+    <div class="factoids">
+      <div class="factoid">
+        <span class="factoid-n">6 h</span>
+        <span class="factoid-l">por semana es lo que dedica en promedio un dueño a contar y cuadrar a mano</span>
+      </div>
+      <div class="factoid">
+        <span class="factoid-n">156 h</span>
+        <span class="factoid-l">al año recuperadas con ese mismo promedio: 19 jornadas completas de 8 horas</span>
+      </div>
+      <div class="factoid">
+        <span class="factoid-n">$468</span>
+        <span class="factoid-l">valor de ese tiempo en Latinoamérica, a $3 la hora del dueño-gerente</span>
+      </div>
+      <div class="factoid">
+        <span class="factoid-n">$3.900</span>
+        <span class="factoid-l">el mismo tiempo en Estados Unidos, a $25 la hora</span>
+      </div>
+    </div>
+    <p class="factoid-usa">¿Tu negocio está en Estados Unidos? <a href="https://jfcarpiopuntocom.github.io/friendly-123/" target="_blank" rel="noopener">friendly-123 es la versión en inglés</a>, hecha para ese mercado.</p>
     <p class="flecha-abajo" aria-hidden="true">↓ Y esto es lo que ves cuando abres la app</p>
   </section>
 
@@ -888,6 +929,11 @@
       <p class="inversion-cupo">Acompaño personalmente la puesta en marcha de los primeros negocios de cada mes. Mientras sea yo solo quien da soporte, ese acompañamiento uno a uno tiene cupo real.</p>
       <p class="inversion-garantia">Si algo no te cuadra, me escribes por WhatsApp y lo resolvemos. Trato directo con <a href="https://jfcarpio.com" target="_blank" rel="noopener">jfcarpio.com</a>, no con un call center.</p>
     </div>
+  </section>
+
+  <section class="checklist-cta wrap">
+    <p class="checklist-cta-txt">¿Todavía no sabes si esto es para tu negocio?</p>
+    <a href="./checklist.html" class="btn btn-ghost">Responder 12 preguntas y averiguarlo</a>
   </section>
 
   <section class="community-section wrap">
