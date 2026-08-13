@@ -12,15 +12,15 @@
   // ilumina el boton del nav de esa vista), titulo y texto. Textos ES (esta
   // app es solo espanol, por decision de JFC).
   const PASOS = [
-    { vista: "hoy", sel: "nav", titulo: "Tu barra de navegación", texto: "Desde aquí te mueves por toda la app. Este tutorial te lleva de la mano por cada sección — usa Siguiente para avanzar." },
+    { vista: "hoy", sel: "nav", titulo: "Tu barra de navegación", texto: "Desde aquí te mueves por toda la app. Este tutorial te lleva de la mano por cada sección. Usa Siguiente para avanzar." },
     { vista: "hoy", sel: null, titulo: "Hoy: tu día de un vistazo", texto: "Semáforo general, ventas de hoy y alertas de stock. Si algo necesita tu atención, aparece aquí primero, en rojo." },
-    { vista: "inventario", sel: "#btnAltaProducto", titulo: "Crea tus productos aquí", texto: "Con este botón das de alta un producto: nombre, precio, costo y stock. Es el corazón de tu negocio — al final del tutorial vuelves aquí a crear el tuyo." },
-    { vista: "inventario", sel: "#gridInventario", titulo: "Tus productos hablan en colores", texto: "Rojo: reponer urgente. Amarillo: revisar pronto. Azul: buen margen, impúlsalo. Verde: todo en orden. No hay que interpretar números — el color te lo dice." },
+    { vista: "inventario", sel: "#btnAltaProducto", titulo: "Crea tus productos aquí", texto: "Con este botón das de alta un producto: nombre, precio, costo y stock. Es el corazón de tu negocio: al final del tutorial vuelves aquí a crear el tuyo." },
+    { vista: "inventario", sel: "#gridInventario", titulo: "Tus productos hablan en colores", texto: "Verde: todo en orden. Dorado: buen margen, impúlsalo. Naranja: revisar pronto. Rojo: reponer urgente. Negro: capital dormido, no se mueve hace tiempo. No hay que interpretar números, el color te lo dice." },
     { vista: "escanear", sel: null, titulo: "Vende en segundos", texto: "Escanea el código de barras (o escribe el SKU) y la venta queda registrada con stock descontado. Sin cajas registradoras ni pasos extra." },
-    { vista: "perchas", sel: "#vp-btn-agregar", titulo: "Crea tus perchas", texto: "Una percha es un punto de venta: tu local, un stand de socio, una feria. Aquí las creas y les asignas productos, con comisión por socio si aplica." },
+    { vista: "perchas", sel: "#vp-btn-agregar", titulo: "Crea tus perchas", texto: "Una percha es un lugar donde tienes producto: tu local, un stand de socio, una feria. Aquí las creas y les asignas productos, con comisión por socio si aplica." },
     { vista: "clientes", sel: "#btnAltaCliente", titulo: "Tus clientes", texto: "Registra clientes, evalúa trato y confiabilidad, y mira su historial. Tú decides a quién fiar y a quién no, con datos." },
     { vista: "comisiones", sel: null, titulo: "Comisiones sin peleas", texto: "La app calcula sola cuánto le toca a cada socio o promotora según lo vendido. Liquidas con un toque y puedes mandar el recibo por WhatsApp." },
-    { vista: "avanzado", sel: null, titulo: "Avanzado: tu caja fuerte", texto: "Respaldos, claves, correo de recuperación, reportes contables y gastos. Todo vive en TU dispositivo — sin nube, sin suscripciones." },
+    { vista: "avanzado", sel: null, titulo: "Avanzado: tu caja fuerte", texto: "Respaldos, claves, correo de recuperación, reportes contables y gastos. Todo vive en TU dispositivo, sin nube y sin suscripciones." },
   ];
 
   let idx = -1;

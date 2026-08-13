@@ -153,3 +153,37 @@ Dos fases independientes. Cada una se puede desplegar sola.
 **Ambas fases, antes de dar por terminado:**
 - `grep -in "diseñado para\|el objetivo de\|esta seccion\|framework"` sobre `auth-ui.js`: cero resultados en texto visible
 - Confirmar que ningún texto nuevo usa azul como color de estado
+
+
+---
+
+## Auditoría 2026-08-13: las 18, verificadas contra el código
+
+Las 18 están implementadas y verificadas por grep sobre `auth-ui.js`, no por memoria:
+A1 a A10 y B1 a B8, todas presentes. El recuadro rojo de emergencia del aviso de PIN
+(`#FDECEA`) ya no existe, que era la comprobación en negativo de A6.
+
+Correcciones aplicadas sobre el plan original:
+- **B3** dispara a los **30 segundos**, no a los 2 minutos.
+- **B4** dice "Empezar a usar la app para mi negocio", no "tu propio negocio".
+- **888** no abría el demo. Entraba como dueño real. Corregido.
+
+### Lo que la Fase A NO cubre
+
+La Fase A termina en la pantalla de éxito. El onboarding real del que empieza a usarla
+sigue después, en `welcome-ui.js` (wizard con candado de confirmación) y `tutorial-ui.js`
+(tour de 9 pasos por cada vista). Ese camino existía y no estaba en el plan. Auditado
+hoy, tenía tres defectos en texto que ve todo usuario nuevo:
+
+1. **El azul estaba en el semáforo del tutorial.** Decía "Rojo: reponer urgente.
+   Amarillo: revisar pronto. Azul: buen margen, impúlsalo. Verde: todo en orden."
+   Faltaban naranja y negro y sobraba el azul. Corregido a los cinco reales.
+2. **"Una percha es un punto de venta."** Contradice el posicionamiento entero.
+   Ahora dice "un lugar donde tienes producto".
+3. Cinco em dashes como conectores en prosa visible.
+
+### Pendiente de decisión
+
+El texto de A4 promete tres pasos concretos ("carga 10 productos, registra una venta de
+prueba, mira cómo cambia el color"). El tutorial recorre las nueve vistas de la app en
+vez de esos tres pasos. La promesa y el recorrido no son la misma cosa.
