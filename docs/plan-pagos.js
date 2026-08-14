@@ -53,6 +53,34 @@
 (function (global) {
   "use strict";
 
+  /* ---------------------------------------------------------------------------
+     Normalizacion y dedupe. Ver el comentario del fix de doble escritura
+     (2026-08-13). NO simplificar esto a h.datos: hay hechos reales guardados
+     con las dos formas y ninguna se puede dejar de leer.
+     --------------------------------------------------------------------------- */
+  function _d(h) { return (h && h.datos && h.datos.payload) ? h.datos.payload : ((h && h.datos) || {}); }
+  function _anidado(h) { return !!(h && h.datos && h.datos.payload); }
+  function _sinDuplicados(hs, campoDueno) {
+    var grupos = {};
+    hs.forEach(function (h) {
+      var d = _d(h);
+      var k = [h.tipo, d[campoDueno], d.monto, d.motivo || "", Math.floor((Number(h.ts) || 0) / 2000)].join("|");
+      (grupos[k] = grupos[k] || []).push(h);
+    });
+    var out = [];
+    Object.keys(grupos).forEach(function (k) {
+      var g = grupos[k];
+      var an = g.filter(_anidado);
+      var pl = g.filter(function (h) { return !_anidado(h); });
+      /* Un anidado + un plano en la misma ventana = el par que dejo el bug.
+         Se cuenta una sola vez. Si son todos de la misma forma, son
+         movimientos distintos de verdad y van todos. */
+      if (an.length && pl.length) out = out.concat(an.length >= pl.length ? an : pl);
+      else out = out.concat(g);
+    });
+    return out;
+  }
+
   var TIPO_CREADO = "plan_pago_creado";
   var TIPO_ANULADO = "plan_pago_anulado";
   var FRECUENCIAS = { mensual: 1, quincenal: 15, semanal: 7 };
@@ -112,18 +140,20 @@
       return Promise.resolve([]);
     }
     return global.AMG.Hechos.todos().then(function (todos) {
-      return (todos || []).filter(function (h) {
-        var p = (h && h.datos) || {};
-        return String(p.clienteId || "") === String(clienteId);
-      });
+      return _sinDuplicados((todos || []).filter(function (h) {
+        return String(_d(h).clienteId || "") === String(clienteId);
+      }), "clienteId");
     }).catch(function (e) {
       try { console.error("plan-pagos: no se pudieron leer los hechos", e); } catch (_) {}
       return [];
     });
   }
 
+  /* hechos.js sella con ts, no con fecha. Leer h.fecha daba 0 para TODOS los
+     hechos, y el orden y el corte "abonos desde que existe el plan" quedaban
+     al azar. Se deja h.fecha como respaldo por si algun hecho viejo lo trae. */
   function fechaDe(h) {
-    return Number(h && h.fecha) || 0;
+    return Number(h && (h.ts || h.fecha)) || 0;
   }
 
   /* Devuelve el plan vigente, o null. Un plan_pago_anulado posterior lo mata.
@@ -138,7 +168,7 @@
         return h.tipo === TIPO_ANULADO && fechaDe(h) >= fechaDe(ultimo);
       });
       if (anuladoDespues) return null;
-      var p = ultimo.datos || {};
+      var p = _d(ultimo);
       return {
         creadoEn: fechaDe(ultimo),
         montoTotal: Number(p.montoTotal) || 0,
@@ -182,10 +212,18 @@
       quien: quienSoy()
     };
 
-    var eb = bus();
-    if (eb) eb.emit(TIPO_CREADO + ":completado", { payload: payload });
+    /* UN SOLO CAMINO DE ESCRITURA (fix 2026-08-13). Antes esto emitia
+       ":completado" ANTES de registrar, y hechos.js lo persistia por su cuenta:
+       dos hechos por un solo movimiento. Ahora se registra primero, se espera a
+       que quede en disco, y recien entonces se avisa. El sufijo es
+       ":registrado" a proposito: hechos.js solo persiste ":completado", asi que
+       este aviso no puede volver a duplicar nada. */
     if (global.AMG && global.AMG.Hechos && global.AMG.Hechos.registrar) {
-      return global.AMG.Hechos.registrar(TIPO_CREADO, payload);
+      return global.AMG.Hechos.registrar(TIPO_CREADO, payload).then(function (r) {
+        var eb = bus();
+        if (eb) eb.emit(TIPO_CREADO + ":registrado", { payload: payload });
+        return r;
+      });
     }
     return Promise.reject(new Error("plan-pagos: AMG.Hechos no disponible"));
   }
@@ -199,10 +237,18 @@
       motivo: String(motivo || "").slice(0, 300),
       quien: quienSoy()
     };
-    var eb = bus();
-    if (eb) eb.emit(TIPO_ANULADO + ":completado", { payload: payload });
+    /* UN SOLO CAMINO DE ESCRITURA (fix 2026-08-13). Antes esto emitia
+       ":completado" ANTES de registrar, y hechos.js lo persistia por su cuenta:
+       dos hechos por un solo movimiento. Ahora se registra primero, se espera a
+       que quede en disco, y recien entonces se avisa. El sufijo es
+       ":registrado" a proposito: hechos.js solo persiste ":completado", asi que
+       este aviso no puede volver a duplicar nada. */
     if (global.AMG && global.AMG.Hechos && global.AMG.Hechos.registrar) {
-      return global.AMG.Hechos.registrar(TIPO_ANULADO, payload);
+      return global.AMG.Hechos.registrar(TIPO_ANULADO, payload).then(function (r) {
+        var eb = bus();
+        if (eb) eb.emit(TIPO_ANULADO + ":registrado", { payload: payload });
+        return r;
+      });
     }
     return Promise.reject(new Error("plan-pagos: AMG.Hechos no disponible"));
   }
@@ -235,7 +281,7 @@
       return hechosDe(clienteId).then(function (hs) {
         var abonado = hs.filter(function (h) {
           return h.tipo === "cartera_abono" && fechaDe(h) >= plan.creadoEn;
-        }).reduce(function (a, h) { return a + (Number(h.datos && h.datos.monto) || 0); }, 0);
+        }).reduce(function (a, h) { return a + (Number(_d(h).monto) || 0); }, 0);
 
         var vencidas = cuotasVencidasA(plan, hoy);
         var esperado = +(vencidas * plan.montoCuota).toFixed(2);
