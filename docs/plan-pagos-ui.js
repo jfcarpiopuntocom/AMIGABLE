@@ -243,6 +243,78 @@
   }
   global.fiarCliente = modalFiar;
 
+  /* Abonar tambien pasa a modal. Con prompt() no se puede mostrar cuanto debe
+     ni cuanto falta para la cuota, que es justo lo que hace falta saber en el
+     momento de recibir la plata. Y desentonaba con el modal de fiar. */
+  function modalAbonar(clienteId, nombre) {
+    if (document.getElementById("pp-modal-abono")) return;
+    var m = document.createElement("div");
+    m.className = "pp-modal";
+    m.id = "pp-modal-abono";
+    m.innerHTML =
+      '<div class="pp-caja">' +
+        '<h3>Registrar un abono</h3>' +
+        '<p class="pp-resumen" id="pp-ab-ctx">Cargando...</p>' +
+        '<div class="pp-fg"><label for="pp-ab-monto">Cuanto abona</label>' +
+          '<input id="pp-ab-monto" type="number" inputmode="decimal" min="0" step="0.01"></div>' +
+        '<button type="button" class="pp-btn" id="pp-ab-ok">Registrar abono</button>' +
+        '<button type="button" class="pp-btn gris" id="pp-ab-cancel">Cancelar</button>' +
+        '<p class="pp-msg" id="pp-ab-msg"></p>' +
+      '</div>';
+    document.body.appendChild(m);
+    var q = function (id) { return m.querySelector("#" + id); };
+
+    function cerrar() { try { m.remove(); } catch (_) {} document.removeEventListener("keydown", onKey, true); }
+    function onKey(ev) { if (ev.key === "Escape" || ev.key === "Esc") { ev.stopPropagation(); cerrar(); } }
+    document.addEventListener("keydown", onKey, true);
+    m.addEventListener("click", function (ev) { if (ev.target === m) cerrar(); });
+    q("pp-ab-cancel").addEventListener("click", cerrar);
+
+    /* Contexto ANTES de escribir el monto: cuanto debe y, si hay plan, cuanto
+       falta para ponerse al dia. Sugerir ese numero ahorra la cuenta mental. */
+    fetch(API + "/clientes/" + clienteId + "/cartera")
+      .then(function (r) { return r.json(); })
+      .then(function (info) {
+        var debe = info && info.saldo < 0 ? -info.saldo : 0;
+        return global.AMG.PlanPagos.estadoDelPlan(clienteId).then(function (e) {
+          var t = debe > 0 ? "Debe " + fmt(debe) + "." : "No tiene saldo pendiente.";
+          if (e.hayPlan && e.diferencia < 0) {
+            var falta = -e.diferencia;
+            t += " Para ponerse al dia faltan " + fmt(falta) + ".";
+            q("pp-ab-monto").value = falta.toFixed(2);
+          } else if (e.hayPlan) {
+            t += " Esta " + (e.diferencia > 0 ? "adelantado" : "al dia") + " con su plan.";
+          }
+          q("pp-ab-ctx").textContent = t;
+        });
+      }).catch(function () { q("pp-ab-ctx").textContent = ""; });
+
+    q("pp-ab-ok").addEventListener("click", function (ev) {
+      var btn = ev.currentTarget;
+      if (btn.disabled) return;
+      btn.disabled = true;
+      setTimeout(function () { btn.disabled = false; }, 1000);
+      var msg = q("pp-ab-msg");
+      var monto = Number(q("pp-ab-monto").value);
+      if (!(monto > 0)) { msg.style.color = "#B0183E"; msg.textContent = "El monto debe ser mayor a cero."; return; }
+      fetch(API + "/clientes/" + clienteId + "/abonar", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monto: monto, motivo: "Abono" })
+      }).then(function (r) { return r.json(); }).then(function (r) {
+        if (r && r.error) throw new Error(r.error);
+        cerrar();
+        if (global.pintarSaldoCartera) global.pintarSaldoCartera(clienteId);
+        refrescarHoy();
+      }).catch(function (e) {
+        msg.style.color = "#B0183E";
+        msg.textContent = (e && e.message) || "No se pudo registrar el abono.";
+      });
+    });
+
+    q("pp-ab-monto").focus();
+  }
+  global.abonarCliente = modalAbonar;
+
   // ---------------------------------------------------------------------------
   // B3 · la alerta en Hoy, y el filtro en Clientes
   // ---------------------------------------------------------------------------
