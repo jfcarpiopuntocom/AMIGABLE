@@ -1641,13 +1641,13 @@
        matriz de estaciones son SOLO del dueno (cargarClientes aplica el rol). -->
   <section id="vista-clientes" class="vista">
     <h3 class="seccion" style="margin-top:0;">Mis Clientes</h3>
-    <p style="font-size:16px;color:var(--ink-soft);margin-top:0;">Tu cartera completa, viva y buscable al instante. Más abajo, la lectura por estaciones te dice a quién cuidar y a quién despertar.</p>
+    <p style="font-size:16px;color:var(--ink-soft);margin-top:0;">Tu cartera completa, viva y buscable al instante. Más abajo, la lectura por comportamiento te dice con quién puedes contar.</p>
     <details style="margin:-4px 0 12px;font-size:14px;">
       <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
       <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Agrega un cliente con nombre (y teléfono opcional) — recibe un código único automáticamente.</p>
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Busca con la lupa y toca "Vender a este cliente" para ir directo a Vendido con su nombre ya elegido.</p>
-        <p style="margin:0;font-size:14px;color:var(--ink);">3. Solo dueño: más abajo, la matriz de estaciones muestra quién lleva tiempo sin comprar — ahí sabes a quién escribirle.</p>
+        <p style="margin:0;font-size:14px;color:var(--ink);">3. Solo dueño: más abajo, la matriz de comportamiento muestra con quién puedes contar, y después la de estaciones, quién lleva tiempo sin comprar.</p>
       </div>
     </details>
     <div class="tag-card" style="padding:14px;">
@@ -2625,7 +2625,8 @@ async function cargarClientes(){
     const celda = (k) => { const e = ESTACIONES[k], l = grupos[k] || []; return `<div style="background:${e.bg};border:2px solid ${e.borde};border-radius:4px;padding:12px;min-height:90px;">
       <div style="font-weight:700;font-size:15px;color:${e.tinta};">${e.icono} ${e.titulo.split(" — ")[0]}</div>
       <div style="font-size:14px;color:#0F1923;margin-top:6px;">${l.length ? l.map((c) => escHtml(c.nombre.split(" ")[0])).join(", ") : "—"}</div></div>`; };
-    mc.innerHTML = `<h4 style="font-family:var(--font-display);font-weight:700;font-size:16px;margin:0 0 4px;">Matriz de estaciones</h4>
+    /* Se arma pero NO se escribe todavia: va DEBAJO de comportamiento. */
+    var htmlEstaciones = `<h4 style="font-family:var(--font-display);font-weight:700;font-size:16px;margin:0 0 4px;">Matriz de estaciones</h4>
       <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">Derecha: compran hace poco. Arriba: dejan más dinero. La esquina naranja es donde se recupera plata perdida.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         ${celda("otono")}${celda("verano")}
@@ -2654,9 +2655,9 @@ async function cargarClientes(){
       };
       const neutros = comp.neutro || [];
       const despedidos = comp.despedidos || [];
-      mc.innerHTML += `
+      var htmlComportamiento = `
         <h4 style="font-family:var(--font-display);font-weight:700;font-size:16px;margin:24px 0 4px;">Matriz de comportamiento</h4>
-        <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">El negocio evalúa al cliente. Toca "Calificar" en cada tarjeta y asigna Cumplimiento y Actitud del 1 al 5.</p>
+        <p style="font-size:15px;color:var(--ink-soft);margin-top:0;">Gracias a amigable-123 puedes calificar tú también a tus clientes, e incluso armar una lista negra. Toca Calificar en cada tarjeta y pon estrellas de cumplimiento y corazones de actitud, del 1 al 5.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           ${celdaComp(CUAD[0])}${celdaComp(CUAD[1])}
           ${celdaComp(CUAD[2])}${celdaComp(CUAD[3])}
@@ -2673,7 +2674,11 @@ async function cargarClientes(){
             </div>`).join("")}
           </div>
         </details>` : ""}`;
-    }
+      }
+      /* EL ORDEN IMPORTA (JFC, 2026-08-13): comportamiento primero, estaciones
+         despues. Con quien puedo contar pesa mas que en que epoca compra, y las
+         estaciones son una lectura secundaria que no debe abrir la seccion. */
+      mc.innerHTML = (typeof htmlComportamiento === "string" ? htmlComportamiento : "") + htmlEstaciones;
   }
   poblarSelectClientes(grupos);
   // Importar CSV: solo el dueno lo ve (regla JFC). El empleado se queda con el
@@ -3354,7 +3359,7 @@ function renderPerchaCard(u, sucursalesDisp, promotorasDisp) {
     </div>
     <div style="font-size:14px;color:var(--ink-soft);margin:4px 0 10px;">${tipoLabel}${comLabel}${u.esFeria ? ' · <strong style="color:var(--rust,#E86040);">FERIA</strong>' : ''}${u.esEvento ? ' · <strong style="color:var(--rust,#E86040);">EVENTO</strong>' : ''}${inactiva ? ' · DESACTIVADA' : ''}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-      ${tipo !== 'propio' ? `<button data-percha-comision="${u.id}" style="font-size:14px;padding:6px 10px;border:2px solid var(--verde,#2f7a4f);border-radius:4px;background:transparent;color:var(--verde,#2f7a4f);cursor:pointer;">💰 Comisión${escalasEfectivas.length ? ` (${escalasEfectivas.length} escalas)` : ''}</button>` : ''}
+      ${tipo !== 'propio' ? `<button data-percha-comision="${u.id}" style="font-size:14px;padding:6px 10px;border:2px solid var(--verde,#2f7a4f);border-radius:4px;background:transparent;color:var(--verde,#2f7a4f);cursor:pointer;">Comisión${escalasEfectivas.length ? ` (${escalasEfectivas.length} escalas)` : ''}</button>` : ''}
       <button data-percha-evento="${u.id}" data-evento-ahora="${u.esEvento ? '1' : ''}" style="font-size:14px;padding:6px 10px;border:2px solid var(--rust,#E86040);border-radius:4px;background:transparent;color:var(--rust,#E86040);cursor:pointer;">${u.esEvento ? 'Quitar marca evento' : 'Marcar como evento'}</button>
       <button data-percha-toggle="${u.id}" data-activa="${u.activa !== false}" data-feria="${u.esFeria ? '1' : ''}" style="font-size:14px;padding:6px 10px;border:2px solid var(--rust);border-radius:4px;background:transparent;color:var(--rust);cursor:pointer;">${inactiva ? 'Reactivar' : (u.esFeria ? 'Cerrar y liquidar' : 'Desactivar')}</button>
       <button data-percha-borrar="${u.id}" data-nombre="${escHtml(u.nombre)}" style="font-size:14px;padding:6px 10px;border:2px solid var(--rojo,#E8365D);border-radius:4px;background:transparent;color:var(--rojo,#E8365D);cursor:pointer;">Borrar</button>
@@ -3568,7 +3573,7 @@ async function abrirEditorComision(id, u){
       <p id="oc-com-nota" style="font-size:14px;color:var(--ink-soft);margin:4px 0 0;">${u.usarComisionPropia ? "" : `Por defecto está usando el ${Number(prom ? prom.comisionBase : 0) || 0}% de ${escHtml(prom ? prom.nombre : "su comisionista")}. Los campos de abajo solo aplican si activas el switch.`}</p>` : '';
   caja.innerHTML = `
     <div class="ficha-producto tag-card" style="text-align:left;background:var(--blanco-calido,#fbf5e8);">
-      <div class="titulo">💰 Comisión — ${escHtml(u.nombre)}</div>
+      <div class="titulo">Comisión — ${escHtml(u.nombre)}</div>
       <p style="font-size:14px;color:var(--ink-soft);">Comisión base y meta mensual. Si agregas tramos, la comisión sube según cuánto se acerque a la meta (ej: 25% hasta el 80% de la meta, 30% de ahí en adelante).</p>
       ${toggleHtml}
       <div id="oc-com-camposPropios" style="${(u.promotoraId && !u.usarComisionPropia) ? "pointer-events:none;background:var(--azul-suave,#dde5ec);border-radius:4px;padding:8px;" : ""}">
@@ -4026,7 +4031,7 @@ async function mostrarFormEditarProducto(id){
       <div id="ed-comision-wrap" style="margin-top:8px;display:${p.tipoProveedor === "consignacion" ? "block" : "none"};">
         <label style="display:block;font-size:14px;">Comisión al artista (%)<br>
           <input id="ed-comision-pct" type="number" min="0" max="100" step="1" value="${p.comisionProveedorPct || 0}" ${inp}></label>
-        <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 0;">Esto es solo una nota de referencia — NO se descuenta solo en la venta. La comisión que sí se calcula automático se configura por percha en Inventario → Perchas → 💰 Comisión.</p>
+        <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 0;">Esto es solo una nota de referencia — NO se descuenta solo en la venta. La comisión que sí se calcula automático se configura por percha en Inventario → Perchas → Comisión.</p>
       </div>
       <label style="display:block;margin-top:10px;font-size:14px;">Tipo de producto<br>
         <select id="ed-tipo-producto" ${inp}>
@@ -4258,7 +4263,7 @@ async function abrirAltaProducto(){
       <div id="np-comision-wrap" style="display:none;margin-top:8px;">
         <label style="display:block;font-size:14px;">Comisión al artista (%)<br>
           <input id="np-comision-pct" type="number" min="0" max="100" step="1" placeholder="Ej: 30" ${inp}></label>
-        <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 0;">Esto es solo una nota de referencia — NO se descuenta solo en la venta. La comisión que sí se calcula automático se configura por percha en Inventario → Perchas → 💰 Comisión.</p>
+        <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 0;">Esto es solo una nota de referencia — NO se descuenta solo en la venta. La comisión que sí se calcula automático se configura por percha en Inventario → Perchas → Comisión.</p>
       </div>
       <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:15px;font-weight:700;">
         <input id="np-perecible" type="checkbox" style="width:20px;height:20px;"> ¿Este producto expira?</label>
@@ -4315,7 +4320,7 @@ function pintarFicha(p){
       ${p.ubicacionNombre && p.ubicacionNombre !== "todas" ? `<div class="linea"><strong>Percha:</strong> ${escHtml(p.ubicacionNombre)}</div>` : ""}
       ${(p.otrasPerchas && p.otrasPerchas.length) ? `<div class="linea"><strong>${icoOC("percha", "currentColor", 12)} También en:</strong> ${p.otrasPerchas.map(h => `<span data-ver-hermano="${h.id}" style="cursor:pointer;text-decoration:underline;">${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)</span>`).join(" · ")}</div>` : ""}
       ${esDuenoOAdminFicha ? `<div class="linea"><strong>Costo:</strong> ${fmtMoney(p.costo||0)} · Margen: ${fmtMoney((p.precio||0)-(p.costo||0))} (${p.precio > 0 ? Math.round(((p.precio-(p.costo||0))/p.precio)*100) : 0}%)</div>` : ""}
-      ${(esDuenoOAdminFicha && p.otrasPerchas && p.otrasPerchas.some(h => h.precio != null && h.precio !== p.precio)) ? `<div class="linea" style="color:var(--rust,#E86040);"><strong>⚠ Precio distinto en otra percha</strong> — revisa "También en" arriba, se copió al crear la percha y no se actualiza sola.</div>` : ""}
+      ${(esDuenoOAdminFicha && p.otrasPerchas && p.otrasPerchas.some(h => h.precio != null && h.precio !== p.precio)) ? `<div class="linea" style="color:var(--rust,#E86040);"><strong>Precio distinto en otra percha</strong> — revisa "También en" arriba, se copió al crear la percha y no se actualiza sola.</div>` : ""}
       ${(p.stockComprometido > 0) ? `<div class="linea" style="color:#B8760A;"><strong>Reservado en transferencias pendientes:</strong> ${p.stockComprometido} unidades</div>` : ""}
       <div class="linea"><strong>Stock actual:</strong> ${p.stockActual} unidades${p.stockActual < 0 ? ` <span class="badge-estado rojo" style="margin-left:6px;">Descuadre — revisa el Log de actividad</span>` : ""}</div>
       ${p.perecible ? `<div class="linea"><strong>Vence:</strong> ${escHtml(p.fechaCaducidad || "sin fecha")}${p.metodoCosteo ? ` · ${escHtml(p.metodoCosteo)}` : ""}</div>` : ""}
@@ -5032,7 +5037,7 @@ async function abrirEditorComisionista(id, pr){
   const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"';
   caja.innerHTML = `
     <div class="ficha-producto tag-card" style="text-align:left;background:var(--blanco-calido,#fbf5e8);">
-      <div class="titulo">💰 Comisión — ${escHtml(pr.nombre)}</div>
+      <div class="titulo">Comisión — ${escHtml(pr.nombre)}</div>
       <p style="font-size:14px;color:var(--ink-soft);">Esta es la comisión del/de la comisionista: se aplica en cualquier percha donde esté asignado/a, salvo que esa percha tenga activado "usar su propia comisión estándar".</p>
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Comisión base %<br><input id="oc-com-base" type="number" min="0" max="100" step="1" value="${Number(pr.comisionBase)||0}" ${inp}></label>
@@ -5240,7 +5245,7 @@ async function cargarComisiones(){
         <tr><td><strong>Comisión de la promotor/a</strong></td><td style="text-align:right;"><strong>${fmtMoney(f.comisionSocio)}</strong></td></tr>
         <tr><td>Neto para el dueño</td><td style="text-align:right;">${fmtMoney(f.netoDueno)}</td></tr>
       </table>
-      ${f.contribFijaSuperaVentas ? `<p style="font-size:14px;font-weight:700;color:#B0183E;margin:8px 0 0;">⚠️ El aporte fijo ($${f.contribFija}) supera las ventas del mes — revisa el monto o el período.</p>` : ""}
+      ${f.contribFijaSuperaVentas ? `<p style="font-size:14px;font-weight:700;color:#B0183E;margin:8px 0 0;">El aporte fijo ($${f.contribFija}) supera las ventas del mes — revisa el monto o el período.</p>` : ""}
       ${(f.detallePendientes && f.detallePendientes.length) ? `
       <details style="margin-top:8px;">
         <summary style="font-size:14px;font-weight:700;cursor:pointer;color:var(--azul-medio,#2c4a68);user-select:none;">¿De qué ventas es este pago? →</summary>
@@ -5527,7 +5532,7 @@ async function marcarComisionPagada(ubicacionId, promotorNombre, monto){
     const neg = (function(){ try { const s = document.getElementById("oc-negocio-nombre"); return s ? s.textContent.trim() : ""; } catch(_){ return ""; } })();
     const mes = new Date().toLocaleDateString("es", { month: "long", year: "numeric" });
     const recibo = [
-      `✅ *Pago de comisión confirmado*`,
+      `*Pago de comisión confirmado*`,
       `Promotor/a: ${promotorNombre}`,
       `Monto: ${fmtMoney(monto)}`,
       `Mes: ${mes}`,

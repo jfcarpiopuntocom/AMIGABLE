@@ -50,7 +50,7 @@
     } catch (_) {}
     return w;
   }
-  var ETIQUETA_BCG = { 3: "⭐ estrella", 2: "🐄 vaca", 1: "🌱 promesa", 0: "" };
+  var ETIQUETA_BCG = { 3: "⭐ estrella", 2: "vaca", 1: "promesa", 0: "" };
 
   function construirLista(prods, bcgPesos) {
     var enReorden = (prods || []).filter(function (p) {
