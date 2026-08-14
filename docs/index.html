@@ -1814,7 +1814,7 @@
 
 <footer>
   <em>amigable-123: control de inventario, perchas, clientes y comisiones</em>
-  <br>Made in Cuenca :apps y herramientas: &mdash; powered by <a href="https://jfcarpio.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">jfcarpio.com</a> y <a href="https://avatiun.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">avatiun.com</a> &mdash; 2026
+  <br>Made in Cuenca, powered by <a href="https://jfcarpio.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">jfcarpio.com</a> y <a href="https://avatiun.com" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">avatiun.com</a>, 2026
 </footer>
 
 <!-- MODAL ETIQUETA -->
@@ -2928,7 +2928,7 @@ async function revisarDescuadres(){
       const d = it.detalle || {};
       return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;font-size:14px;flex-wrap:wrap;">` +
         `<span>${escHtml(d.producto || "")} quedó en ${escHtml(String(d.stockActual != null ? d.stockActual : "?"))} — dos dispositivos vendieron casi al mismo tiempo.</span>` +
-        `<button onclick="_marcarDescuadreVisto('${escHtml(it.id)}');revisarDescuadres();" style="font-size:12px;padding:5px 10px;border:1.5px solid var(--rojo,#a3392a);border-radius:5px;background:transparent;color:var(--rojo,#a3392a);cursor:pointer;flex-shrink:0;">Visto</button>` +
+        `<button onclick="_marcarDescuadreVisto('${escHtml(it.id)}');revisarDescuadres();" style="font-size:13px;padding:5px 10px;border:1.5px solid var(--rojo,#a3392a);border-radius:5px;background:transparent;color:var(--rojo,#a3392a);cursor:pointer;flex-shrink:0;">Visto</button>` +
         `</div>`;
     }).join("") +
     `</div>`;
