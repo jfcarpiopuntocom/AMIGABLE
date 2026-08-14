@@ -2421,7 +2421,7 @@ function tarjetaCliente(c, esDueno, ctx) {
   // con este cliente ya elegido en el pulldown — sin retipear nombre.
   const btnVender = `<button class="ir" style="margin-top:8px;font-size:14px;padding:5px 14px;"
       onclick="irAVenderConCliente('${c.id}')">${icoOC("caja", "currentColor", 13)} Vender a este cliente</button>`;
-  return `<div style="background:#FFFFFF;border:2px solid var(--linea,#D7E0E8);border-radius:4px;padding:10px 12px;margin:6px 0;">
+  return `<div class="cliente-card" style="background:#FFFFFF;border:2px solid var(--linea,#D7E0E8);border-radius:4px;padding:10px 12px;margin:6px 0;">
     <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
       <strong style="font-size:16px;color:#0F1923;">${escHtml(c.nombre)}</strong>
       <span style="font-family:var(--font-mono);font-size:14px;color:#2E6278;margin-left:6px;">${escHtml(c.codigo)}</span>
@@ -6191,6 +6191,7 @@ function ocAlert(mensaje) {
 <script src="./hechos.js"></script>
 <script src="./cartera.js"></script>
 <script src="./plan-pagos.js"></script>
+<script src="./plan-pagos-ui.js"></script>
 <script src="./caja-chica.js"></script>
 <script src="./reconciliacion.js"></script>
 <script src="./respaldo-empleado.js"></script>
