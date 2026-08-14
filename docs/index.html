@@ -2402,6 +2402,11 @@ function tarjetaCliente(c, esDueno, ctx) {
         </span>
       </div>${campoHora}
     </div>` : "";
+  /* Fiado / abono. Solo el dueno registra movimientos de cartera: un
+     empleado puede vender, pero no decidir a quien se le fia. */
+  const btnFiar = esDueno
+    ? `<button class="btn-mini" style="background:#E8A020;color:#0F1923;"
+        onclick="fiarCliente('${c.id}','${escHtml(c.nombre)}')">Fiar / abonar</button>` : "";
   const btnDespedir = (esDueno && nivelEv(ev.trato) === -1 && nivelEv(ev.confiabilidad) === -1)
     ? `<button style="margin-top:8px;font-size:14px;padding:4px 12px;background:#FDECEA;border:1.5px solid #C0392B;border-radius:4px;color:#C0392B !important;-webkit-text-fill-color:#C0392B !important;cursor:pointer;"
         onclick="despedirCliente('${c.id}','${escHtml(c.nombre)}')">Despedir cliente</button>` : "";
@@ -2423,7 +2428,7 @@ function tarjetaCliente(c, esDueno, ctx) {
       ${esDueno ? `${badgeComportamiento(ev)}${chipProm}${chipEstacion}` : ""}
     </div>
     ${dato}${lineaContacto}${lineaNotas}${historialEventos}
-    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">${controles}${btnVender}${btnEditar}${btnDespedir}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">${controles}${btnVender}${btnEditar}${btnFiar}${btnDespedir}</div><div id="cartera-${c.id}" style="margin-top:8px;"></div>
     ${panelEditar}
   </div>`;
 }
@@ -5423,6 +5428,67 @@ async function evaluarCliente(clienteId, campo, valor, btn) {
   }
 }
 
+/* ===================== CARTERA DE CLIENTES (fiado / abono) =====================
+   Portado de friendly-123 (2026-08-13). El saldo que se pinta aqui SIEMPRE
+   viene del endpoint, que lo deriva de los hechos. Nunca se guarda ni se
+   calcula en la UI: si algun dia esta funcion desaparece, el saldo real sigue
+   intacto en hechos.js.
+   Saldo negativo = el cliente debe. Saldo positivo = tiene credito a favor.
+   Fiado SIN penalidad (regla de JFC): la alerta se puede apagar por cliente y
+   no existe ningun interes ni recargo. NO agregar uno sin pedirselo. */
+async function pintarSaldoCartera(clienteId) {
+  const el = document.getElementById(`cartera-${clienteId}`);
+  if (!el) return;
+  try {
+    const info = await (await fetch(`${API}/clientes/${clienteId}/cartera`)).json();
+    if (!info || !info.saldo) { el.innerHTML = ""; return; }
+    const debe = info.saldo < 0;
+    const texto = debe ? `Debe ${fmtMoney(-info.saldo)}` : `A favor ${fmtMoney(info.saldo)}`;
+    const alertaOn = window.AMG && window.AMG.Cartera ? window.AMG.Cartera.alertaActiva(clienteId) : true;
+    const color = debe ? "#E86040" : "#00C87A";
+    el.innerHTML = `<span style="display:inline-block;font-size:14px;font-weight:700;padding:6px 12px;`
+      + `border-radius:8px;background:${color};color:#FFFFFF;">${texto}</span>`
+      + (debe ? ` <label style="font-size:14px;color:#2C3E50;margin-left:8px;">`
+          + `<input type="checkbox" ${alertaOn ? "checked" : ""} `
+          + `onchange="alternarAlertaCartera('${clienteId}', this.checked)"> avisarme</label>` : "")
+      + ` <button class="btn-mini" onclick="abonarCliente('${clienteId}')">Abonar</button>`;
+  } catch (e) { el.innerHTML = ""; }
+}
+
+function alternarAlertaCartera(clienteId, activa) {
+  if (window.AMG && window.AMG.Cartera) window.AMG.Cartera.fijarAlerta(clienteId, activa);
+  pintarSaldoCartera(clienteId);
+}
+
+async function fiarCliente(clienteId, nombre) {
+  const monto = prompt(`Cuanto se le fia a ${nombre}?`);
+  if (monto === null) return;
+  const motivo = prompt("Motivo (opcional)") || "";
+  try {
+    const res = await fetch(`${API}/clientes/${clienteId}/fiar`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ monto: Number(monto), motivo })
+    });
+    const r = await res.json();
+    if (r && r.error) { alert(r.error); return; }
+    pintarSaldoCartera(clienteId);
+  } catch (e) { alert("No se pudo registrar el fiado."); }
+}
+
+async function abonarCliente(clienteId) {
+  const monto = prompt("Cuanto abona?");
+  if (monto === null) return;
+  try {
+    const res = await fetch(`${API}/clientes/${clienteId}/abonar`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ monto: Number(monto), motivo: "Abono" })
+    });
+    const r = await res.json();
+    if (r && r.error) { alert(r.error); return; }
+    pintarSaldoCartera(clienteId);
+  } catch (e) { alert("No se pudo registrar el abono."); }
+}
+
 async function despedirCliente(clienteId, nombre) {
   if (!(await ocConfirm(`¿Despedir a ${nombre}? Dejará de aparecer en el selector de ventas.\nPuedes reactivarlo después desde esta misma sección.`))) return;
   try {
@@ -6123,6 +6189,8 @@ function ocAlert(mensaje) {
 <script src="./identity-context.js"></script>
 <script src="./audit-store.js"></script>
 <script src="./hechos.js"></script>
+<script src="./cartera.js"></script>
+<script src="./caja-chica.js"></script>
 <script src="./reconciliacion.js"></script>
 <script src="./respaldo-empleado.js"></script>
 <script src="./edutips.js"></script>
