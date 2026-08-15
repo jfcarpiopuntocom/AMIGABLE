@@ -330,7 +330,13 @@
   var clave = null, ws = null, miId = "t" + Math.random().toString(36).slice(2, 10);
   var datos = { productos: [], clientes: [], ventas: [], resumen: null };
   var esperados = {}, recibidos = {};
+  /* De que foto son los trozos que estoy armando. Dos dispositivos pueden
+     contestar el mismo pedido, y al reconectar se pide otra: sin esto, los
+     trozos de fotos distintas se mezclaban y salia un negocio hecho de dos
+     momentos diferentes, sin ningun aviso. */
+  var fotoEnCurso = "";
   var ultimoDato = 0, tabla = null, vista = "productos", degradado = false;
+  var tablaDe = "";   /* de que vista es la tabla que esta montada ahora mismo */
   var autorizado = false;   /* mientras sea false, nada de datos se pinta */
 
   var $ = function (id) { return document.getElementById(id); };
@@ -505,6 +511,18 @@
   /* --- La foto llega por partes. Se pinta lo que va llegando. --- */
   function recibirTrozo(p) {
     if (!p || !p.tabla) return;
+    /* Foto nueva: se tira lo que habia a medias. Mezclar es peor que esperar.
+
+       Y si dos dispositivos del equipo contestan a la vez, gana LA MAS
+       RECIENTE, no la ultima en llegar: el que tiene peor conexion suele
+       contestar despues y con datos mas viejos, y quedarse con esa seria
+       mostrar el negocio de hace media hora sin decirlo. */
+    var sello = String(p.generadaEn || "");
+    if (sello && sello !== fotoEnCurso) {
+      if (fotoEnCurso && sello < fotoEnCurso) return;   /* llego una mas vieja */
+      fotoEnCurso = sello;
+      esperados = {}; recibidos = {};
+    }
     ultimoDato = Date.now();
     if (p.negocio) $("neg-nombre").textContent = p.negocio;
     esperados[p.tabla] = p.total;
@@ -672,7 +690,13 @@
     });
     $("exp").addEventListener("click", function (e) {
       var b = e.target.closest("[data-x]");
-      if (!b || !tabla) return;
+      if (!b) return;
+      /* Un boton que no hace nada al tocarlo es peor que uno que dice por que. */
+      if (!tabla) {
+        $("cierre").innerHTML = "<strong>Ahora mismo no se puede exportar.</strong>" +
+          "No cargó la herramienta de exportación. Recarga la página con internet y vuelve a intentarlo.";
+        return;
+      }
       exportar(b.dataset.x);
     });
     $("buscar").addEventListener("input", function () { filtrar(this.value); });
@@ -685,7 +709,9 @@
     return String(s == null ? "" : s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   }
   function filtrar(q) {
-    if (!tabla) return;
+    /* Sin Tabulator no hay filtro. Se filtra a mano sobre la tabla simple en
+       vez de dejar al duenio tecleando contra una caja que no responde. */
+    if (!tabla) { filtrarDegradado(q); return; }
     var t = normalizar(q).trim();
     if (!t) { tabla.clearFilter(); return; }
     tabla.setFilter(function (fila) {
@@ -696,12 +722,33 @@
     });
   }
 
+  /* Filtro de emergencia: oculta filas de la tabla en HTML plano. Lento
+     comparado con Tabulator, pero con 500 filas como tope no se nota. */
+  function filtrarDegradado(q) {
+    var t = normalizar(q).trim();
+    var filas = document.querySelectorAll("#tabla tbody tr");
+    if (!filas.length) return;
+    Array.prototype.forEach.call(filas, function (tr) {
+      tr.style.display = (!t || normalizar(tr.textContent).indexOf(t) >= 0) ? "" : "none";
+    });
+  }
+
   function pintarTabla() {
     var v = VISTAS[vista];
     var filas = v.filas();
     $("cierre").innerHTML = v.cierre(filas);
     if (typeof Tabulator === "undefined") { degradarSinTabulator(v, filas); return; }
+    /* Si la vista es la misma, se REEMPLAZAN los datos en vez de reconstruir.
+       Destruir la tabla en cada actualizacion tiraba el scroll, el orden que el
+       duenio habia elegido y la fila donde estaba mirando — y aqui los datos
+       llegan en vivo, asi que pasaba con cada venta. */
+    if (tabla && tablaDe === vista && !degradado) {
+      try { tabla.replaceData(filas); filtrar($("buscar").value); return; }
+      catch (_) { /* si falla, se reconstruye abajo */ }
+    }
     if (tabla) { try { tabla.destroy(); } catch (_) {} }
+    degradado = false;   /* si Tabulator llego tarde, ya no estamos degradados */
+    tablaDe = vista;
     tabla = new Tabulator("#tabla", {
       data: filas,
       columns: v.cols,
@@ -712,7 +759,19 @@
       movableColumns: true,
       /* El nombre largo se corta por ancho; el tooltip lo devuelve entero sin
          obligar a ensanchar la columna ni a hacer scroll lateral. */
-      tooltip: function (e, cell) { return String(cell.getValue() == null ? "" : cell.getValue()); },
+      /* El tooltip devuelve lo que se VE, no el dato crudo: sobre la columna
+         Estado mostraba "rojo" en vez de "Urgente". */
+      tooltip: function (e, cell) {
+        try {
+          var f = cell.getColumn().getDefinition().formatter;
+          if (typeof f === "function") {
+            var tmp = document.createElement("div");
+            tmp.innerHTML = f(cell);
+            return tmp.textContent || "";
+          }
+        } catch (_) {}
+        return String(cell.getValue() == null ? "" : cell.getValue());
+      },
     });
     filtrar($("buscar").value);
   }
@@ -721,9 +780,20 @@
      dice. Degradar no es fallar. */
   function degradarSinTabulator(v, filas) {
     degradado = true;
+    /* Se suelta la instancia vieja: si no, filtrar() la seguiria usando y
+       llamaria setFilter sobre una tabla que ya no existe en el DOM. */
+    if (tabla) { try { tabla.destroy(); } catch (_) {} tabla = null; }
+    tablaDe = "";
     var th = v.cols.map(function (c) { return "<th style='text-align:left;padding:9px 8px;border-bottom:2px solid #0F1923;font-size:13px;'>" + esc(c.title) + "</th>"; }).join("");
     var tr = filas.slice(0, 500).map(function (f) {
-      return "<tr>" + v.cols.map(function (c) { return "<td style='padding:8px;border-bottom:1px solid #E8ECF2;font-size:15px;'>" + esc(f[c.field]) + "</td>"; }).join("") + "</tr>";
+      /* esc(undefined) pintaba la palabra "undefined" en la celda. Aqui no hay
+         formatters, asi que al menos el dinero se formatea a mano. */
+      return "<tr>" + v.cols.map(function (c) {
+        var val = f[c.field];
+        if (val == null || val === "") return "<td style='padding:8px;border-bottom:1px solid #E8ECF2;font-size:15px;'>—</td>";
+        if (/^(precio|costo|margen|precioUnit|costoUnit|monto)$/.test(c.field)) val = money(val);
+        return "<td style='padding:8px;border-bottom:1px solid #E8ECF2;font-size:15px;'>" + esc(val) + "</td>";
+      }).join("") + "</tr>";
     }).join("");
     $("tabla").innerHTML =
       "<div style='padding:11px 14px;background:#FFF6F2;border-bottom:1px solid #E8ECF2;font-size:15px;'>" +
@@ -733,7 +803,9 @@
   }
 
   function exportar(tipo) {
-    var nombre = ($("neg-nombre").textContent || "negocio").replace(/[^\w\s-]/g, "").trim();
+    /* \w no incluye acentos ni ñ: "Panadería Ñusta" salia como "Panadera usta".
+       Se quitan solo los caracteres que los sistemas de archivos prohiben. */
+    var nombre = ($("neg-nombre").textContent || "negocio").replace(/[\\/:*?"<>|]/g, "").trim();
     var f = nombre + " · " + VISTAS[vista].nombre + " · " + new Date().toISOString().slice(0, 10);
     try {
       if (tipo === "csv") tabla.download("csv", f + ".csv", { bom: true });
@@ -894,7 +966,7 @@
     /* El aviso va en el documento, no solo en pantalla: el PDF se manda por
        WhatsApp y viaja solo. */
     doc.text("Insumo para tu contador. No es una declaración válida ante el SRI.", 40, y + 18);
-    doc.save(neg.replace(/[^\w\s-]/g, "").trim() + " - " + titulo + " - " + (new Date()).toISOString().slice(0, 10) + ".pdf");
+    doc.save(neg.replace(/[\\/:*?"<>|]/g, "").trim() + " - " + titulo + " - " + (new Date()).toISOString().slice(0, 10) + ".pdf");
   }
 
   /* ================================================== EL MANDO A DISTANCIA
