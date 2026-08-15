@@ -178,7 +178,6 @@
     var yo = M.yo();
 
     cont.innerHTML =
-      '<h3 style="font-size:17px;font-weight:700;margin:0 0 4px;color:#0F1923;">Tu equipo ahora</h3>' +
       '<p style="font-size:14px;line-height:1.55;margin:0 0 12px;color:#2C3E50;">' +
       (ciegos
         ? "Hay " + ciegos + (ciegos === 1 ? " dispositivo que lleva" : " dispositivos que llevan") +
