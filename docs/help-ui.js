@@ -68,12 +68,9 @@
       Es un lienzo: no guarda nada. Tus datos se quedan en los dispositivos de tu equipo y
       desde ahí se proyectan, cifrados. Al cerrar la pestaña no queda rastro.
     </p>
-    <!-- El boton solo aparece si hay sala activa y el rol es dueno o admin.
-         La logica y el aviso estan en ocAbrirTablero(), en avanzado-extra.js:
-         dos puertas, una sola implementacion. NO duplicar el modal aqui. -->
-    <p id="oc-help-tablero-wrap" style="margin:0 0 10px;"><button type="button" id="oc-help-tablero"
-      style="min-height:44px;padding:11px 16px;border-radius:8px;border:2px solid #0F1923;background:#0F1923;
-      color:#FFFFFF;font-family:var(--font-display,sans-serif);font-size:15px;font-weight:700;cursor:pointer;">Abrir mi tablero de control</button></p>
+    <!-- UNA SOLA PUERTA (JFC 2026-08-15): se entra al tablero desde Avanzado,
+         junto a la capa contable. Aqui solo se explica que existe. -->
+    <p style="font-size:14px;line-height:1.6;margin:0 0 10px;">Se abre desde Avanzado. Pide tu código de negocio y tu PIN.</p>
     <h3>Hoy: tu señal diaria</h3>
     <ul>
       <li>Un vistazo a Hoy te dice qué atender antes de abrir.</li>

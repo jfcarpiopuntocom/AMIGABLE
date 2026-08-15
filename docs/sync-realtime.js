@@ -68,6 +68,42 @@
      dispositivo, como lo llaman, rol y hora. Sirve para que el equipo sepa
      quien esta en el loop y quien anda a ciegas. Ver docs/micelio-vivo.js. */
   const TIPO_LATIDO = "__latido__";
+  /* MANDO A DISTANCIA (2026-08-15). El tablero no tiene backend: pide y este
+     dispositivo ejecuta contra SU propio /api y devuelve el resultado. Por eso
+     el tablero puede ofrecer lo mismo que Avanzado sin duplicar una sola linea
+     de logica de negocio, y sin que ningun dato pase por un servidor.
+
+     LISTA BLANCA, no lista negra: solo se atienden las rutas de aqui abajo.
+     Una ruta que no este en la lista no se ejecuta aunque la pidan. Esto es
+     una decision de seguridad, no una comodidad: el codigo de la sala abre la
+     puerta a leer, y aqui se decide exactamente cuanto mas abre. */
+  /* El tablero no basta con la licencia: exige tambien el PIN. La licencia
+     abre la sala; el PIN dice quien eres. Se verifica AQUI, contra OCSecure de
+     este dispositivo: el tablero nunca ve un PIN ni sabe si existe. */
+  const TIPO_PIN = "__pin__";
+  const TIPO_ORDEN = "__orden__";
+  const TIPO_RESPUESTA = "__respuesta__";
+  const ORDENES_PERMITIDAS = [
+    /* Leer: todo lo que Avanzado ya muestra. */
+    { m: "GET", re: /^\/api\/usuarios$/ },
+    { m: "GET", re: /^\/api\/actividad(\?.*)?$/ },
+    { m: "GET", re: /^\/api\/integridad(\?.*)?$/ },
+    { m: "GET", re: /^\/api\/transferencias(\?.*)?$/ },
+    { m: "GET", re: /^\/api\/reportes\/(pl|balance|valorizado)(\?.*)?$/ },
+    { m: "GET", re: /^\/api\/ubicaciones$/ },
+    { m: "GET", re: /^\/api\/sucursales(\?.*)?$/ },
+    { m: "GET", re: /^\/api\/liquidaciones(\?.*)?$/ },
+    { m: "GET", re: /^\/api\/reservas(\?.*)?$/ },
+    /* Escribir: SOLO gestion de equipo y transferencias. Deliberadamente NO
+       entran ventas, ajustes de stock ni nada que mueva dinero o inventario:
+       eso se hace donde ocurre, con el producto delante. Tampoco entran el
+       codigo maestro, el respaldo ni el cambio de codigo de sala, que son
+       cosas DEL DISPOSITIVO y no del negocio. */
+    { m: "POST",  re: /^\/api\/usuarios$/ },
+    { m: "PATCH", re: /^\/api\/usuarios\/[^/]+$/ },
+    { m: "POST",  re: /^\/api\/transferencias$/ },
+    { m: "PATCH", re: /^\/api\/transferencias\/[^/]+$/ },
+  ];
   const TIPO_FOTO_PEDIDA = "__foto_pedida__";
   const TIPO_FOTO_TROZO = "__foto_trozo__";
   const FOTO_FILAS_POR_TROZO = 150;   /* M4: por partes, no un bloque unico */
@@ -252,6 +288,21 @@
           responderCatchup(op);
           return;
         }
+        if (op && op.tipo === TIPO_PIN) {
+          responderPin(op);
+          return;
+        }
+        /* Orden del tablero: se ejecuta contra MI backend y se devuelve el
+           resultado. Ver ORDENES_PERMITIDAS: lista blanca estricta. */
+        if (op && op.tipo === TIPO_ORDEN) {
+          responderOrden(op);
+          return;
+        }
+        /* Respuesta a una orden: solo le interesa a quien la pidio. */
+        if (op && op.tipo === TIPO_RESPUESTA) {
+          try { window.dispatchEvent(new CustomEvent("oc-sync-respuesta", { detail: op })); } catch (_) {}
+          return;
+        }
         /* Latido ajeno: se anota quien hablo y cuando. NO se registra en el
            log ni se aplica como op de negocio: no es un hecho del negocio. */
         if (op && op.tipo === TIPO_LATIDO) {
@@ -421,6 +472,103 @@
         fecha: (new Date()).toISOString(),
       };
       try { ws.send(await cifrar(claveActual, op)); } catch (_) { return; }
+    }
+  }
+
+  /* ==========================================================================
+     EL MANDO A DISTANCIA. Este dispositivo hace de manos del tablero.
+
+     Por que asi y no reimplementando Avanzado dentro de tablero.html: la
+     logica de negocio vive en un solo sitio. Si manana cambia como se agrega
+     un empleado, cambia en mock-backend.js y el tablero se entera solo. Dos
+     implementaciones de la misma regla es como se rompen los negocios.
+     ========================================================================== */
+  /* Verifica el PIN que llego del tablero y contesta SOLO el rol, nunca nada
+     mas. Un PIN de empleado o de contador no abre el tablero: ese es el punto.
+     El PIN viaja cifrado con la clave de sala, igual que todo lo demas. */
+  async function responderPin(op) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    const pin = String((op.payload && op.payload.pin) || "");
+    let rol = "";
+    try {
+      if (window.OCSecure && window.OCSecure.verificarOwnerOEmpleado) {
+        rol = (await window.OCSecure.verificarOwnerOEmpleado(pin)) || "";
+      }
+    } catch (_) {}
+    /* Solo duenio y admin. Se contesta igual cuando no pasa, para que el
+       tablero pueda decir "no" en vez de quedarse esperando. */
+    const ok = rol === "dueno" || rol === "admin";
+    const r = {
+      opId: uuidCorto(), deviceId: deviceId(), tipo: TIPO_RESPUESTA,
+      payload: { pedido: (op.payload && op.payload.pedidoId) || op.opId, ok: ok,
+                 datos: ok ? { rol: rol } : { error: "Ese PIN no abre el tablero." } },
+      fecha: (new Date()).toISOString(),
+    };
+    try { ws.send(await cifrar(claveActual, r)); } catch (_) {}
+  }
+
+  function ordenPermitida(metodo, ruta) {
+    return ORDENES_PERMITIDAS.some(function (p) { return p.m === metodo && p.re.test(ruta); });
+  }
+
+  async function responderOrden(op) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    const p = op.payload || {};
+    const metodo = String(p.metodo || "GET").toUpperCase();
+    const ruta = String(p.ruta || "");
+    const responder = async (cuerpo, ok) => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      const r = {
+        opId: uuidCorto(), deviceId: deviceId(), tipo: TIPO_RESPUESTA,
+        payload: { pedido: p.pedidoId || op.opId, ok: !!ok, datos: cuerpo },
+        fecha: (new Date()).toISOString(),
+      };
+      try { ws.send(await cifrar(claveActual, r)); } catch (_) {}
+    };
+    if (!ordenPermitida(metodo, ruta)) {
+      /* Se dice que no se permite, no se ignora: un tablero esperando en
+         silencio una respuesta que nunca llega es peor que un no claro. */
+      return responder({ error: "Esa acción no se puede hacer desde el tablero." }, false);
+    }
+    /* Jitter, igual que en el catch-up: si hay dos telefonos del negocio
+       conectados, no ejecutan la misma orden a la vez. Solo el primero que
+       conteste importa; el tablero descarta las respuestas repetidas. */
+    await new Promise((r) => setTimeout(r, Math.random() * 350));
+    try {
+      const opts = { method: metodo };
+      let cuerpo = p.cuerpo || {};
+      /* CASO ESPECIAL, y el unico: dar de alta a alguien. El backend exige el
+         PIN, pero el PIN NO puede viajar al tablero ni teclearse alli: el
+         tablero puede estar abierto en una pantalla que ve medio local. Asi
+         que lo genera ESTE dispositivo, se lo manda al backend, y al tablero
+         solo le contesta que ya esta. El PIN se muestra aqui, en la mano del
+         duenio, que es donde tiene que verse. */
+      let pinGenerado = "";
+      if (metodo === "POST" && ruta === "/api/usuarios" && !cuerpo.pin) {
+        const b = new Uint8Array(2);
+        crypto.getRandomValues(b);
+        pinGenerado = String(100 + ((b[0] << 8 | b[1]) % 900));   /* 100..999 */
+        cuerpo = Object.assign({}, cuerpo, { pin: pinGenerado });
+      }
+      if (metodo !== "GET") {
+        opts.headers = { "Content-Type": "application/json" };
+        opts.body = JSON.stringify(cuerpo);
+      }
+      const res = await fetch(ruta, opts);
+      const datos = await res.json();
+      if (pinGenerado && res.ok !== false && !datos.error) {
+        /* El aviso con el PIN sale en ESTE dispositivo. Nunca en la respuesta. */
+        try {
+          window.dispatchEvent(new CustomEvent("oc-alta-remota", {
+            detail: { nombre: datos.nombre || cuerpo.nombre, rol: datos.rol || cuerpo.rol, pin: pinGenerado },
+          }));
+        } catch (_) {}
+      }
+      /* Por si acaso: nunca devolver un pin, venga de donde venga. */
+      if (datos && typeof datos === "object" && "pin" in datos) { try { delete datos.pin; } catch (_) {} }
+      await responder(datos, res.ok !== false);
+    } catch (e) {
+      await responder({ error: "No se pudo completar." }, false);
     }
   }
 

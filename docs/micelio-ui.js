@@ -4,10 +4,13 @@
 
    Tres cosas, en orden de importancia:
 
-   1. LA CINTA. Si TU dispositivo lleva rato sin hablar con el equipo, aparece
-      una cinta arriba de todo. No un iconito: una cinta. El que está a ciegas
-      es el único que puede arreglarlo moviéndose a donde haya señal, y es
-      justo el que no se entera.
+   1. EL PULSAR. Si TU dispositivo lleva rato sin hablar con el equipo, un
+      punto de color aparece flotando abajo a la derecha y late despacio. Al
+      tocarlo cuenta qué pasa. Va FUERA del flujo del documento: no empuja el
+      header, no mueve el layout, no tapa nada. Cuando todo está al día, no
+      existe. El que está a ciegas es el único que puede arreglarlo moviéndose
+      a donde haya señal, y es justo el que no se entera: por eso se ve. Pero
+      se ve como un pulso, no como una alarma de incendio.
 
    2. EL PANEL DEL EQUIPO, dentro de Avanzado. Quién está al día, quién
       rezagado, quién a ciegas, con el apodo que el negocio le puso.
@@ -37,27 +40,120 @@
     return m.apodo || ROL[m.rol] || ("Dispositivo " + String(m.id).slice(1, 5));
   }
 
-  /* ======================================================== 1. LA CINTA === */
-  var cinta = null;
-  function pintarCinta() {
-    var e = M.miEstado();
-    if (e.estado === "al_dia") { if (cinta) { cinta.remove(); cinta = null; } return; }
-    if (!cinta) {
-      cinta = document.createElement("div");
-      cinta.id = "oc-micelio-cinta";
-      cinta.setAttribute("role", "status");
-      cinta.style.cssText =
-        "position:sticky;top:0;z-index:900;padding:11px 14px;font-size:15px;line-height:1.5;" +
-        "font-weight:700;text-align:center;";
-      document.body.insertBefore(cinta, document.body.firstChild);
-    }
+  /* ====================================================== 1. EL PULSAR ===
+     UN PULSAR, NO UN BANNER (JFC, 2026-08-15, y con razon: un banner arriba de
+     todo empuja el header y arruina el layout que costo meses).
+
+     Es un punto flotante, fijo abajo a la derecha, fuera del flujo del
+     documento: NO mueve ni un pixel de la app. Cuando todo esta al dia no
+     existe. Cuando hay algo que decir aparece del color que corresponde y
+     late despacio. Al tocarlo, cuenta lo que pasa y como arreglarlo.
+
+     Visible pero no grotesco: eso era el encargo.
+     ======================================================================== */
+  var pulsar = null, globo = null;
+
+  function estiloPulsar() {
+    if (document.getElementById("oc-micelio-css")) return;
+    var css = document.createElement("style");
+    css.id = "oc-micelio-css";
+    css.textContent =
+      "#oc-micelio-pulsar{position:fixed;right:14px;bottom:14px;z-index:880;width:44px;height:44px;" +
+      "border:none;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;" +
+      "justify-content:center;}" +
+      "#oc-micelio-pulsar .pt{width:15px;height:15px;border-radius:50%;display:block;" +
+      "box-shadow:0 1px 4px #00000040;}" +
+      "#oc-micelio-pulsar .halo{position:absolute;width:15px;height:15px;border-radius:50%;" +
+      "animation:ocLatir 2.6s ease-out infinite;}" +
+      "@keyframes ocLatir{0%{transform:scale(1);opacity:.55;}70%{transform:scale(2.5);opacity:0;}100%{opacity:0;}}" +
+      "@media (prefers-reduced-motion: reduce){#oc-micelio-pulsar .halo{animation:none;display:none;}}" +
+      "#oc-micelio-globo{position:fixed;right:14px;bottom:64px;z-index:881;max-width:min(92vw,330px);" +
+      "background:#FFFFFF;border-radius:13px;padding:14px 16px;box-shadow:0 6px 24px #00000033;" +
+      "border:1px solid #dde5ec;}" +
+      "#oc-micelio-globo p{font-size:15px;line-height:1.55;margin:0 0 9px;color:#2C3E50;}" +
+      "#oc-micelio-globo strong{display:block;font-size:16px;margin:0 0 5px;color:#0F1923;}" +
+      "#oc-micelio-globo button{min-height:44px;width:100%;padding:11px;border-radius:9px;" +
+      "border:2px solid #0F1923;background:#FFFFFF;color:#0F1923;font-size:15px;font-weight:700;cursor:pointer;}";
+    document.head.appendChild(css);
+  }
+
+  function cerrarGlobo() {
+    if (globo) { globo.remove(); globo = null; }
+  }
+
+  function abrirGlobo(e) {
+    if (globo) { cerrarGlobo(); return; }
+    estiloPulsar();
     var ciego = e.estado === "ciegas";
-    cinta.style.background = ciego ? "#E8365D" : "#FFC700";
-    cinta.style.color = ciego ? "#FFFFFF" : "#3D2E00";
-    cinta.style.webkitTextFillColor = ciego ? "#FFFFFF" : "#3D2E00";
-    cinta.textContent = ciego
-      ? "Llevas " + e.cuando.replace("hace ", "") + " sin sincronizar con tu equipo. Cuidado con vender algo que otro ya vendió."
-      : "Tu dispositivo lleva " + e.cuando.replace("hace ", "") + " sin sincronizar. Suele ser la señal.";
+    globo = document.createElement("div");
+    globo.id = "oc-micelio-globo";
+    globo.setAttribute("role", "status");
+    globo.innerHTML =
+      "<p><strong>" + (ciego ? "Estás fuera del loop" : "Poniéndose al día") + "</strong>" +
+      /* "hace un momento" no se puede meter en "lleva ___ sin hablar": queda
+         mal escrito. Se dice de otra forma en vez de forzar la plantilla. */
+      (function () {
+        var t = e.cuando === "hace un momento" ? "" : esc(e.cuando.replace("hace ", ""));
+        if (ciego) {
+          return t
+            ? "Este dispositivo lleva " + t + " sin hablar con tu equipo. Mientras siga así, puede que vendas algo que otro ya vendió."
+            : "Este dispositivo dejó de hablar con tu equipo. Mientras siga así, puede que vendas algo que otro ya vendió.";
+        }
+        return t
+          ? "Lleva " + t + " sin sincronizar. Casi siempre es la señal."
+          : "Dejó de sincronizar hace un momento. Casi siempre es la señal.";
+      })() +
+      "</p>" +
+      "<p>Se arregla solo en cuanto haya internet: no hay que hacer nada más que acercarse a donde haya señal.</p>" +
+      '<button type="button" id="oc-micelio-globo-x">Entendido</button>';
+    document.body.appendChild(globo);
+    /* El globo sale justo encima del pulsar, este donde este. */
+    if (pulsar) globo.style.bottom = (parseInt(pulsar.style.bottom || 14, 10) + 50) + "px";
+    document.getElementById("oc-micelio-globo-x").addEventListener("click", cerrarGlobo);
+  }
+
+  function pintarPulsar() {
+    var e = M.miEstado();
+    if (e.estado === "al_dia") {
+      /* Todo bien: no hay nada que decir, y un indicador que siempre esta
+         encendido deja de significar algo. */
+      if (pulsar) { pulsar.remove(); pulsar = null; }
+      cerrarGlobo();
+      return;
+    }
+    estiloPulsar();
+    var ciego = e.estado === "ciegas";
+    var color = ciego ? "#E8365D" : "#FFC700";
+    if (!pulsar) {
+      pulsar = document.createElement("button");
+      pulsar.type = "button";
+      pulsar.id = "oc-micelio-pulsar";
+      pulsar.innerHTML = '<span class="halo"></span><span class="pt"></span>';
+      pulsar.addEventListener("click", function () { abrirGlobo(M.miEstado()); });
+      document.body.appendChild(pulsar);
+    }
+    /* Se sube por encima de cualquier barra fija de abajo (la de demo, por
+       ejemplo): un pulsar tapado no avisa de nada. Se mide en vez de suponer,
+       porque esas barras cambian de alto segun el texto y el ancho. */
+    var estorbo = 0;
+    try {
+      document.querySelectorAll("body > *").forEach(function (el) {
+        if (el === pulsar || el === globo) return;
+        var st = getComputedStyle(el);
+        if ((st.position !== "fixed" && st.position !== "sticky") || st.display === "none") return;
+        var r = el.getBoundingClientRect();
+        if (!r.height || r.bottom < window.innerHeight - 6) return;   /* no esta pegado abajo */
+        if (r.height > window.innerHeight * 0.5) return;              /* es un modal, no una barra */
+        estorbo = Math.max(estorbo, Math.round(r.height));
+      });
+    } catch (_) {}
+    pulsar.style.bottom = (14 + estorbo) + "px";
+    if (globo) globo.style.bottom = (64 + estorbo) + "px";
+
+    pulsar.title = ciego ? "Este dispositivo está fuera del loop" : "Este dispositivo va rezagado";
+    pulsar.setAttribute("aria-label", pulsar.title);
+    pulsar.querySelector(".pt").style.background = color;
+    pulsar.querySelector(".halo").style.background = color;
   }
 
   /* ================================================ 2. PANEL DEL EQUIPO === */
@@ -194,7 +290,7 @@
 
   /* =============================================================== ciclo === */
   function refrescar() {
-    try { pintarCinta(); } catch (_) {}
+    try { pintarPulsar(); } catch (_) {}
     try {
       /* El panel solo se repinta si está a la vista: repintarlo mientras el
          usuario escribe su apodo le borraría lo tecleado. */
@@ -208,6 +304,39 @@
   setInterval(refrescar, 30000);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", refrescar);
   else refrescar();
+
+  /* ============================================ EL PIN DE QUIEN SE DIO DE ALTA
+     Cuando el duenio agrega a alguien desde el tablero, el PIN se genera AQUI
+     y se muestra AQUI: el tablero puede estar en una pantalla que ve medio
+     local. Este si es un modal y no un pulsar, porque es un dato que hay que
+     leer y pasar a una persona, una sola vez, ahora.
+     ========================================================================= */
+  window.addEventListener("oc-alta-remota", function (ev) {
+    var d = (ev && ev.detail) || {};
+    if (!d.pin) return;
+    var viejo = document.getElementById("oc-alta-modal");
+    if (viejo) viejo.remove();
+    var m = document.createElement("div");
+    m.id = "oc-alta-modal";
+    m.style.cssText = "position:fixed;inset:0;z-index:960;background:#0F192399;display:flex;" +
+      "align-items:center;justify-content:center;padding:20px;";
+    m.innerHTML =
+      '<div style="background:#FFFFFF;border-radius:15px;padding:22px;max-width:400px;width:100%;">' +
+      '<h3 style="font-size:19px;margin:0 0 8px;color:#0F1923;">' + esc(d.nombre || "Nuevo miembro") + " ya está en tu equipo</h3>" +
+      '<p style="font-size:15px;line-height:1.55;margin:0 0 12px;color:#2C3E50;">Lo agregaste desde tu tablero. Este es su PIN, y solo se muestra ahora:</p>' +
+      '<div style="text-align:center;font-family:var(--font-mono,monospace);font-size:38px;font-weight:700;' +
+      'letter-spacing:.14em;color:#0F1923;background:#F8F9FB;border-radius:11px;padding:15px;margin:0 0 12px;">' +
+      esc(d.pin) + "</div>" +
+      '<p style="font-size:15px;line-height:1.55;margin:0 0 14px;color:#2C3E50;">Dáselo en persona. No aparece en el tablero ni vuelve a aparecer aquí: si se pierde, se le pone uno nuevo desde Avanzado.</p>' +
+      '<button type="button" id="oc-alta-x" style="width:100%;min-height:48px;padding:12px;border-radius:10px;' +
+      'border:none;background:#E86040;color:#FFFFFF;-webkit-text-fill-color:#FFFFFF;font-size:16px;font-weight:700;cursor:pointer;">Ya lo anoté</button>' +
+      "</div>";
+    document.body.appendChild(m);
+    var cerrar = function () { try { m.remove(); } catch (_) {} };
+    document.getElementById("oc-alta-x").addEventListener("click", cerrar);
+    /* A proposito NO se cierra tocando afuera ni con Escape: cerrarlo sin
+       querer significa perder el PIN. Solo el boton lo cierra. */
+  });
 
   window.OCMicelioUI = { pintarPanel: pintarPanel, refrescar: refrescar, comoSeLlama: comoSeLlama };
 })();

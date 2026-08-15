@@ -93,7 +93,15 @@
 
   /* ---------- puerta ---------- */
   #puerta{min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-content:center;padding:24px}
+  /* DESKTOP FIRST, a proposito (JFC 2026-08-15): el tablero es para llegar a
+     casa y mirar el negocio con calma en una pantalla que si cabe. La app del
+     dia a dia ya es mobile-first; esta no. Igual funciona a 320px, pero las
+     medidas base son las de escritorio y se APRIETAN hacia abajo. */
   #puerta .card{max-width:520px;width:100%;text-align:center}
+  .wrap{max-width:1500px}
+  @media (max-width: 900px){
+    .wrap{padding-left:14px;padding-right:14px}
+  }
   .card{
     background:var(--card);border:1px solid var(--hairline);border-radius:18px;
     padding:clamp(20px,3.4vw,30px);
@@ -101,13 +109,29 @@
   #puerta img{height:38px;width:auto;margin:0 auto 16px;display:block}
   h1{font-size:clamp(24px,4vw,32px);line-height:1.2;margin:0 0 8px}
   .sub{font-size:16px;line-height:1.55;margin:0 0 20px}
-  input[type=text]{
+  #puerta input[type=text],#puerta input[type=password]{
     width:100%;min-height:52px;padding:13px 15px;border:2px solid var(--hairline);
     border-radius:12px;font-family:var(--font-mono);font-size:17px;letter-spacing:.06em;
     text-align:center;text-transform:uppercase;background:#FFFFFF;
     color:var(--ink) !important;-webkit-text-fill-color:var(--ink) !important;
   }
-  input[type=text]:focus-visible{outline:3px solid var(--rust);outline-offset:2px}
+  #puerta input[type=password]{margin-top:10px;letter-spacing:.4em}
+  #puerta input:focus-visible{outline:3px solid var(--rust);outline-offset:2px}
+  /* Enlaces de texto: subrayados y del color del cuerpo. Nunca gris apagado. */
+  .enlace{
+    background:none;border:none;padding:4px 2px;font-family:inherit;font-size:inherit;
+    text-decoration:underline;cursor:pointer;
+    color:var(--body-c) !important;-webkit-text-fill-color:var(--body-c) !important;
+  }
+  /* POLITICA DE DATOS: popup ligero, sin pagina aparte. Se abre desde los dos
+     sitios donde alguien se lo puede preguntar: la puerta y el pie. */
+  #pol{position:fixed;inset:0;z-index:990;background:#0F1923D9;display:none;
+    align-items:center;justify-content:center;padding:18px;}
+  #pol.on{display:flex}
+  #pol .card{max-width:520px;width:100%;max-height:88vh;overflow-y:auto;text-align:left}
+  #pol h2{font-size:21px;margin:0 0 12px}
+  #pol p{font-size:15px;line-height:1.6;margin:0 0 11px}
+  #pol li{font-size:15px;line-height:1.6;margin:0 0 7px}
   .btn{
     width:100%;min-height:50px;padding:13px;border:none;border-radius:12px;
     background:var(--rust);color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;
@@ -182,15 +206,38 @@
 
     <input id="codigo" type="text" inputmode="latin" autocomplete="off" spellcheck="false"
            placeholder="AMG-XXXX-XXXX-XXXX" aria-label="Código de tu negocio">
+    <!-- EL PIN NO ES OPCIONAL (JFC, 2026-08-15). El codigo abre la sala; el PIN
+         dice quien eres. Un enlace reenviado sin PIN no muestra nada. Se
+         verifica en el dispositivo del duenio, no aqui: este lienzo nunca sabe
+         si un PIN existe, solo recibe un si o un no. -->
+    <input id="pin" type="password" inputmode="numeric" autocomplete="off"
+           maxlength="6" placeholder="Tu PIN" aria-label="Tu PIN de dueño o admin">
     <button type="button" class="btn" id="entrar">Ver mi negocio</button>
     <p class="msg" id="msg"></p>
 
     <p class="nota">
-      <strong>Esta pantalla es un lienzo.</strong> Tus datos permanecen en los teléfonos y
-      computadoras de tu equipo, y desde ahí se proyectan aquí, cifrados. No se guardan en
-      ningún servidor, ni en el nuestro: nosotros solo te servimos esta pantalla, vacía.
-      Al cerrarla no queda nada.
+      Este tablero es un lienzo: no guarda nada. Lo que ves llega cifrado desde los
+      dispositivos de tu equipo y desaparece al cerrar esta pesta&ntilde;a.
+      <button type="button" class="enlace" id="ver-politica-2">C&oacute;mo tratamos tus datos</button>
     </p>
+  </div>
+</div>
+
+<!-- Politica de datos. Corta a proposito: si hace falta una pagina entera
+     para explicar que no guardamos nada, algo se esta guardando. -->
+<div id="pol" role="dialog" aria-modal="true" aria-labelledby="pol-t">
+  <div class="card">
+    <h2 id="pol-t">C&oacute;mo tratamos tus datos</h2>
+    <p><strong>No los tratamos. No los tenemos.</strong></p>
+    <ul>
+      <li>Tus productos, ventas y clientes se guardan en los dispositivos de tu equipo. En ningún servidor nuestro.</li>
+      <li>Para que se vean aquí, viajan cifrados con una clave que sale de tu código de licencia y que nunca sale de tus dispositivos.</li>
+      <li>El servidor por el que pasan solo rebota bytes que no puede leer, y no los guarda.</li>
+      <li>Este tablero no escribe nada en tu navegador. Al cerrar la pestaña no queda rastro.</li>
+      <li>No hay analítica, ni rastreadores, ni publicidad.</li>
+    </ul>
+    <p>Lo único que sí guardamos, en nuestro panel de licencias: tu código, tu nombre y correo de contacto, y las fallas técnicas que la app reporta sola para poder arreglarlas. Nada de tu negocio.</p>
+    <button type="button" class="btn" id="pol-x">Entendido</button>
   </div>
 </div>
 
@@ -226,9 +273,22 @@
     <p id="micelio-nota" style="font-size:14px;line-height:1.55;margin:10px 0 0;"></p>
   </section>
 
+  <!-- AVANZADO, calcado (JFC 2026-08-15). La app del dia a dia mete todo esto
+       en una columna de telefono; aqui hay pantalla de sobra para usarlo bien.
+       Lo que se ve y lo que se hace NO se reimplementa: se le pide al
+       dispositivo del duenio por el canal cifrado y el ejecuta. Ver
+       ORDENES_PERMITIDAS en sync-realtime.js (lista blanca estricta). -->
+  <section id="avz" style="margin:30px 0 0;">
+    <h2 style="font-size:19px;margin:0 0 4px;">Avanzado</h2>
+    <div class="tabsel" id="avz-sel" style="margin:0 0 12px;"></div>
+    <div id="avz-cuerpo" class="card"></div>
+    <p id="avz-msg" style="font-size:15px;font-weight:700;margin:10px 0 0;min-height:22px;"></p>
+  </section>
+
   <p class="pie-lienzo">
     Este tablero es un lienzo: no guarda nada. Lo que ves llega cifrado desde los dispositivos
-    de tu equipo y desaparece al cerrar esta pestaña.
+    de tu equipo y desaparece al cerrar esta pesta&ntilde;a.
+    <button type="button" id="ver-politica">C&oacute;mo tratamos tus datos</button>
   </p>
 </div></main>
 
@@ -258,6 +318,9 @@
   var RELAY_URL = "wss://amigable-sync-relay.jfcarpio.workers.dev/sala/";
   var SALT_FIJO = "amigable-sync-v1";
   var TIPO_LATIDO = "__latido__";
+  var TIPO_PIN = "__pin__";
+  var TIPO_ORDEN = "__orden__";
+  var TIPO_RESPUESTA = "__respuesta__";
   var TIPO_FOTO_PEDIDA = "__foto_pedida__";
   var TIPO_FOTO_TROZO = "__foto_trozo__";
 
@@ -268,6 +331,7 @@
   var datos = { productos: [], clientes: [], ventas: [], resumen: null };
   var esperados = {}, recibidos = {};
   var ultimoDato = 0, tabla = null, vista = "productos", degradado = false;
+  var autorizado = false;   /* mientras sea false, nada de datos se pinta */
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) {
@@ -340,6 +404,37 @@
   }, 5000);
 
   /* --- Conexión --- */
+  /* Manda el PIN al dispositivo del duenio, que es el unico que puede
+     verificarlo. Aqui no hay copia del PIN ni forma de saber si existe. */
+  function verificarPin(pin) {
+    return new Promise(function (resolve) {
+      if (!ws || ws.readyState !== 1) { resolve({ ok: false, datos: { error: "Sin conexión." } }); return; }
+      var id = "p" + Math.random().toString(36).slice(2, 10);
+      var reloj = setTimeout(function () {
+        if (!pedidos[id]) return;
+        delete pedidos[id];
+        resolve({ ok: false, datos: { error: "Tu dispositivo no contestó. Abre la app y vuelve a intentar." } });
+      }, 12000);
+      pedidos[id] = function (r) { clearTimeout(reloj); resolve(r); };
+      cifrar({ opId: id, deviceId: miId, tipo: TIPO_PIN, payload: { pedidoId: id, pin: pin } })
+        .then(function (buf) { try { ws.send(buf); } catch (_) {} });
+    });
+  }
+
+  /* Si a los 6 s no contesto nadie, casi siempre es que no hay ningun
+     dispositivo del equipo encendido. Se dice, no se disimula. */
+  function sinNadie() {
+    setTimeout(function () {
+      if (ultimoDato) return;
+      pulso("ningún dispositivo conectado", "solo");
+      $("cierre").innerHTML = "<strong>Ningún dispositivo de tu equipo está conectado.</strong>" +
+        "Abre amigable-123 y esta pantalla se llena sola.";
+      $("puerta").style.display = "none";
+      $("cabecera").style.display = "block";
+      $("tablero").style.display = "block";
+    }, 6000);
+  }
+
   async function conectar(codigo) {
     /* Mismo normalizado que la app: sin esto, "amg-x" y "AMG-X" caen en salas
        distintas y el equipo nunca entiende por que no ve nada. */
@@ -348,27 +443,29 @@
     var sala = await idDeSala(codigo);
     ws = new WebSocket(RELAY_URL + sala);
     ws.binaryType = "arraybuffer";
-    ws.onopen = function () {
-      pulso("pidiendo tu negocio…");
-      pedirFoto();
-      /* Reintento unico: si nadie contesto en 6 s, casi siempre es que no hay
-         ningun dispositivo del equipo encendido. Se dice, no se disimula. */
-      setTimeout(function () {
-        if (!ultimoDato) {
-          pulso("ningún dispositivo conectado", "solo");
-          $("cierre").innerHTML = "<strong>No hay ningún dispositivo de tu equipo conectado.</strong>" +
-            "Abre amigable-123 en tu teléfono y esta pantalla se llena sola. " +
-            "Tus datos permanecen ahí, no en un servidor, así que hace falta que al menos uno esté encendido.";
-          $("puerta").style.display = "none";
-          $("cabecera").style.display = "block";
-          $("tablero").style.display = "block";
-        }
-      }, 6000);
-    };
+    /* onopen NO pide la foto: primero hay que pasar el PIN. Pedirla antes
+       seria justo el agujero que el PIN viene a tapar.
+
+       conectar() no resuelve hasta que el socket este ABIERTO de verdad: sin
+       esto, el PIN se mandaba por un socket todavia en CONNECTING y siempre
+       fallaba con "sin conexion". */
+    var abierto = new Promise(function (listo, falla) {
+      var reloj = setTimeout(function () { falla(new Error("timeout")); }, 12000);
+      ws.onopen = function () {
+        clearTimeout(reloj);
+        pulso("comprobando tu PIN…");
+        listo();
+      };
+      ws.addEventListener("error", function () { clearTimeout(reloj); falla(new Error("error")); }, { once: true });
+    });
     ws.onmessage = async function (ev) {
       if (typeof ev.data === "string") return;   /* presencia, en claro */
       try {
         var op = await descifrar(ev.data);
+        /* La respuesta al PIN es lo UNICO que se atiende antes de estar
+           autorizado. Todo lo demas se descarta: sin PIN no se pinta un dato. */
+        if (op && op.tipo === TIPO_RESPUESTA) { recibirRespuesta(op.payload); return; }
+        if (!autorizado) return;
         if (op && op.tipo === TIPO_FOTO_TROZO) { recibirTrozo(op.payload); return; }
         /* Latido: quien esta vivo y como se llama. No es dato del negocio y no
            se guarda en ningun lado; vive en memoria hasta que se cierre esta
@@ -384,8 +481,18 @@
         if (op && op.tipo && op.tipo.indexOf("__") !== 0) { pedirFoto(); }
       } catch (_) { /* cifrado con otra clave: ruido, se ignora */ }
     };
-    ws.onclose = function () { pulso("reconectando…"); setTimeout(function () { conectar(codigo); }, 3000); };
+    /* Al reconectar se vuelve a pedir la foto sin volver a pedir el PIN: la
+       sesion ya esta autorizada en esta pestana, y hacerle teclear el PIN cada
+       vez que parpadea el wifi seria insufrible. Al cerrar la pestana se
+       pierde todo, que es justo lo que tiene que pasar. */
+    ws.onclose = function () {
+      pulso("reconectando…");
+      setTimeout(function () {
+        conectar(codigo).then(function () { if (autorizado) pedirFoto(); }).catch(function () {});
+      }, 3000);
+    };
     ws.onerror = function () { try { ws.close(); } catch (_) {} };
+    await abierto;
   }
 
   async function pedirFoto() {
@@ -512,6 +619,7 @@
     $("tablero").style.display = "block";
     pintarKpis();
     if (!$("tabsel").children.length) pintarSelector();
+    try { if (window.OCTableroAvanzado) window.OCTableroAvanzado.pintar(); } catch (_) {}
     pintarTabla();
   }
 
@@ -688,7 +796,7 @@
 
     if (!lista.length) {
       $("micelio-resumen").textContent =
-        "Todavía no se ha presentado ningún dispositivo. Cada uno avisa que está aquí una vez por minuto.";
+        "Esperando a que se presente algún dispositivo.";
       $("micelio-lista").innerHTML = "";
       $("micelio-nota").textContent = "";
       return;
@@ -713,9 +821,8 @@
     }).join("");
 
     $("micelio-nota").innerHTML = ciegos.length
-      ? "Para volver al día basta con abrir la app donde haya señal: se pone al corriente sola. " +
-        "Los apodos se ponen en cada dispositivo, en Avanzado."
-      : "Cada dispositivo se presenta con el nombre que le pusieron en Avanzado. Si ves un nombre que no reconoces, cambia el código de tu sala.";
+      ? "Se ponen al día solos en cuanto haya señal."
+      : "Si ves un nombre que no reconoces, cambia el código de tu sala.";
   }
   /* Los estados envejecen aunque no llegue nada: sin este reloj, alguien que
      se apago hace una hora seguiria pintado en verde. */
@@ -790,6 +897,47 @@
     doc.save(neg.replace(/[^\w\s-]/g, "").trim() + " - " + titulo + " - " + (new Date()).toISOString().slice(0, 10) + ".pdf");
   }
 
+  /* ================================================== EL MANDO A DISTANCIA
+     Este lienzo no tiene backend y no reimplementa ni una regla de negocio.
+     Manda una orden cifrada y el dispositivo del duenio la ejecuta contra su
+     propio /api. La regla vive en un solo sitio; aqui solo se pide y se pinta.
+     ======================================================================== */
+  var pedidos = {};   /* pedidoId -> resolve. En memoria y nada mas. */
+
+  function ordenar(metodo, ruta, cuerpo) {
+    return new Promise(function (resolve) {
+      if (!ws || ws.readyState !== 1) {
+        resolve({ ok: false, datos: { error: "Sin conexión con tu equipo." } });
+        return;
+      }
+      var id = "o" + Math.random().toString(36).slice(2, 10);
+      /* Timeout SIEMPRE. Si el telefono se apago justo ahora, esta pantalla no
+         puede quedarse girando para siempre esperando algo que no va a venir. */
+      var reloj = setTimeout(function () {
+        if (!pedidos[id]) return;
+        delete pedidos[id];
+        resolve({ ok: false, datos: { error: "Tu dispositivo no contestó. Revisa que la app esté abierta." } });
+      }, 12000);
+      pedidos[id] = function (r) { clearTimeout(reloj); resolve(r); };
+      cifrar({ opId: id, deviceId: miId, tipo: TIPO_ORDEN,
+               payload: { pedidoId: id, metodo: metodo, ruta: ruta, cuerpo: cuerpo || null } })
+        .then(function (buf) { try { ws.send(buf); } catch (_) {} });
+    });
+  }
+
+  /* Si dos dispositivos del negocio contestan la misma orden, solo cuenta el
+     primero: el pedido ya se borro y el segundo cae aqui sin hacer nada. */
+  function recibirRespuesta(p) {
+    var fn = pedidos[p && p.pedido];
+    if (!fn) return;
+    delete pedidos[p.pedido];
+    fn({ ok: !!p.ok, datos: p.datos });
+  }
+
+  /* El puente para tablero-avanzado.js. Se expone lo minimo: pedir, y las
+     cuatro funciones de formato. Nada de ws ni de la clave. */
+  window.__lienzo = { $: $, esc: esc, money: money, fecha: fecha, ordenar: ordenar };
+
   /* ------------------------------------------------------------- arranque */
   function normalizarCodigo(c) {
     return String(c || "").toUpperCase().replace(/[^A-Z0-9*~$=-]/g, "");
@@ -802,9 +950,38 @@
       $("msg").textContent = "Revisa el código: va completo, como AMG-XXXX-XXXX-XXXX.";
       return;
     }
+    var pin = String($("pin").value || "").trim();
+    if (!/^[0-9]{3,6}$/.test(pin)) {
+      $("msg").style.color = "#A8123A";
+      $("msg").textContent = "Escribe tu PIN.";
+      $("pin").focus();
+      return;
+    }
+    $("entrar").disabled = true;
     $("msg").style.color = "#00975C";
     $("msg").textContent = "Conectando con tus dispositivos…";
-    try { await conectar(c); } catch (e) {
+    try {
+      await conectar(c);
+      $("msg").textContent = "Comprobando tu PIN…";
+      var v = await verificarPin(pin);
+      if (!v.ok) {
+        /* Se corta la conexion: sin PIN valido este lienzo no se queda
+           escuchando la sala. */
+        try { ws.close(); } catch (_) {}
+        ws = null;
+        $("entrar").disabled = false;
+        $("msg").style.color = "#A8123A";
+        $("msg").textContent = (v.datos && v.datos.error) || "No se pudo comprobar tu PIN.";
+        $("pin").value = "";
+        return;
+      }
+      autorizado = true;
+      $("pin").value = "";
+      pulso("pidiendo tu negocio…");
+      pedirFoto();
+      sinNadie();
+    } catch (e) {
+      $("entrar").disabled = false;
       $("msg").style.color = "#A8123A";
       $("msg").textContent = "No se pudo conectar. Revisa tu internet.";
     }
@@ -822,6 +999,21 @@
     setTimeout(function () { $("entrar").click(); }, 200);
   })();
 
+  /* La politica se abre desde la puerta y desde el pie. Un solo popup, dos
+     botones: si hubiera dos textos, uno se quedaria viejo. */
+  (function () {
+    var pol = $("pol");
+    var abrir = function () { pol.classList.add("on"); };
+    var cerrar = function () { pol.classList.remove("on"); };
+    ["ver-politica", "ver-politica-2"].forEach(function (id) {
+      var b = $(id);
+      if (b) b.addEventListener("click", abrir);
+    });
+    $("pol-x").addEventListener("click", cerrar);
+    pol.addEventListener("click", function (e) { if (e.target === pol) cerrar(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") cerrar(); });
+  })();
+
   /* Logo: se inyecta desde la constante de abajo para no repetir el base64. */
   if (LOGO) { $("logo-puerta").src = LOGO; $("logo-top").src = LOGO; }
   else {
@@ -830,5 +1022,8 @@
   }
 })();
 </script>
+<!-- Avanzado, aparte: si este archivo no carga, el resto del tablero
+     sigue funcionando igual. -->
+<script src="./tablero-avanzado.js"></script>
 </body>
 </html>
