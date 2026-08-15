@@ -3,8 +3,15 @@
  * ============================================================================
  * QUE ES
  * ----------------------------------------------------------------------------
- * La cajita azul al pie de la vista contable. Una reflexion corta que ensena a
- * leer los numeros que el dueno ya tiene en pantalla, no un dato nuevo.
+ * La cajita azul al pie de la vista contable. Un tip corto que ensena a sacarle
+ * mas a la app: una funcion que ya esta pagada y nadie usa, un atajo, una forma
+ * mas rapida de hacer algo que hoy se hace a mano.
+ *
+ * CAMBIO DE RUMBO (JFC, 2026-08-15): antes eran tips FINANCIEROS (margen,
+ * P&G, rotacion). Ya no. Ahora son de APROVECHAMIENTO. El motivo es simple:
+ * buena parte de lo que ya esta construido no se usa porque nadie sabe que
+ * existe, y una leccion de contabilidad no arregla eso. Si un tip menciona
+ * tiempo o dinero ahorrado, es porque es cierto y concreto, no de adorno.
  *
  * REGLA DE COLOR (JFC 2026-07-28) — IMPORTANTE, NO ROMPER
  * ----------------------------------------------------------------------------
@@ -12,64 +19,203 @@
  * lenguaje de accion (los colores Simon) y meter azul lo ensucia. El azul vive
  * SOLO en dos lugares, ambos serenos y ambos al pie de su seccion:
  *   1. "En observacion" — productos con margen flaco.
- *   2. Esta cajita — reflexion o tip contable.
+ *   2. Esta cajita — tip de aprovechamiento.
  * Si alguna vez hace falta azul en otro lado, primero preguntar. Ver la memoria
  * project_blue_semantic_rule.
  *
  * COMO CAMBIAR EL TEXTO
  * ----------------------------------------------------------------------------
- * Edita el arreglo TIPS de abajo y listo. Rota uno por dia (deterministico, no
- * al azar: el dueno ve el mismo tip todo el dia y puede volver a leerlo, en vez
- * de que se le cambie debajo de los ojos al refrescar).
+ * Edita el arreglo TIPS. Cada entrada es { t: titulo, c: cuerpo }. Un tip por
+ * dia, deterministico: el duenio ve el mismo todo el dia y puede volver a
+ * leerlo, en vez de que se le cambie debajo de los ojos al refrescar.
+ *
+ * EL TIP DE LOS PIN es distinto y esta aparte (ver TIP_PIN). Sale cada 14 dias
+ * como maximo mientras el dispositivo siga con los PIN de demo, y deja de salir
+ * para siempre en cuanto los cambien. Un recordatorio que sigue apareciendo
+ * despues de que ya hiciste lo que pedia es la forma mas rapida de que la gente
+ * deje de leer esta cajita entera.
  * ============================================================================
  */
 (function (global) {
   "use strict";
 
-  // Cada tip: titulo corto + cuerpo de una o dos frases. Nada de jerga
-  // contable sin traducir — si aparece un termino tecnico, se explica en la
-  // misma frase. Espanol neutro, sin regionalismos.
+  /* Cada tip: titulo corto + una o dos frases. Nada de jerga. Espanol neutro,
+     sin regionalismos. Ninguno inventa una funcion que no exista: si aqui dice
+     que algo se puede hacer, se puede hacer hoy. */
   var TIPS = [
-    {
-      t: "Margen no es ganancia",
-      c: "El margen es lo que queda del precio despues del costo del producto. La ganancia es lo que queda despues de TODO: arriendo, luz, sueldos. Un producto con buen margen puede seguir dejandote en cero si vendes pocas unidades."
-    },
-    {
-      t: "Lo que no rota, cuesta",
-      c: "Un producto parado en la percha es dinero tuyo dormido. Aunque no se dane, te esta costando: ese mismo dinero podria estar comprando algo que si sale."
-    },
-    {
-      t: "Vender mas no siempre es ganar mas",
-      c: "Si subes ventas bajando precios y el margen queda muy delgado, trabajas mas para ganar lo mismo. Mira la columna de margen antes de celebrar un dia de muchas ventas."
-    },
-    {
-      t: "El gasto fijo no espera",
-      c: "El arriendo y los sueldos corren los dias que vendes y los que no. Por eso el P&G reparte tu gasto mensual entre todos los dias: para que sepas cuanto necesitas vender un dia cualquiera solo para empatar."
-    },
-    {
-      t: "Tu inventario es plata, no cosas",
-      c: "El inventario valorizado te dice cuanto dinero tuyo esta ahora mismo convertido en producto. Si esa cifra crece mes a mes pero las ventas no, el dinero se te esta quedando quieto en la percha."
-    },
-    {
-      t: "Comision pagada es costo real",
-      c: "La comision de un socio o comisionista sale de tu margen, no de un bolsillo aparte. Registrala siempre: un negocio que la olvida cree que gana mas de lo que gana."
-    },
-    {
-      t: "Precio bajo no fideliza solo",
-      c: "El cliente que llega solo por precio se va con el primero que baje mas. Los datos de clientes que ya tienes sirven para saber quien vuelve — esos son los que sostienen el negocio."
-    }
+    { t: "Los colores te dicen que hacer",
+      c: "No hace falta leer un solo numero para saber como esta tu negocio. Verde sigue asi, dorado hay dinero esperandote, naranja se acaba, rojo actua ya, negro no se mueve. Un vistazo a Hoy antes de abrir y ya sabes por donde empezar." },
+
+    { t: "El cierre del dia, si no registraste en vivo",
+      c: "Si el mostrador estuvo lleno y no alcanzaste a registrar nada, no tienes que reconstruir venta por venta. En Vendido, el cierre del dia aplica todo junto en una sola pasada." },
+
+    { t: "Busca como piensas, no por columnas",
+      c: "El buscador de Inventario y de Clientes encuentra por cualquier cosa: nombre, categoria, codigo, un pedazo de palabra. No tienes que recordar en que campo lo escribiste." },
+
+    { t: "Las perchas son la unidad, no la tienda",
+      c: "Si tienes un local y un puesto de feria, no son un solo monton. Separalos en perchas y cada uno te dice su propia verdad: cual sostiene al otro se ve en una tarde." },
+
+    { t: "Reposicion por percha",
+      c: "En Perchas, la reposicion arma sola la lista de que pedir y en que orden. Es la diferencia entre ir al proveedor con una lista y ir a ver que se te ocurre." },
+
+    { t: "La etiqueta con codigo la imprimes tu",
+      c: "Cada producto puede llevar su codigo de barras. Lo imprimes desde Etiquetas y despues vendes escaneando: se acaba el buscar el producto en la lista con el cliente esperando." },
+
+    { t: "Escanea para vender",
+      c: "Si el producto ya tiene su codigo, la camara del telefono es el lector. Apuntar y listo, sin teclear nada." },
+
+    { t: "Tu equipo entra con su propio PIN",
+      c: "Cada persona con su clave no es burocracia: es que el log de actividad diga quien hizo cada cosa. El dia que un numero no cuadre, la diferencia entre saber y sospechar es esa." },
+
+    { t: "El historial esta sellado",
+      c: "Cada movimiento queda encadenado con el anterior. Si alguien edita o borra uno, la cadena se rompe y el control anti fraude lo dice. No impide que pase; te avisa que paso." },
+
+    { t: "Los clientes se califican solos y tu tambien",
+      c: "La app arma sola la matriz de comportamiento: quien vuelve, quien compra fuerte, quien desaparecio. Y tu puedes ponerles estrellas y corazones, o dejar de venderle a quien no quieras." },
+
+    { t: "Fiado sin intereses, pero con memoria",
+      c: "Puedes anotar lo que le fias a alguien y armar un plan de pagos, con cuotas fijas o con abonos como vayan cayendo. Sin recargos: solo un aviso cuando toca cobrar." },
+
+    { t: "El respaldo es tuyo, no nuestro",
+      c: "En Avanzado puedes bajar todo tu negocio en un archivo y guardarlo donde quieras. Hazlo una vez al mes: son diez segundos y es la diferencia entre un susto y una perdida." },
+
+    { t: "Un equipo, un codigo",
+      c: "Con la sincronizacion encendida, lo que registra uno lo ven todos en segundos. Se acaba el mensaje de WhatsApp preguntando cuanto queda." },
+
+    { t: "El tablero de control, para verlo con calma",
+      c: "En una pantalla grande cabe lo que en el telefono hay que resumir: producto por producto, venta por venta, con busqueda y exportacion. Se abre desde Avanzado." },
+
+    { t: "Exporta lo que tu contador si pueda usar",
+      c: "El reporte contable sale en un archivo que abre en Excel. Mandarle eso en vez de fotos del cuaderno le ahorra a el horas y a ti la factura de esas horas." },
+
+    { t: "Las fotos de producto valen mas que el nombre",
+      c: "Una tarjeta con foto se reconoce sin leer. Si tienes empleados nuevos o productos parecidos entre si, poner las fotos es la hora mejor invertida de la semana." },
+
+    { t: "Productos que son casi el mismo",
+      c: "Si vendes lo mismo en variantes que solo cambian por dentro, agrupalos por familia con un codigo comun. Se ven juntos y dejas de confundirlos al vender." },
+
+    { t: "Las transferencias entre perchas dejan rastro",
+      c: "Mover producto de un lado a otro no es solo restar aqui y sumar alla. Quien recibe confirma lo que llego, y si falta algo se sabe donde." },
+
+    { t: "Las comisiones se calculan solas",
+      c: "Si trabajas con promotores o consignacion, la app reparte cada venta segun lo pactado. Se acaba el domingo de calculadora." },
+
+    { t: "Caja chica tambien es tu dinero",
+      c: "El taxi, el almuerzo, la funda de la esquina. Anotarlos toma cinco segundos y es la unica forma de que la ganancia del mes sea la de verdad y no la que te gustaria." },
+
+    { t: "Ajustar no es hacer trampa",
+      c: "Si algo se rompio, vencio o el conteo estaba mal, usa Ajustar y escribe el motivo. Queda registrado. Un inventario que nunca se ajusta es un inventario que nadie cree." },
+
+    { t: "Lo que se muere en la percha",
+      c: "El color negro marca lo que lleva mucho sin moverse. Ese es dinero tuyo detenido: rematarlo con descuento casi siempre sale mejor que esperar a que alguien lo quiera." },
+
+    { t: "Cuanto vale lo que tienes ahora",
+      c: "El inventario valorizado te dice, en un numero, cuanto de tu dinero esta ahora mismo convertido en producto. Sirve para pedir un credito y para decidir si comprar mas." },
+
+    { t: "El buscador tambien perdona los acentos",
+      c: "Escribe camiseta o Camiseta, con tilde o sin ella: encuentra igual. Esta hecho para teclear rapido con una mano." },
+
+    { t: "Quien esta en el loop",
+      c: "En Avanzado ves que dispositivos de tu equipo estan sincronizados y cuales llevan rato sin hablar. El que anda desconectado puede estar vendiendo algo que aqui ya se vendio." },
+
+    { t: "Ponle nombre a cada dispositivo",
+      c: "En Avanzado puedes escribir como se llama este aparato: Rosa, el celular del mostrador, tablet feria. Cuando el equipo crece, es la diferencia entre una lista util y una lista de codigos." },
+
+    { t: "Sin internet tambien funciona",
+      c: "La app abre y registra aunque se caiga la conexion. Cuando vuelve, se pone al dia sola con el resto del equipo. No pierdes una venta por el wifi." },
+
+    { t: "Instalala como app",
+      c: "Desde el navegador puedes agregarla a la pantalla de inicio. Abre a pantalla completa, arranca mas rapido y deja de ser una pestana que se pierde entre veinte." },
+
+    { t: "Las reservas y encargos no viven en la memoria",
+      c: "Lo que un cliente aparto o encargo se anota y queda. Es lo que evita vender dos veces lo mismo y quedar mal con quien lo pidio primero." },
+
+    { t: "El correo de recuperacion no es tramite",
+      c: "Es lo unico que te devuelve el acceso si olvidas tu PIN. Registralo en Avanzado hoy, no el dia que lo necesites." },
+
+    { t: "Tu codigo de licencia es casi una llave privada",
+      c: "Quien lo tenga entra a la sala de tu negocio. Anotalo en un lugar seguro, compartelo solo con tu equipo, y si se filtra puedes cambiarlo desde Avanzado." },
+
+    { t: "La app se reporta sola cuando falla",
+      c: "Si algo se rompe, nos llega el dato tecnico y nada mas: ni un producto, ni un cliente, ni una cifra tuya. Casi siempre lo arreglamos antes de que alcances a escribir." },
   ];
 
-  // Indice deterministico por dia: el mismo tip toda la jornada. Se usa la fecha
-  // local (no UTC) para que el cambio ocurra a medianoche del dueno, no a una
-  // hora rara.
+  /* ==========================================================================
+     EL TIP DE LOS PIN. Aparte del arreglo, con su propia regla.
+
+     Sale cada 14 dias como maximo mientras el dispositivo siga con los PIN de
+     demo, y DEJA DE SALIR en cuanto los cambien. Un recordatorio que sigue
+     apareciendo despues de que ya hiciste lo que pedia es la forma mas rapida
+     de que la gente deje de leer esta cajita.
+
+     No regana: dice para que sirve. Nadie cambia un PIN porque lo rete un
+     cuadrito azul.
+     ========================================================================== */
+  var TIP_PIN = {
+    t: "Los PIN de demo siguen puestos",
+    c: "Mientras esten los codigos de ejemplo, cualquiera que los haya visto en la landing puede entrar a tu negocio. Poner los tuyos toma un minuto en Avanzado, y desde ahi cada persona de tu equipo entra con su propia clave: eso es lo que hace que el registro de actividad sirva de algo.",
+    pin: true,
+  };
+
+  var K_PIN_VISTO = "amigable_edutip_pin_visto";
+  var CADA_MS = 14 * 86400000;
+
+  /* Si el dispositivo ya fue apropiado, los PIN de demo ya no aplican: al
+     activar con 789 el PIN del duenio se reemplaza. Se comprueba por el mismo
+     dato que usa el resto de la app, no por una bandera propia que se pueda
+     desincronizar. */
+  function sigueEnDemo() {
+    try {
+      var raw = localStorage.getItem("amigable_owned");
+      if (!raw) return true;              /* nunca activado: sigue en demo */
+      var o = JSON.parse(raw);
+      return !(o && o.licenseCode);
+    } catch (_) {
+      /* Ante la duda NO se muestra: es preferible callar un recordatorio que
+         acusar de inseguro a quien ya hizo los deberes. */
+      return false;
+    }
+  }
+
+  function tocaElDePin() {
+    if (!sigueEnDemo()) return false;
+    try {
+      var ultimo = Number(localStorage.getItem(K_PIN_VISTO)) || 0;
+      return (Date.now() - ultimo) >= CADA_MS;
+    } catch (_) { return false; }
+  }
+
+  /* --------------------------------------------------------- la rotacion ---
+     Baraja deterministica por bloque: se recorre la lista entera antes de
+     repetir ninguno. Con rotacion al azar puro, algunos tips no salen nunca y
+     otros salen dos dias seguidos; con 32 tips eso se nota. */
+  function diasDesdeEpoca() {
+    var d = new Date();
+    return Math.floor(new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() / 86400000);
+  }
+
+  /* Generador simple y estable: la misma semilla da siempre el mismo orden,
+     asi que no hace falta guardar nada. */
+  function barajaDe(semilla, n) {
+    var orden = [], i;
+    for (i = 0; i < n; i++) orden.push(i);
+    var x = (semilla * 2654435761) % 4294967296;
+    for (i = n - 1; i > 0; i--) {
+      x = (x * 1103515245 + 12345) % 2147483648;
+      var j = x % (i + 1);
+      var t = orden[i]; orden[i] = orden[j]; orden[j] = t;
+    }
+    return orden;
+  }
+
   function tipDeHoy() {
     try {
-      var d = new Date();
-      var dias = Math.floor(
-        (d - new Date(d.getFullYear(), 0, 0)) / 86400000
-      );
-      return TIPS[Math.abs(dias) % TIPS.length];
+      if (tocaElDePin()) return TIP_PIN;
+      var dia = diasDesdeEpoca();
+      var n = TIPS.length;
+      var bloque = Math.floor(dia / n);      /* cada n dias, orden nuevo */
+      var pos = ((dia % n) + n) % n;
+      return TIPS[barajaDe(bloque + 1, n)[pos]];
     } catch (_) {
       return TIPS[0];
     }
@@ -81,12 +227,15 @@
     });
   }
 
-  // Colores solidos y explicitos, con -webkit-text-fill-color: iOS en modo
-  // oscuro reinterpreta los colores heredados y deja el texto invisible. Ver la
-  // regla de legibilidad iOS/WhatsApp en CLAUDE.md — no quitar los !important.
+  /* Colores solidos y explicitos, con -webkit-text-fill-color: iOS en modo
+     oscuro reinterpreta los colores heredados y deja el texto invisible. Ver la
+     regla de legibilidad iOS/WhatsApp en CLAUDE.md — no quitar los !important. */
   function pintar(mount) {
     if (!mount) return;
     var tip = tipDeHoy();
+    /* Se marca como visto SOLO al pintarlo de verdad: si el duenio nunca abre
+       la vista contable, el contador no corre y el recordatorio sigue vivo. */
+    if (tip.pin) { try { localStorage.setItem(K_PIN_VISTO, String(Date.now())); } catch (_) {} }
     mount.innerHTML =
       '<div style="font-size:.82rem;font-weight:700;letter-spacing:.04em;'
       + 'color:#2E6278 !important;-webkit-text-fill-color:#2E6278 !important;'
@@ -103,7 +252,11 @@
     pintar(document.getElementById("oc-edutip-contable"));
   }
 
-  global.OCEdutips = { montar: montar, tipDeHoy: tipDeHoy, TIPS: TIPS };
+  global.OCEdutips = {
+    montar: montar, tipDeHoy: tipDeHoy, TIPS: TIPS, TIP_PIN: TIP_PIN,
+    /* Expuestos para poder probar la rotacion sin esperar 32 dias. */
+    _baraja: barajaDe, _sigueEnDemo: sigueEnDemo,
+  };
 
   // La vista contable se pinta con cargarAvanzado(); montamos al cargar el DOM
   // y ademas exponemos montar() para que avanzado-extra.js lo llame si repinta.

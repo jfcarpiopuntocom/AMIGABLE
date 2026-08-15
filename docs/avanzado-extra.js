@@ -182,20 +182,25 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
     _t.dataset.listo = "1";
     /* Se pinta el panel del equipo apenas se rinde esta vista. */
     try { if (window.OCMicelioUI) window.OCMicelioUI.pintarPanel(); } catch (_) {}
-    /* Se pinta el panel del equipo apenas se rinde esta vista. */
-    try { if (window.OCMicelioUI) window.OCMicelioUI.pintarPanel(); } catch (_) {}
-    _t.addEventListener("click", function(){ ocAbrirTablero(salaActiva); });
-    /* El chequeo de rol va DIFERIDO a proposito: isDueno/isAdmin se declaran
-       mas abajo en el modulo y llamarlas aqui revienta por zona muerta (TDZ),
-       y eso tumbaba el init entero de Avanzado. Un tick despues ya existen.
-       Si por lo que sea fallara, el boton se queda visible: no es la capa de
-       seguridad, la capa de seguridad es que el tablero exige el codigo. */
-    setTimeout(function(){
+    _t.addEventListener("click", function(){ ocAbrirTablero(); });
+
+    /* El rol se comprueba EN CADA LOGIN, no una sola vez al inicializar. Antes
+       se hacia con un setTimeout y el boton desaparecia para siempre: en ese
+       momento todavia no habia nadie dentro, rolActual() era null, y null no es
+       duenio. Se OCULTA en vez de borrarse, para que el siguiente login pueda
+       volver a mostrarlo.
+
+       Ocultarlo NO es la seguridad: la seguridad es que el tablero exige el
+       codigo de la sala Y el PIN, y los verifica el dispositivo. */
+    var segunRol = function () {
       try {
         var rol = window.OCAuth && window.OCAuth.rolActual && window.OCAuth.rolActual();
-        if (rol !== "dueno" && rol !== "admin") _t.remove();
+        _t.style.display = (rol === "dueno" || rol === "admin") ? "" : "none";
       } catch (_) {}
-    }, 0);
+    };
+    segunRol();
+    window.addEventListener("oc-login", segunRol);
+    window.addEventListener("oc-logout", segunRol);
   })(),
   (function(){var _r=document.getElementById("oc-sync-rotar");if(_r&&!_r.dataset.listo){_r.dataset.listo="1";_r.addEventListener("click",ocRotarCodigoSala);}})(),document.getElementById("oc-sync-desactivar").addEventListener("click", () => {
     window.OCSyncControl.desactivar();
@@ -853,7 +858,14 @@ try{
      enterrado en el manual.
      ========================================================================== */
   function ocAbrirTablero(codigo) {
-    if (!codigo) return;
+    /* Sin argumento se lee del storage: este boton vive junto a la capa
+       contable, fuera del render de la seccion de sync, donde salaActiva ni
+       siquiera esta puesta todavia. */
+    if (!codigo) { try { codigo = JSON.parse(localStorage.getItem("amigable_sync_room") || "{}").codigo || ""; } catch (_) { codigo = ""; } }
+    if (!codigo) {
+      alert("Primero enciende la sincronización de equipo, aquí en Avanzado: el tablero se conecta con ese mismo código.");
+      return;
+    }
     var url = new URL("tablero.html", location.href).href + "#c=" + encodeURIComponent(codigo);
     var m = document.createElement("div");
     m.className = "oc-subgate";
