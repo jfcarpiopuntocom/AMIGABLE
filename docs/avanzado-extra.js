@@ -31,14 +31,26 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
   panel.id = "oc-sync-panel";
   panel.style.cssText = "text-align:left;margin-top:22px;";
   const salaActiva = window.OCSyncControl.salaActiva();
-  const codigoPrecargado = (function () {
-    try { return (JSON.parse(localStorage.getItem("amigable_owned") || "null") || {}).licenseCode || ""; } catch (_) { return ""; }
-  })();
+  /* LICENCIA AJENA (bug en vivo, iPhone de JFC, 2026-08-15). aislamiento.js
+     rescata del espacio comun las claves con prefijo "amigable_", y
+     friendly-123 —que es un fork de esta app— escribe con esos mismos nombres.
+     En un telefono donde se abrieron las dos, AMIGABLE terminaba mostrando la
+     licencia F123 de la otra app como si fuera la propia.
+
+     Aqui SOLO se acepta una licencia de esta app. No se borra nada: la ajena
+     se ignora y punto, porque borrarla dejaria sin acceso a la otra app. */
+  function _licenciaDeEstaApp() {
+    try {
+      var c = (JSON.parse(localStorage.getItem("amigable_owned") || "null") || {}).licenseCode || "";
+      return /^AMG-/i.test(c) ? c : "";
+    } catch (_) { return ""; }
+  }
+  const codigoPrecargado = _licenciaDeEstaApp();
   panel.innerHTML = `
     <h3 class="seccion" style="margin-top:0;">Sincronizar equipo</h3>
     <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">
       Todos los dispositivos de tu equipo (dueño, admins, empleados) que tengan
-      el código de tu negocio quedan sincronizados en segundos, siempre —
+      tu licencia quedan sincronizados en segundos, siempre —
       no solo en ferias. Ventas, ajustes y transferencias de stock se avisan
       entre todos al instante, para que nadie venda las mismas últimas
       unidades sin saberlo.
@@ -50,12 +62,12 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
     </p>
     <div id="oc-sync-estado" style="font-size:13px;font-weight:700;margin-bottom:10px;"></div>
     <div id="oc-sync-apagado" style="display:${salaActiva ? "none" : "flex"};gap:8px;flex-wrap:wrap;align-items:center;">
-      <input id="oc-sync-codigo" type="text" value="${escHtml(codigoPrecargado)}" placeholder="Código de tu negocio (AMG-XXXX-XXXX-XXXX)" maxlength="40"
+      <input id="oc-sync-codigo" type="text" value="${escHtml(codigoPrecargado)}" placeholder="Tu licencia (AMG-XXXX-XXXX-XXXX)" maxlength="40"
         style="flex:1;min-width:220px;padding:8px;border:2px solid var(--azul-medio);border-radius:5px;font-size:14px;">
       <button id="oc-sync-activar" class="ir">Activar</button>
     </div>
     <div id="oc-sync-activo" style="display:${salaActiva ? "block" : "none"};">
-      <p style="font-size:13px;color:var(--ink-soft);">Código de tu equipo — compártelo con cada celular nuevo UNA sola vez:</p>
+      <p style="font-size:13px;color:var(--ink-soft);">Tu licencia — compártela con cada celular nuevo UNA sola vez:</p>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <code id="oc-sync-codigo-actual" style="font-size:16px;font-weight:700;background:var(--paper-deep,#E2E8ED);padding:6px 12px;border-radius:6px;">${escHtml(salaActiva || "")}</code>
         <div id="oc-sync-qr" style="margin-top:8px;"></div>
@@ -864,6 +876,9 @@ try{
        contable, fuera del render de la seccion de sync, donde salaActiva ni
        siquiera esta puesta todavia. */
     if (!codigo) { try { codigo = JSON.parse(localStorage.getItem("amigable_sync_room") || "{}").codigo || ""; } catch (_) { codigo = ""; } }
+    /* Una sala que no es de esta app no abre este tablero: ver el comentario
+       de _licenciaDeEstaApp. Mejor pedirla que proyectar el negocio de otra. */
+    if (codigo && !/^AMG-/i.test(codigo)) codigo = "";
     if (!codigo) {
       alert("Primero enciende la sincronización de equipo, aquí en Avanzado: el tablero se conecta con ese mismo código.");
       return;
