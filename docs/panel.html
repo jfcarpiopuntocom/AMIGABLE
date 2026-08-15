@@ -266,10 +266,25 @@
         <option value="bloqueada">Bloqueada</option>
       </select>
     </div>
+    <!-- SALUD DE LA FLOTA (2026-08-15). Va ARRIBA de la tabla de licencias a
+         proposito: es lo primero que hay que mirar cada manana. Agrupa la misma
+         falla entre todas las instancias y la ordena por cuantos negocios
+         afecta, que es lo que decide que se arregla primero. -->
+    <div id="salud-flota" style="display:none;margin:0 0 18px;">
+      <h3 style="font-size:17px;font-weight:700;margin:0 0 4px;color:var(--gold,#c9a24a);">Fallas de la flota</h3>
+      <p style="font-size:14px;margin:0 0 10px;color:#CCCCCC;">Agrupadas por falla, no por negocio. Arriba, la que afecta a mas gente.</p>
+      <div class="tabla-wrap">
+        <table class="versiones">
+          <thead><tr><th>Negocios</th><th>Veces</th><th>Falla</th><th>Dónde</th><th>Versión</th><th>Última</th></tr></thead>
+          <tbody id="salud-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="tabla-wrap">
       <div id="lic-empty" style="padding:34px 20px;text-align:center;color:var(--ink-soft);font-size:14px;display:none;">Aún no hay instancias. Cuando alguien active con PIN 789 (y tengas el Worker configurado), aparecerán aquí.</div>
       <table class="versiones" id="lic-tabla" style="display:none;">
-        <thead><tr><th>Estado</th><th>Código AMG</th><th>Nombre</th><th>Negocio</th><th>Email</th><th>WhatsApp</th><th>Cédula</th><th>Activado</th><th>Última vez</th><th>Acción</th></tr></thead>
+        <thead><tr><th>Estado</th><th>Código AMG</th><th>Nombre</th><th>Negocio</th><th>Email</th><th>WhatsApp</th><th>Cédula</th><th>Activado</th><th>Última vez</th><th>Salud</th><th>Acción</th></tr></thead>
         <tbody id="lic-tbody"></tbody>
       </table>
     </div>
@@ -622,7 +637,106 @@
 
 <script>const PANEL_EMOJIS=["🕵️","🔐","🗝️","🔍","🧩","🎯","🌐","🛸","💠","⚡","🔮","🌌","⛓️","🧬","🪐","⚗️","🔭","💡","🌀","🎱","🏹","🧿","🔬","💫","🌠","🎰"];const _PIN_LEN=6;/* SEGURIDAD (2026-07-16): el PIN ya NO vive en el codigo fuente. Solo su hash SHA-256. Para cambiar el PIN: calcular sha256 del nuevo PIN y reemplazar _expectedHash. NO volver a poner el PIN en claro. */const _expectedHash="eaa98de6c2fe709ba90d71464e4bd004cbe5cc13f5400ed6f49efc2fb0308068";async function sha256hex(str){const buf=await crypto.subtle.digest("SHA-256",(new TextEncoder).encode(str));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("")}function barajar(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}function montarTeclado(padEl,slotsEl,onComplete){let entrada=[];const pool=barajar(PANEL_EMOJIS);padEl.innerHTML="";for(let d=0;d<=9;d++){if(d===0){const vacio=document.createElement("div");vacio.className="pad-key vacio";padEl.appendChild(vacio)}const key=document.createElement("div");key.className="pad-key";key.innerHTML=`<span class="emoji">${pool[d]}</span><span class="digit">${d}</span>`;key.addEventListener("click",()=>{if(entrada.length>=_PIN_LEN)return;entrada.push(String(d));actualizarSlots(slotsEl,entrada.length);if(entrada.length===_PIN_LEN)onComplete(entrada.join(""),resetEntrada)});padEl.appendChild(key);if(d===0){const borrar=document.createElement("div");borrar.className="pad-key borrar";borrar.textContent="⌫";borrar.addEventListener("click",()=>{if(!entrada.length)return;entrada.pop();actualizarSlots(slotsEl,entrada.length)});padEl.appendChild(borrar)}}function actualizarSlots(slotsEl,n){const slots=slotsEl.querySelectorAll(".slot");slots.forEach((s,i)=>{if(i<n){s.textContent="●";s.classList.add("lleno")}else{s.textContent="";s.classList.remove("lleno")}})}function resetEntrada(){entrada=[];actualizarSlots(slotsEl,0)}return resetEntrada}async function initGate(){const padEl=document.getElementById("gate-pad");const slotsEl=document.getElementById("gate-slots");const msgEl=document.getElementById("gate-msg");if(sessionStorage.getItem("panel_auth")==="1"){mostrarPanel();return}montarTeclado(padEl,slotsEl,async(codigo,reset)=>{const h=await sha256hex(codigo);if(h===_expectedHash){sessionStorage.setItem("panel_auth","1");mostrarPanel()}else{msgEl.textContent="Código incorrecto.";setTimeout(()=>{msgEl.textContent="";reset()},1400)}})}function mostrarPanel(){document.getElementById("gate").style.display="none";document.getElementById("panel").classList.add("visible");initPanel()}function initPanel(){const d=new Date;const meses=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];document.getElementById("fecha-panel").textContent=d.getDate()+" "+meses[d.getMonth()]+" "+d.getFullYear();document.getElementById("btn-cerrar").addEventListener("click",()=>{sessionStorage.removeItem("panel_auth");location.reload()});document.querySelectorAll("[data-action='liberar']").forEach(btn=>{btn.addEventListener("click",()=>abrirModalLiberar(btn.dataset.nombre,btn.dataset.key))});licInit()}let _licData=[];function licGetCfg(){try{return JSON.parse(localStorage.getItem("amg_master_cfg")||"{}")}catch(_){return{}}}function licSetCfg(obj){const prev=licGetCfg();localStorage.setItem("amg_master_cfg",JSON.stringify({...prev,...obj}))}function licWorkerUrl(){return(licGetCfg().workerUrl||"").trim()}function licMasterKey(){return(licGetCfg().masterKey||"").trim()}function licInit(){const cfg=licGetCfg();const u=document.getElementById("lic-worker-url");const k=document.getElementById("lic-master-key");if(u)u.value=cfg.workerUrl||"";if(k)k.value=cfg.masterKey||"";const cache=licLeerCache();if(cache&&cache.data.length){_licData=cache.data;licRenderTabla(_licData);licRenderStats(_licData);const cuando=new Date(cache.ts).toLocaleString("es");document.getElementById("lic-meta").textContent="mostrando "+cache.data.length+" instancia(s) guardadas de "+cuando+" · actualizando…"}if(cfg.workerUrl)licRecargar();else if(!cache){licMostrarVacio();document.getElementById("lic-meta").textContent="configura el Worker →"}}function licToggleConfig(){const p=document.getElementById("lic-config");p.style.display=p.style.display==="none"?"block":"none"}function licGuardarConfig(){const workerUrl=document.getElementById("lic-worker-url").value.trim();const masterKey=document.getElementById("lic-master-key").value.trim();if(workerUrl){let u;try{u=new URL(workerUrl)}catch(_){mostrarConfirmacion("URL inválida — revisa que esté completa");return}if(u.protocol!=="https:"){mostrarConfirmacion("La URL del Worker debe empezar con https://");return}}licSetCfg({workerUrl:workerUrl,masterKey:masterKey});mostrarConfirmacion("Configuración del Worker guardada");licRecargar()}function licCacheKey(){return"amg_lic_cache"}function licGuardarCache(data){try{localStorage.setItem(licCacheKey(),JSON.stringify({data:data,ts:Date.now()}))}catch(_){}}function licLeerCache(){try{const raw=localStorage.getItem(licCacheKey());if(!raw)return null;const parsed=JSON.parse(raw);if(!parsed||!Array.isArray(parsed.data))return null;return parsed}catch(_){return null}}function licMostrarCacheSiHay(motivo){const cache=licLeerCache();const meta=document.getElementById("lic-meta");if(cache&&cache.data.length){_licData=cache.data;licRenderTabla(_licData);licRenderStats(_licData);const cuando=new Date(cache.ts).toLocaleString("es");meta.textContent=motivo+" — mostrando "+cache.data.length+" instancia(s) guardadas de "+cuando;return true}meta.textContent=motivo;licMostrarVacio();return false}
 async function licRecargar(){const url=licWorkerUrl();const meta=document.getElementById("lic-meta");if(!url){meta.textContent="sin URL del Worker — abre Config";licMostrarCacheSiHay("sin URL del Worker");return}if(!licMasterKey()){licMostrarCacheSiHay("falta la Master Key — vuelve a pegarla abajo");document.getElementById("lic-config").style.display="block";mostrarConfirmacion("Configura la Master Key del Worker");return}meta.textContent="cargando…";try{const res=await fetch(url.replace(/\/+$/,"")+"/licencias",{headers:{"X-Master-Key":licMasterKey()}});if(res.status===401){licMostrarCacheSiHay("Master Key incorrecta o se perdió del dispositivo — vuelve a pegarla abajo");document.getElementById("lic-config").style.display="block";mostrarConfirmacion("Master Key incorrecta — revisa Config");return}const data=await res.json();_licData=(Array.isArray(data)?data:[]).filter(Boolean);licGuardarCache(_licData);licRenderTabla(_licData);licRenderStats(_licData);meta.textContent=_licData.length+" instancia(s) · "+(new Date).toLocaleTimeString("es")}catch(e){licMostrarCacheSiHay("error al conectar con el Worker: "+e.message)}}function licEsc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}function licFmtDate(ts){if(!ts)return"—";const d=new Date(ts);return d.toLocaleDateString("es")+" "+d.toLocaleTimeString("es",{hour:"2-digit",minute:"2-digit"})}function licNormEstado(e){e=String(e||"").toLowerCase();if(e==="full"||e==="minima"||e==="bloqueada")return e;if(e==="activa")return "full";if(e==="limitada"||e==="observada")return "minima";return "minima"}
-function licRenderStats(data){const c={full:0,minima:0,bloqueada:0};data.forEach(r=>{const e=licNormEstado(r.estado);if(c[e]!==undefined)c[e]++});document.getElementById("lic-stats").innerHTML=`<div class="stat-box"><div class="stat-value">${data.length}</div><div class="stat-label">Total</div></div>`+`<div class="stat-box"><div class="stat-value" style="color:var(--green);">${c.full}</div><div class="stat-label">Full</div></div>`+`<div class="stat-box"><div class="stat-value" style="color:var(--amber);">${c.minima}</div><div class="stat-label">Mínima</div></div>`+`<div class="stat-box"><div class="stat-value" style="color:var(--red);">${c.bloqueada}</div><div class="stat-label">Bloqueadas</div></div>`}function licMostrarVacio(){document.getElementById("lic-empty").style.display="block";document.getElementById("lic-tabla").style.display="none"}function licWaHref(tel){const digits=String(tel||"").replace(/\D/g,"");return digits?"https://wa.me/"+digits:""}function licRenderTabla(data){if(!data.length){licMostrarVacio();return}document.getElementById("lic-empty").style.display="none";document.getElementById("lic-tabla").style.display="table";const tb=document.getElementById("lic-tbody");tb.innerHTML="";const grupos=[];const idx={};data.forEach(r=>{const cod=String(r.licenseCode||"").trim().toUpperCase();if(!cod){grupos.push({cod:"",filas:[r]});return}if(idx[cod]===undefined){idx[cod]=grupos.length;grupos.push({cod:cod,filas:[]})}grupos[idx[cod]].filas.push(r)});grupos.forEach(g=>{const r=g.filas[0];const est=r.estado||"minima";const id=licEsc(r.instanceId);const waHref=licWaHref(r.whatsapp);const n=g.filas.length;const tr=document.createElement("tr");tr.innerHTML=`<td><span class="lic-badge ${licEsc(licNormEstado(est))}">${licEsc(licNormEstado(est))}</span></td>`+`<td class="mono" style="color:var(--gold);">${licEsc(r.licenseCode||"—")}`+(n>1?`<br><button onclick="licToggleDisp('${id}')" style="margin-top:4px;background:none;border:1px solid var(--gold);color:var(--gold);border-radius:4px;padding:3px 8px;font-size:13px;cursor:pointer;">${n} dispositivos</button>`:"")+`</td>`+`<td id="lic-td-nombre-${id}">${licEsc(((r.nombre||"")+" "+(r.apellido||"")).trim()||"—")} <button title="Editar nombre" onclick="licEditarInline('${id}','nombre')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0 2px;">&#9998;</button></td>`+`<td id="lic-td-nombreNegocio-${id}" style="font-size:13px;">${licEsc(r.nombreNegocio||"—")} <button title="Editar negocio" onclick="licEditarInline('${id}','nombreNegocio')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0 2px;">&#9998;</button></td>`+`<td id="lic-td-email-${id}" style="font-size:13px;">${licEsc(r.email||"—")} <button title="Editar correo" onclick="licEditarInline('${id}','email')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0 2px;">&#9998;</button></td>`+`<td style="font-size:13px;">${waHref?`<a href="${waHref}" target="_blank" style="color:#25D366;">${licEsc(r.whatsapp)}</a>`:"—"}</td>`+`<td style="font-size:13px;">${licEsc(r.cedula||"—")}</td>`+`<td class="date">${licFmtDate(r.activatedAt)}</td>`+`<td class="date">${licFmtDate(r.lastSeen)}</td>`+`<td><select id="lic-sel-${id}">`+`<option value="minima"${licNormEstado(est)==="minima"?" selected":""}>Mínima — gratis (25 items · 100 ventas/mes · 1 empleado)</option>`+`<option value="full"${licNormEstado(est)==="full"?" selected":""}>Full — sin topes</option>`+`<option value="bloqueada"${licNormEstado(est)==="bloqueada"?" selected":""}>Bloqueada</option>`+`</select><button class="btn-ok" onclick="licCambiarEstado('${id}')">OK</button>`+` <button class="btn-ok" title="Generar codigo de liberacion" onclick="licLiberarCodigo('${id}')" style="background:var(--rust,#E86040);margin-left:4px;">Liberar</button>`+` <button class="btn-ok" title="Ver e historial y restaurar versiones anteriores" onclick="licVerHistorial('${id}')" style="background:transparent;border:1px solid var(--gold-dim,#c9a24a);color:var(--gold-dim,#c9a24a);margin-left:4px;">Historial</button>`+` <button class="btn-ok" title="Borrar este registro (se archiva, se puede recuperar)" onclick="licBorrar('${id}')" style="background:transparent;border:1px solid var(--red,#E8365D);color:var(--red,#E8365D);margin-left:4px;">Borrar</button></td>`;tb.appendChild(tr);g.filas.slice(1).forEach(h=>{const hid=licEsc(h.instanceId);const trh=document.createElement("tr");trh.className="lic-disp lic-disp-"+id;trh.style.display="none";trh.style.background="rgba(255,255,255,.03)";trh.innerHTML=`<td></td><td class="mono" style="font-size:13px;color:#CCCCCC;">mismo negocio, otro dispositivo</td>`+`<td colspan="5" style="font-size:13px;color:#CCCCCC;">${licEsc(h.instanceId)}</td>`+`<td class="date">${licFmtDate(h.activatedAt)}</td><td class="date">${licFmtDate(h.lastSeen)}</td>`+`<td><button class="btn-ok" onclick="licLiberarCodigo('${hid}')" style="background:var(--rust,#E86040);">Liberar</button>`+` <button class="btn-ok" onclick="licBorrar('${hid}')" style="background:transparent;border:1px solid var(--red,#E8365D);color:var(--red,#E8365D);margin-left:4px;">Borrar</button></td>`;tb.appendChild(trh)})})}function licToggleDisp(id){const fs=document.querySelectorAll(".lic-disp-"+id);fs.forEach(f=>{f.style.display=f.style.display==="none"?"table-row":"none"})}// Version control real (JFC 2026-07-28, incidente: "borraste mi nombre" y
+function licRenderStats(data){const c={full:0,minima:0,bloqueada:0};data.forEach(r=>{const e=licNormEstado(r.estado);if(c[e]!==undefined)c[e]++});document.getElementById("lic-stats").innerHTML=`<div class="stat-box"><div class="stat-value">${data.length}</div><div class="stat-label">Total</div></div>`+`<div class="stat-box"><div class="stat-value" style="color:var(--green);">${c.full}</div><div class="stat-label">Full</div></div>`+`<div class="stat-box"><div class="stat-value" style="color:var(--amber);">${c.minima}</div><div class="stat-label">Mínima</div></div>`+`<div class="stat-box"><div class="stat-value" style="color:var(--red);">${c.bloqueada}</div><div class="stat-label">Bloqueadas</div></div>`+(function(){var n=data.filter(function(r){return Array.isArray(r.errores)&&r.errores.length}).length;return n?`<div class="stat-box"><div class="stat-value" style="color:var(--red);">${n}</div><div class="stat-label">Con fallas</div></div>`:""})()}function licMostrarVacio(){document.getElementById("lic-empty").style.display="block";document.getElementById("lic-tabla").style.display="none"}function licWaHref(tel){const digits=String(tel||"").replace(/\D/g,"");return digits?"https://wa.me/"+digits:""}function licRenderTabla(data){window._licData=data;saludRender(data);if(!data.length){licMostrarVacio();return}document.getElementById("lic-empty").style.display="none";document.getElementById("lic-tabla").style.display="table";const tb=document.getElementById("lic-tbody");tb.innerHTML="";const grupos=[];const idx={};data.forEach(r=>{const cod=String(r.licenseCode||"").trim().toUpperCase();if(!cod){grupos.push({cod:"",filas:[r]});return}if(idx[cod]===undefined){idx[cod]=grupos.length;grupos.push({cod:cod,filas:[]})}grupos[idx[cod]].filas.push(r)});grupos.forEach(g=>{const r=g.filas[0];const est=r.estado||"minima";const id=licEsc(r.instanceId);const waHref=licWaHref(r.whatsapp);const n=g.filas.length;const tr=document.createElement("tr");tr.innerHTML=`<td><span class="lic-badge ${licEsc(licNormEstado(est))}">${licEsc(licNormEstado(est))}</span></td>`+`<td class="mono" style="color:var(--gold);">${licEsc(r.licenseCode||"—")}`+(n>1?`<br><button onclick="licToggleDisp('${id}')" style="margin-top:4px;background:none;border:1px solid var(--gold);color:var(--gold);border-radius:4px;padding:3px 8px;font-size:13px;cursor:pointer;">${n} dispositivos</button>`:"")+`</td>`+`<td id="lic-td-nombre-${id}">${licEsc(((r.nombre||"")+" "+(r.apellido||"")).trim()||"—")} <button title="Editar nombre" onclick="licEditarInline('${id}','nombre')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0 2px;">&#9998;</button></td>`+`<td id="lic-td-nombreNegocio-${id}" style="font-size:13px;">${licEsc(r.nombreNegocio||"—")} <button title="Editar negocio" onclick="licEditarInline('${id}','nombreNegocio')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0 2px;">&#9998;</button></td>`+`<td id="lic-td-email-${id}" style="font-size:13px;">${licEsc(r.email||"—")} <button title="Editar correo" onclick="licEditarInline('${id}','email')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0 2px;">&#9998;</button></td>`+`<td style="font-size:13px;">${waHref?`<a href="${waHref}" target="_blank" style="color:#25D366;">${licEsc(r.whatsapp)}</a>`:"—"}</td>`+`<td style="font-size:13px;">${licEsc(r.cedula||"—")}</td>`+`<td class="date">${licFmtDate(r.activatedAt)}</td>`+`<td class="date">${licFmtDate(r.lastSeen)}</td>`+licCeldaSalud(g.filas)+`<td><select id="lic-sel-${id}">`+`<option value="minima"${licNormEstado(est)==="minima"?" selected":""}>Mínima — gratis (25 items · 100 ventas/mes · 1 empleado)</option>`+`<option value="full"${licNormEstado(est)==="full"?" selected":""}>Full — sin topes</option>`+`<option value="bloqueada"${licNormEstado(est)==="bloqueada"?" selected":""}>Bloqueada</option>`+`</select><button class="btn-ok" onclick="licCambiarEstado('${id}')">OK</button>`+` <button class="btn-ok" title="Generar codigo de liberacion" onclick="licLiberarCodigo('${id}')" style="background:var(--rust,#E86040);margin-left:4px;">Liberar</button>`+` <button class="btn-ok" title="Ver e historial y restaurar versiones anteriores" onclick="licVerHistorial('${id}')" style="background:transparent;border:1px solid var(--gold-dim,#c9a24a);color:var(--gold-dim,#c9a24a);margin-left:4px;">Historial</button>`+` <button class="btn-ok" title="Borrar este registro (se archiva, se puede recuperar)" onclick="licBorrar('${id}')" style="background:transparent;border:1px solid var(--red,#E8365D);color:var(--red,#E8365D);margin-left:4px;">Borrar</button></td>`;tb.appendChild(tr);g.filas.slice(1).forEach(h=>{const hid=licEsc(h.instanceId);const trh=document.createElement("tr");trh.className="lic-disp lic-disp-"+id;trh.style.display="none";trh.style.background="rgba(255,255,255,.03)";trh.innerHTML=`<td></td><td class="mono" style="font-size:13px;color:#CCCCCC;">mismo negocio, otro dispositivo</td>`+`<td colspan="5" style="font-size:13px;color:#CCCCCC;">${licEsc(h.instanceId)}</td>`+`<td class="date">${licFmtDate(h.activatedAt)}</td><td class="date">${licFmtDate(h.lastSeen)}</td>`+licCeldaSalud([h])+`<td><button class="btn-ok" onclick="licLiberarCodigo('${hid}')" style="background:var(--rust,#E86040);">Liberar</button>`+` <button class="btn-ok" onclick="licBorrar('${hid}')" style="background:transparent;border:1px solid var(--red,#E8365D);color:var(--red,#E8365D);margin-left:4px;">Borrar</button></td>`;tb.appendChild(trh)})})}
+/* ==========================================================================
+   SALUD DE LA FLOTA (2026-08-15). Ver docs/salud-app.js del lado cliente.
+   Los errores que llegan son SOLO tecnicos: mensaje, archivo, linea, version.
+   Por construccion no hay datos de negocio aqui, asi que este panel se puede
+   mirar sin ver el negocio de nadie.
+   ========================================================================== */
+function saludFirma(e){ return (e.msg||"")+" | "+(e.archivo||"")+":"+(e.linea||0); }
+
+/* Agrupa la MISMA falla entre TODAS las instancias. La clave es "cuantos
+   negocios", no "cuantas veces": un error en 8 negocios es mas urgente que uno
+   que se repite 200 veces en uno solo. */
+function saludAgrupar(data){
+  const mapa = {};
+  (data||[]).forEach(r => {
+    const errs = Array.isArray(r.errores) ? r.errores : [];
+    const vistasAqui = {};
+    errs.forEach(e => {
+      const f = saludFirma(e);
+      if (!mapa[f]) mapa[f] = { msg:e.msg||"", archivo:e.archivo||"", linea:e.linea||0,
+                                vers:{}, veces:0, negocios:0, ultima:0 };
+      const g = mapa[f];
+      g.veces += Number(e.veces)||1;
+      if (e.ver) g.vers[e.ver] = true;
+      const t = Date.parse(e.cuando||"")||0;
+      if (t > g.ultima) g.ultima = t;
+      /* Un negocio cuenta UNA vez por falla aunque la haya sufrido 50 veces. */
+      if (!vistasAqui[f]) { vistasAqui[f] = 1; g.negocios++; }
+    });
+  });
+  return Object.keys(mapa).map(k => mapa[k])
+    .sort((a,b) => (b.negocios - a.negocios) || (b.veces - a.veces) || (b.ultima - a.ultima));
+}
+
+function saludRender(data){
+  const cont = document.getElementById("salud-flota");
+  const tb = document.getElementById("salud-tbody");
+  if (!cont || !tb) return;
+  const grupos = saludAgrupar(data);
+  if (!grupos.length) { cont.style.display = "none"; tb.innerHTML = ""; return; }
+  cont.style.display = "block";
+  tb.innerHTML = grupos.slice(0, 40).map(g => {
+    /* Rojo cuando la falla toca a mas de un negocio: eso ya no es el caso raro
+       de un dispositivo, es un bug del producto. */
+    const color = g.negocios > 1 ? "var(--red,#E8365D)" : "var(--amber,#c9a24a)";
+    const vers = Object.keys(g.vers).join(", ") || "—";
+    return `<tr>
+      <td style="font-weight:700;color:${color};font-size:17px;">${g.negocios}</td>
+      <td class="mono" style="font-size:14px;">${g.veces}</td>
+      <td style="font-size:14px;">${licEsc(g.msg)}</td>
+      <td class="mono" style="font-size:13px;color:#CCCCCC;">${licEsc(g.archivo)}${g.linea?":"+g.linea:""}</td>
+      <td class="mono" style="font-size:13px;color:#CCCCCC;">${licEsc(vers)}</td>
+      <td class="date">${g.ultima?licFmtDate(g.ultima):"—"}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* Aviso por fila: para cuando el cliente escribe y hay que mirar SU caso. */
+function licCeldaSalud(filas){
+  let n = 0, ultima = 0;
+  (filas||[]).forEach(r => {
+    const errs = Array.isArray(r.errores) ? r.errores : [];
+    n += errs.length;
+    const t = Number(r.erroresAt)||0;
+    if (t > ultima) ultima = t;
+  });
+  if (!n) return `<td style="font-size:13px;color:#7FB88F;">ok</td>`;
+  const id = licEsc((filas[0]||{}).instanceId||"");
+  return `<td><button onclick="licVerErrores('${id}')" title="Ver las fallas de este negocio"
+    style="background:transparent;border:1px solid var(--red,#E8365D);color:var(--red,#E8365D);
+    border-radius:6px;padding:4px 9px;font-size:13px;font-weight:700;cursor:pointer;">${n} ${n===1?"falla":"fallas"}</button></td>`;
+}
+
+function licVerErrores(id){
+  const r = (window._licData||[]).find(x => String(x.instanceId) === String(id));
+  if (!r) return;
+  const errs = Array.isArray(r.errores) ? r.errores : [];
+  const filas = errs.slice().sort((a,b)=>(Date.parse(b.cuando||"")||0)-(Date.parse(a.cuando||"")||0))
+    .map(e => `<tr><td class="mono" style="font-size:13px;">${e.veces||1}x</td>`+
+      `<td style="font-size:14px;">${licEsc(e.msg||"")}</td>`+
+      `<td class="mono" style="font-size:13px;color:#CCCCCC;">${licEsc(e.archivo||"")}${e.linea?":"+e.linea:""}</td>`+
+      `<td class="mono" style="font-size:13px;color:#CCCCCC;">${licEsc(e.ver||"")}</td>`+
+      `<td class="date">${licEsc(String(e.cuando||"").slice(0,16).replace("T"," "))}</td></tr>`).join("");
+  const w = window.open("", "_blank", "width=900,height=620");
+  if (!w) return;
+  w.document.write(`<!doctype html><meta charset="utf-8"><title>Fallas</title>
+    <body style="font-family:system-ui,sans-serif;background:#12161b;color:#E2E8ED;padding:22px;">
+    <h2 style="color:#c9a24a;margin:0 0 4px;font-size:19px;">Fallas de ${licEsc(r.nombreNegocio||r.licenseCode||id)}</h2>
+    <p style="font-size:14px;color:#CCCCCC;margin:0 0 16px;">Solo datos tecnicos. Este panel no puede ver el negocio del cliente.</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+    <thead><tr style="text-align:left;border-bottom:2px solid #c9a24a;">
+    <th style="padding:8px 6px;">Veces</th><th style="padding:8px 6px;">Falla</th>
+    <th style="padding:8px 6px;">Dónde</th><th style="padding:8px 6px;">Versión</th>
+    <th style="padding:8px 6px;">Cuándo</th></tr></thead>
+    <tbody>${filas || '<tr><td colspan="5" style="padding:14px 6px;">Sin fallas registradas.</td></tr>'}</tbody>
+    </table></body>`);
+  w.document.close();
+}
+
+function licToggleDisp(id){const fs=document.querySelectorAll(".lic-disp-"+id);fs.forEach(f=>{f.style.display=f.style.display==="none"?"table-row":"none"})}// Version control real (JFC 2026-07-28, incidente: "borraste mi nombre" y
 // "restauraste el correo de un cliente a una version vieja"). Cada escritura
 // en el Worker ahora guarda la version anterior (ver guardarConHistorial en
 // worker.js) — esto es el visor+restaurador de esas versiones, directo en la
