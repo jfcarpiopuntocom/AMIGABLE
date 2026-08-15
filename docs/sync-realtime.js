@@ -337,12 +337,29 @@
       // tecleara el usuario, silencioso y confuso si alguien no usaba mayus.
       const codigoNorm = normalizarCodigo(codigo);
       if (codigoNorm.length < 6) return { ok: false, error: "El código debe tener al menos 6 caracteres." };
-      // Blindaje (2026-08-10): la mascara de escritura ya sugiere el formato,
-      // pero no lo obligaba — un codigo truncado/mal tecleado con 6+ caracteres
-      // pasaba y unia el dispositivo a una sala vacia, sin error, desincronizado
-      // en silencio. Mismo formato que exige la activacion de licencia.
-      if (!/^AMG-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(codigoNorm)) {
-        return { ok: false, error: "Código inválido — revisa el formato AMG-XXXX-XXXX-XXXX." };
+      /* FORMATO DE SALA (2026-08-14). Acepta el formato nuevo de 4 grupos con
+         simbolo de verificacion y TAMBIEN el viejo, para no dejar afuera a
+         ninguna licencia ya emitida. consultorio-123 acepta ademas el prefijo
+         F123 que emitio por error antes del 2026-08-13.
+         Si el codigo trae simbolo de verificacion y NO cuadra, se bloquea: eso
+         es un codigo mal tecleado, y dejarlo pasar es lo que manda a alguien a
+         una sala vacia sin entender por que no se sincroniza. */
+      var _pre = ["AMG"];
+      var _cuerpo = codigoNorm.replace(new RegExp("^(" + _pre.join("|") + ")-"), "").replace(/-/g, "");
+      var _prefijoOk = _pre.some(function (p) { return codigoNorm.indexOf(p + "-") === 0; });
+      if (!_prefijoOk || (_cuerpo.length !== 8 && _cuerpo.length !== 12 && _cuerpo.length !== 17)) {
+        return { ok: false, error: "Código inválido — revisa que esté completo, con el formato AMG-XXXX-XXXX-XXXX-XXXXX." };
+      }
+      if (_cuerpo.length === 17) {
+        var _B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ", _CHK = _B32 + "*~$=U", _acc = 0, _mal = false;
+        for (var _i = 0; _i < 16; _i++) {
+          var _v = _B32.indexOf(_cuerpo.charAt(_i));
+          if (_v < 0) { _mal = true; break; }
+          _acc = (_acc * 32 + _v) % 37;
+        }
+        if (_mal || _CHK.charAt(_acc) !== _cuerpo.charAt(16)) {
+          return { ok: false, error: "Ese código tiene un error de tipeo. Revísalo carácter por carácter." };
+        }
       }
       try { localStorage.setItem(ROOM_KEY, JSON.stringify({ codigo: codigoNorm })); } catch (_) {}
       reintentoMs = 1000;
