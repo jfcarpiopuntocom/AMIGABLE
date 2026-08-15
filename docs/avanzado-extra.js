@@ -63,6 +63,7 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
         <button id="oc-sync-compartir" class="ir" style="background:#25D366;border-color:#1da851;">Compartir con mi equipo</button>
         <button id="oc-sync-resincronizar">Resincronizar</button>
+        <button id="oc-sync-tablero" class="ir" style="background:#0F1923;border-color:#0F1923;">Abrir mi tablero de control</button>
         <button id="oc-sync-rotar" style="border-color:#E86040;color:#E86040;">Cambiar el c&oacute;digo</button>
         <button id="oc-sync-desactivar" style="border-color:var(--rojo);color:var(--rojo);">Desactivar sincronización</button>
       </div>
@@ -168,6 +169,27 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
     msg.textContent = "Resincronizando…";
     setTimeout(() => { if (msg.textContent === "Resincronizando…") msg.textContent = ""; }, 3000);
   });
+  /* TABLERO DE CONTROL (M13/M14/M15, 2026-08-15).
+     Solo dueno y admin. El boton oculto NO es la seguridad: la seguridad es
+     que el tablero exige el codigo de la sala, que un empleado no tiene. Son
+     dos capas independientes, como el resto de la app. */
+  (function(){
+    var _t = document.getElementById("oc-sync-tablero");
+    if (!_t || _t.dataset.listo) return;
+    _t.dataset.listo = "1";
+    _t.addEventListener("click", function(){ ocAbrirTablero(salaActiva); });
+    /* El chequeo de rol va DIFERIDO a proposito: isDueno/isAdmin se declaran
+       mas abajo en el modulo y llamarlas aqui revienta por zona muerta (TDZ),
+       y eso tumbaba el init entero de Avanzado. Un tick despues ya existen.
+       Si por lo que sea fallara, el boton se queda visible: no es la capa de
+       seguridad, la capa de seguridad es que el tablero exige el codigo. */
+    setTimeout(function(){
+      try {
+        var rol = window.OCAuth && window.OCAuth.rolActual && window.OCAuth.rolActual();
+        if (rol !== "dueno" && rol !== "admin") _t.remove();
+      } catch (_) {}
+    }, 0);
+  })(),
   (function(){var _r=document.getElementById("oc-sync-rotar");if(_r&&!_r.dataset.listo){_r.dataset.listo="1";_r.addEventListener("click",ocRotarCodigoSala);}})(),document.getElementById("oc-sync-desactivar").addEventListener("click", () => {
     window.OCSyncControl.desactivar();
     document.getElementById("oc-sync-apagado").style.display = "flex";
@@ -814,6 +836,93 @@ try{
      El panel de control BLOQUEA instancias; el dueno ROTA el codigo. No al
      reves: rotar desde el panel dejaria al dueno fuera de su propia sala.
      ========================================================================== */
+  /* ==========================================================================
+     ocAbrirTablero (M13/M15). El enlace lleva el codigo en el fragmento (#),
+     que por como funcionan los navegadores NO se manda al servidor: ni GitHub
+     Pages ni nadie ve el codigo pasar. El tablero lo lee y lo borra de la
+     barra de direcciones al instante.
+
+     El aviso va ANTES de copiar el enlace, que es donde ocurre el riesgo, no
+     enterrado en el manual.
+     ========================================================================== */
+  function ocAbrirTablero(codigo) {
+    if (!codigo) return;
+    var url = new URL("tablero.html", location.href).href + "#c=" + encodeURIComponent(codigo);
+    var m = document.createElement("div");
+    m.className = "oc-subgate";
+    m.id = "oc-tab-modal";
+    m.innerHTML =
+      '<div class="caja" style="background:#FFFFFF;max-width:460px;">' +
+      '<h3 style="margin:0 0 8px;font-size:19px;color:#0F1923;">Tu tablero de control</h3>' +
+      '<p style="font-size:15px;line-height:1.55;margin:0 0 12px;color:#2C3E50;">' +
+      'Tu negocio completo en una pantalla grande, para revisarlo sin la compresi&oacute;n del d&iacute;a a d&iacute;a.</p>' +
+      '<p style="font-size:15px;line-height:1.55;margin:0 0 12px;color:#2C3E50;background:#F8F9FB;' +
+      'border-left:4px solid #00C87A;border-radius:0 8px 8px 0;padding:11px 13px;">' +
+      'El tablero es un lienzo: no guarda nada. Tus datos siguen en los dispositivos de tu equipo ' +
+      'y desde ah&iacute; se proyectan, cifrados. Para que se llene, deja este dispositivo encendido.</p>' +
+      '<p style="font-size:15px;line-height:1.55;margin:0 0 14px;color:#B54E0A;font-weight:700;">' +
+      'Este enlace lleva tu c&oacute;digo. M&aacute;ndalo solo a quien ya tiene acceso al negocio.</p>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+      '<button id="oc-tab-abrir" class="ir" style="background:#0F1923;border-color:#0F1923;">Abrir el tablero</button>' +
+      '<button id="oc-tab-copiar">Copiar el enlace</button>' +
+      '<button id="oc-tab-cerrar">Cerrar</button></div>' +
+      '<p id="oc-tab-msg" style="font-size:14px;margin:10px 0 0;min-height:19px;color:#00975C;"></p></div>';
+    document.body.appendChild(m);
+    var cerrar = function () { try { m.remove(); } catch (_) {} };
+    m.addEventListener("click", function (e) { if (e.target === m) cerrar(); });
+    document.addEventListener("keydown", function esc(e) {
+      if (e.key === "Escape") { cerrar(); document.removeEventListener("keydown", esc); }
+    });
+    document.getElementById("oc-tab-cerrar").addEventListener("click", cerrar);
+    document.getElementById("oc-tab-abrir").addEventListener("click", function () {
+      window.open(url, "_blank", "noopener");
+      cerrar();
+    });
+    document.getElementById("oc-tab-copiar").addEventListener("click", function () {
+      var msg = document.getElementById("oc-tab-msg");
+      /* Sin clipboard API (http, navegador viejo) se cae al textarea de toda
+         la vida antes que dejar al usuario sin poder copiar. */
+      var ok = function () { msg.textContent = "Enlace copiado."; };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(ok, function () { legacy(); });
+      } else { legacy(); }
+      function legacy() {
+        try {
+          var ta = document.createElement("textarea");
+          ta.value = url; ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove();
+          ok();
+        } catch (_) { msg.style.color = "#A8123A"; msg.textContent = "No se pudo copiar. Abre el tablero y guarda la p\u00e1gina en favoritos."; }
+      }
+    });
+  }
+
+  /* Segunda puerta (M13): Ayuda(?) llama aqui. El modal, el aviso y el gate
+     de rol viven en un solo sitio: dos entradas, una sola implementacion. */
+  try {
+    /* El codigo se lee del storage, NO de la variable salaActiva: esa solo
+       existe despues de pintar la vista Avanzado, y la puerta de Ayuda(?) se
+       puede tocar sin haber entrado nunca ahi. Misma clave que usa
+       sync-realtime.js (leerSala); si cambia alla, cambia aqui. */
+    var _salaGuardada = function () {
+      try {
+        var raw = localStorage.getItem("amigable_sync_room");
+        if (!raw) return "";
+        var o = JSON.parse(raw);
+        return (o && o.codigo) ? o.codigo : "";
+      } catch (_) { return ""; }
+    };
+    window.OCTablero = {
+      disponible: function () {
+        try {
+          var rol = window.OCAuth && window.OCAuth.rolActual && window.OCAuth.rolActual();
+          return !!(_salaGuardada() && (rol === "dueno" || rol === "admin"));
+        } catch (_) { return false; }
+      },
+      abrir: function () { var c = _salaGuardada(); if (c && this.disponible()) ocAbrirTablero(c); },
+    };
+  } catch (_) {}
+
   function ocRotarCodigoSala() {
     if (document.getElementById("oc-rot-modal")) return;
     var m = document.createElement("div");

@@ -60,6 +60,13 @@
   const LOG_KEY = "amigable_sync_log"; // ultimas ops vistas (propias + ajenas), para poder RE-enviarlas a un par que las perdio
   const LOG_TOPE = 500; // mismo tope que el dedup de mock-backend.js, mismo criterio
   const TIPO_CATCHUP_PEDIDO = "__catchup_pedido__";
+  /* FOTO PARA EL TABLERO (2026-08-15). El tablero de control es un LIENZO:
+     no guarda nada y no escribe nada. Pide el estado completo y un
+     dispositivo del equipo se lo manda, cifrado con la misma clave de sala.
+     El relay sigue sin guardar ni un byte, igual que con el catch-up. */
+  const TIPO_FOTO_PEDIDA = "__foto_pedida__";
+  const TIPO_FOTO_TROZO = "__foto_trozo__";
+  const FOTO_FILAS_POR_TROZO = 150;   /* M4: por partes, no un bloque unico */
 
   function leerLog() {
     try { const a = JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); return Array.isArray(a) ? a : []; }
@@ -238,6 +245,19 @@
           responderCatchup(op);
           return;
         }
+        /* El tablero pidio una foto. Solo contestan los dispositivos que
+           tienen la app: el tablero nunca responde a otro tablero. */
+        if (op && op.tipo === TIPO_FOTO_PEDIDA) {
+          responderFoto(op);
+          return;
+        }
+        /* Los trozos de foto NO son ops de negocio: no se registran en el
+           log ni se aplican al inventario. Solo se avisan por evento, para
+           que los consuma quien los pidio. */
+        if (op && op.tipo === TIPO_FOTO_TROZO) {
+          window.dispatchEvent(new CustomEvent("oc-sync-foto-trozo", { detail: op }));
+          return;
+        }
         registrarEnLog(op);
         if (window.OCSync && window.OCSync.aplicarOpRemota) window.OCSync.aplicarOpRemota(op);
         window.dispatchEvent(new CustomEvent("oc-sync-op-remota", { detail: op }));
@@ -306,6 +326,102 @@
     }
   }
 
+  /* ==========================================================================
+     LA FOTO DEL NEGOCIO (M2, M3, M4 del PLAN-tablero-2026-08-15).
+
+     Quien pide (el tablero) manda TIPO_FOTO_PEDIDA. Quien tiene la app junta
+     su estado y lo devuelve EN TROZOS numerados. Si un trozo se pierde, se
+     pide solo ese: un negocio con miles de ventas no puede depender de que un
+     unico mensaje gigante llegue entero.
+
+     NADA DE ESTO TOCA UN SERVIDOR. Los datos permanecen en los dispositivos
+     del equipo; el relay solo rebota bytes cifrados que no puede leer, y el
+     tablero los pinta y los olvida al cerrarse.
+     ========================================================================== */
+  async function armarFoto() {
+    /* Se lee del backend local por su propia API, no del storage crudo: si
+       manana cambia como se guarda, esto sigue funcionando. */
+    async function get(ruta) {
+      try {
+        const r = await fetch("/api" + ruta);
+        const j = await r.json();
+        return Array.isArray(j) ? j : (j && typeof j === "object" ? j : null);
+      } catch (_) { return null; }
+    }
+    /* Rutas verificadas contra mock-backend.js: el resumen se llama
+       /api/dashboard, y /api/ventas/todas se agrego para el tablero (solo
+       lectura, ya enriquecida con nombres). */
+    const [productos, clientes, ventas, resumen] = await Promise.all([
+      get("/productos?ubicacionId=todas"),
+      get("/clientes"),
+      get("/ventas/todas?ubicacionId=todas"),
+      get("/dashboard?ubicacionId=todas"),
+    ]);
+    return {
+      productos: productos || [],
+      clientes: Array.isArray(clientes) ? clientes : [],
+      ventas: ventas || [],
+      resumen: resumen || null,
+      negocio: (function () {
+        try { return (JSON.parse(localStorage.getItem("amigable_owned") || "null") || {}).nombreNegocio || ""; }
+        catch (_) { return ""; }
+      })(),
+      generadaEn: (new Date()).toISOString(),
+    };
+  }
+
+  /* Corta una tabla larga en trozos parejos. Devuelve [] si no hay filas, para
+     que el tablero pueda distinguir "sin datos" de "no llego nada". */
+  function trocear(nombre, filas) {
+    const out = [];
+    const arr = Array.isArray(filas) ? filas : [];
+    if (!arr.length) { out.push({ tabla: nombre, i: 0, total: 1, filas: [] }); return out; }
+    const total = Math.ceil(arr.length / FOTO_FILAS_POR_TROZO);
+    for (let i = 0; i < total; i++) {
+      out.push({ tabla: nombre, i: i, total: total, filas: arr.slice(i * FOTO_FILAS_POR_TROZO, (i + 1) * FOTO_FILAS_POR_TROZO) });
+    }
+    return out;
+  }
+
+  async function responderFoto(pedido) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    /* Un tablero no contesta a otro tablero: solo responde quien tiene backend. */
+    if (!window.OCSync && !window.fetch) return;
+    /* Jitter: si hay dos telefonos del mismo negocio conectados, no mandan la
+       foto entera los dos a la vez. */
+    await new Promise((r) => setTimeout(r, Math.random() * 500));
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    let foto;
+    try { foto = await armarFoto(); } catch (_) { return; }
+    const trozos = []
+      .concat(trocear("productos", foto.productos))
+      .concat(trocear("clientes", foto.clientes))
+      .concat(trocear("ventas", foto.ventas))
+      .concat([{ tabla: "resumen", i: 0, total: 1, filas: [foto.resumen || {}] }]);
+    for (let k = 0; k < trozos.length; k++) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      const op = {
+        opId: uuidCorto(), deviceId: deviceId(), tipo: TIPO_FOTO_TROZO,
+        para: pedido.deviceId || null,
+        payload: Object.assign({ negocio: foto.negocio, generadaEn: foto.generadaEn, k: k, deTotal: trozos.length }, trozos[k]),
+        fecha: (new Date()).toISOString(),
+      };
+      try { ws.send(await cifrar(claveActual, op)); } catch (_) { return; }
+    }
+  }
+
+  /* Lo usa el tablero. En la app no se llama nunca, pero se expone desde el
+     mismo modulo para que las dos puntas hablen exactamente el mismo dialecto
+     y no puedan desincronizarse por copia y pega. */
+  async function pedirFoto() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+    const op = {
+      opId: uuidCorto(), deviceId: deviceId(), tipo: TIPO_FOTO_PEDIDA,
+      payload: {}, fecha: (new Date()).toISOString(),
+    };
+    try { ws.send(await cifrar(claveActual, op)); return true; } catch (_) { return false; }
+  }
+
   // --- Puente con mock-backend.js: emitirOpStock(tipo, payload) llama aqui ---
   window.OCSyncEmit = function (tipo, payload) {
     const sala = leerSala();
@@ -368,6 +484,7 @@
       return { ok: true };
     },
     unirse(codigo) { return this.activar(codigo); },
+    pedirFoto: pedirFoto,   /* lo usa tablero.html */
     desactivar() {
       try { localStorage.removeItem(ROOM_KEY); } catch (_) {}
       cerrarWsExistente();
