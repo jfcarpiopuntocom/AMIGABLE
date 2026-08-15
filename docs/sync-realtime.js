@@ -64,6 +64,10 @@
      no guarda nada y no escribe nada. Pide el estado completo y un
      dispositivo del equipo se lo manda, cifrado con la misma clave de sala.
      El relay sigue sin guardar ni un byte, igual que con el catch-up. */
+  /* LATIDO DEL MICELIO (2026-08-15). No lleva ni un dato del negocio: id de
+     dispositivo, como lo llaman, rol y hora. Sirve para que el equipo sepa
+     quien esta en el loop y quien anda a ciegas. Ver docs/micelio-vivo.js. */
+  const TIPO_LATIDO = "__latido__";
   const TIPO_FOTO_PEDIDA = "__foto_pedida__";
   const TIPO_FOTO_TROZO = "__foto_trozo__";
   const FOTO_FILAS_POR_TROZO = 150;   /* M4: por partes, no un bloque unico */
@@ -220,6 +224,9 @@
       reintentoMs = 1000;
       intentosSeguidos = 0;
       notificarEstado("conectado");
+      /* El micelio mide MI estado por la conexion real, no por si la funcion
+         de latir se ejecuto: con el socket caido, latir no informa a nadie. */
+      try { if (window.OCMicelio) window.OCMicelio.marcarConectado(); } catch (_) {}
       vaciarCola();
       pedirCatchup();
     };
@@ -243,6 +250,13 @@
         // como si fuera una Op real de negocio.
         if (op && op.tipo === TIPO_CATCHUP_PEDIDO) {
           responderCatchup(op);
+          return;
+        }
+        /* Latido ajeno: se anota quien hablo y cuando. NO se registra en el
+           log ni se aplica como op de negocio: no es un hecho del negocio. */
+        if (op && op.tipo === TIPO_LATIDO) {
+          try { if (window.OCMicelio) window.OCMicelio.recibir(op); } catch (_) {}
+          try { window.dispatchEvent(new CustomEvent("oc-sync-latido", { detail: op })); } catch (_) {}
           return;
         }
         /* El tablero pidio una foto. Solo contestan los dispositivos que
@@ -410,6 +424,19 @@
     }
   }
 
+  /* Lo llama micelio-vivo.js cada minuto. Si el socket no esta abierto no se
+     encola ni se reintenta: un latido viejo no informa de nada, y el silencio
+     ES la senal que el otro lado necesita leer. */
+  async function emitirLatido(quien) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+    const op = {
+      opId: uuidCorto(), deviceId: deviceId(), tipo: TIPO_LATIDO,
+      payload: { id: quien.id, apodo: quien.apodo || "", rol: quien.rol || "" },
+      fecha: (new Date()).toISOString(),
+    };
+    try { ws.send(await cifrar(claveActual, op)); return true; } catch (_) { return false; }
+  }
+
   /* Lo usa el tablero. En la app no se llama nunca, pero se expone desde el
      mismo modulo para que las dos puntas hablen exactamente el mismo dialecto
      y no puedan desincronizarse por copia y pega. */
@@ -485,6 +512,7 @@
     },
     unirse(codigo) { return this.activar(codigo); },
     pedirFoto: pedirFoto,   /* lo usa tablero.html */
+    emitirLatido: emitirLatido,   /* lo usa micelio-vivo.js */
     desactivar() {
       try { localStorage.removeItem(ROOM_KEY); } catch (_) {}
       cerrarWsExistente();

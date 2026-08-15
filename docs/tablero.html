@@ -215,6 +215,17 @@
   <div id="tabla"></div>
   <div class="cierre" id="cierre"></div>
 
+  <!-- QUIEN ESTA EN EL LOOP. Va al PIE a proposito: no es lo primero que se
+       mira cada manana, pero es lo que hay que revisar antes de creerse los
+       numeros de arriba. Si un dispositivo lleva horas a ciegas, las cifras
+       de esta pantalla estan incompletas y hay que decirlo. -->
+  <section id="micelio" style="margin:26px 0 0;">
+    <h2 style="font-size:19px;margin:0 0 4px;">Tu equipo ahora</h2>
+    <p id="micelio-resumen" style="font-size:15px;line-height:1.55;margin:0 0 12px;"></p>
+    <div id="micelio-lista" class="card" style="padding:6px 16px;"></div>
+    <p id="micelio-nota" style="font-size:14px;line-height:1.55;margin:10px 0 0;"></p>
+  </section>
+
   <p class="pie-lienzo">
     Este tablero es un lienzo: no guarda nada. Lo que ves llega cifrado desde los dispositivos
     de tu equipo y desaparece al cerrar esta pestaña.
@@ -246,6 +257,7 @@
   /* --- ESPEJO EXACTO de sync-realtime.js. No tocar sin tocar alla. --- */
   var RELAY_URL = "wss://amigable-sync-relay.jfcarpio.workers.dev/sala/";
   var SALT_FIJO = "amigable-sync-v1";
+  var TIPO_LATIDO = "__latido__";
   var TIPO_FOTO_PEDIDA = "__foto_pedida__";
   var TIPO_FOTO_TROZO = "__foto_trozo__";
 
@@ -358,6 +370,14 @@
       try {
         var op = await descifrar(ev.data);
         if (op && op.tipo === TIPO_FOTO_TROZO) { recibirTrozo(op.payload); return; }
+        /* Latido: quien esta vivo y como se llama. No es dato del negocio y no
+           se guarda en ningun lado; vive en memoria hasta que se cierre esta
+           pestana, como todo lo demas en este lienzo. */
+        if (op && op.tipo === TIPO_LATIDO && op.payload && op.payload.id) {
+          latidos[op.payload.id] = { apodo: op.payload.apodo || "", rol: op.payload.rol || "", visto: Date.now() };
+          pintarMicelio();
+          return;
+        }
         /* Una op de negocio en vivo: se vuelve a pedir la foto para no
            reimplementar aqui la logica de aplicar cambios. El lienzo se
            repinta entero, que es barato y no puede quedar a medias. */
@@ -625,6 +645,81 @@
       try { if (window.AMG && window.AMG.Salud) window.AMG.Salud.registrar("export " + tipo + ": " + e.message, "tablero.html", 0); } catch (_) {}
     }
   }
+
+  /* ================================================== QUIEN ESTA EN EL LOOP
+     Mismos umbrales y mismos tres estados que la app (ver micelio-vivo.js).
+     Aqui no hay perilla: el tablero solo mira. Los umbrales se cambian desde
+     Avanzado, en el dispositivo del dueno, que es donde vive esa decision.
+
+     UN DISPOSITIVO DESCONECTADO NO PUEDE AVISAR QUE ESTA DESCONECTADO. Por eso
+     no se pregunta "estas ahi": se recuerda la ultima vez que se le oyo. El
+     silencio ES la senal.
+     ======================================================================== */
+  var latidos = {};
+  var UMB = { rezagado: 5, ciegas: 120 };   /* minutos, igual que de fabrica */
+  var MIC = {
+    al_dia:   { texto: "Al día",   bg: "#00C87A", txt: "#0A2E1E" },
+    rezagado: { texto: "Rezagado", bg: "#FFC700", txt: "#3D2E00" },
+    ciegas:   { texto: "A ciegas", bg: "#E8365D", txt: "#FFFFFF" },
+  };
+  var ROLES = { dueno: "Dueño", admin: "Admin", empleado: "Empleado", contador: "Contador" };
+
+  function micEstado(ms) {
+    if (ms < UMB.rezagado * 60000) return "al_dia";
+    if (ms < UMB.ciegas * 60000) return "rezagado";
+    return "ciegas";
+  }
+  function micCuando(ms) {
+    if (ms < 45000) return "hace un momento";
+    var min = Math.round(ms / 60000);
+    if (min < 60) return "hace " + min + (min === 1 ? " minuto" : " minutos");
+    var h = Math.round(min / 60);
+    if (h < 24) return "hace " + h + (h === 1 ? " hora" : " horas");
+    var d = Math.round(h / 24);
+    return "hace " + d + (d === 1 ? " día" : " días");
+  }
+
+  function pintarMicelio() {
+    var ahora = Date.now(), ORDEN = { ciegas: 0, rezagado: 1, al_dia: 2 };
+    var lista = Object.keys(latidos).map(function (id) {
+      var e = latidos[id], ms = ahora - e.visto;
+      return { id: id, apodo: e.apodo, rol: e.rol, ms: ms, estado: micEstado(ms) };
+    }).sort(function (a, b) { return (ORDEN[a.estado] - ORDEN[b.estado]) || (b.ms - a.ms); });
+
+    if (!lista.length) {
+      $("micelio-resumen").textContent =
+        "Todavía no se ha presentado ningún dispositivo. Cada uno avisa que está aquí una vez por minuto.";
+      $("micelio-lista").innerHTML = "";
+      $("micelio-nota").textContent = "";
+      return;
+    }
+
+    var ciegos = lista.filter(function (m) { return m.estado === "ciegas"; });
+    $("micelio-resumen").textContent = ciegos.length
+      ? (ciegos.length === 1 ? "Un dispositivo lleva" : ciegos.length + " dispositivos llevan") +
+        " rato sin sincronizar. Mientras estén así pueden vender algo que aquí ya se vendió, y los números de arriba no los incluyen."
+      : "Todos los dispositivos del equipo están hablando entre sí. Lo que ves arriba está completo.";
+
+    $("micelio-lista").innerHTML = lista.map(function (m) {
+      var c = MIC[m.estado];
+      /* El apodo manda; si no lo pusieron, el rol. Nunca el PIN. */
+      var nombre = m.apodo || ROLES[m.rol] || ("Dispositivo " + String(m.id).slice(1, 5));
+      return '<div style="display:flex;align-items:center;gap:11px;flex-wrap:wrap;padding:11px 0;border-bottom:1px solid var(--hairline);">' +
+        '<span style="display:inline-block;min-width:100px;text-align:center;padding:4px 12px;border-radius:20px;' +
+        'font-size:13px;font-weight:700;background:' + c.bg + ';color:' + c.txt + ' !important;-webkit-text-fill-color:' + c.txt + ' !important;">' + c.texto + "</span>" +
+        '<span style="font-size:16px;font-weight:700;">' + esc(nombre) + "</span>" +
+        (m.apodo && ROLES[m.rol] ? '<span style="font-size:14px;">' + esc(ROLES[m.rol]) + "</span>" : "") +
+        '<span style="font-size:14px;margin-left:auto;">' + esc(micCuando(m.ms)) + "</span></div>";
+    }).join("");
+
+    $("micelio-nota").innerHTML = ciegos.length
+      ? "Para volver al día basta con abrir la app donde haya señal: se pone al corriente sola. " +
+        "Los apodos se ponen en cada dispositivo, en Avanzado."
+      : "Cada dispositivo se presenta con el nombre que le pusieron en Avanzado. Si ves un nombre que no reconoces, cambia el código de tu sala.";
+  }
+  /* Los estados envejecen aunque no llegue nada: sin este reloj, alguien que
+     se apago hace una hora seguiria pintado en verde. */
+  setInterval(pintarMicelio, 20000);
 
   /* --------------------------------------------------------------- M10 --- */
   function reporte(cual) {

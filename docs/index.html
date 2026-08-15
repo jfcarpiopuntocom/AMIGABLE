@@ -6148,6 +6148,11 @@ setTimeout(() => {
      engancha a #vista-avanzado, que ese archivo ya monta. -->
 <script src="./geo-ping.js"></script>
 <script src="./sync-realtime.js"></script>
+<!-- MICELIO VIVO (2026-08-15): quien esta en el loop y quien anda a ciegas.
+     Va DESPUES de sync-realtime.js porque late por su canal (OCSync.emitirLatido).
+     Si este archivo no carga, la app vende igual: solo se pierde el aviso. -->
+<script src="./micelio-vivo.js"></script>
+<script src="./micelio-ui.js"></script>
 <!-- Novedades: gamificación experimental del empleado (FEATURE EXPERIMENTAL,
      JFC 2026-07-22). Módulo aparte, encendida por DEFECTO (el dueño puede
      apagarla en Avanzado con un "0" explícito).

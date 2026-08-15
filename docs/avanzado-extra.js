@@ -60,6 +60,10 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
         <code id="oc-sync-codigo-actual" style="font-size:16px;font-weight:700;background:var(--paper-deep,#E2E8ED);padding:6px 12px;border-radius:6px;">${escHtml(salaActiva || "")}</code>
         <div id="oc-sync-qr" style="margin-top:8px;"></div>
       </div>
+      <!-- MICELIO VIVO (2026-08-15): quien esta en el loop y quien anda a
+           ciegas. Lo pinta micelio-ui.js; aqui solo va el hueco. Si ese
+           archivo no carga, este div queda vacio y no rompe nada. -->
+      <div id="oc-micelio-panel" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--azul-suave,#dde5ec);"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
         <button id="oc-sync-compartir" class="ir" style="background:#25D366;border-color:#1da851;">Compartir con mi equipo</button>
         <button id="oc-sync-resincronizar">Resincronizar</button>
@@ -177,6 +181,10 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
     var _t = document.getElementById("oc-sync-tablero");
     if (!_t || _t.dataset.listo) return;
     _t.dataset.listo = "1";
+    /* Se pinta el panel del equipo apenas se rinde esta vista. */
+    try { if (window.OCMicelioUI) window.OCMicelioUI.pintarPanel(); } catch (_) {}
+    /* Se pinta el panel del equipo apenas se rinde esta vista. */
+    try { if (window.OCMicelioUI) window.OCMicelioUI.pintarPanel(); } catch (_) {}
     _t.addEventListener("click", function(){ ocAbrirTablero(salaActiva); });
     /* El chequeo de rol va DIFERIDO a proposito: isDueno/isAdmin se declaran
        mas abajo en el modulo y llamarlas aqui revienta por zona muerta (TDZ),
