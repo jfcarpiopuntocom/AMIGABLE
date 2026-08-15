@@ -127,6 +127,41 @@ async function handleCheckin(req, env) {
     lastSeen: Date.now(),
     lastAccion: body.accion || "checkin",
   };
+
+  /* AUTORREPORTE DE FALLAS DE LA APP (JFC, 2026-08-15).
+     La app avisa sola cuando se rompe, para poder arreglarlo antes de que un
+     cliente se queje. Ver docs/salud-app.js del lado cliente.
+
+     SOLO CAMPOS TECNICOS. Se reconstruye el objeto campo por campo, por LISTA
+     BLANCA: aunque el cliente mandara cualquier otra cosa, no se guarda. El
+     manifiesto NO CLOUD sigue intacto porque aqui no hay forma de que entre un
+     dato de negocio.
+
+     Los errores se ACUMULAN entre checkins en vez de pisarse, hasta un tope de
+     30: si se pisaran, un error de ayer desapareceria antes de que nadie lo
+     viera. El tope evita que el KV crezca sin control, y el payload total ya
+     esta capado en 4096 bytes mas arriba. */
+  if (Array.isArray(body.errores) && body.errores.length) {
+    const limpios = body.errores.slice(0, 10).map((e) => ({
+      msg: String((e && e.msg) || "").slice(0, 200),
+      archivo: String((e && e.archivo) || "").slice(0, 60),
+      linea: Number(e && e.linea) || 0,
+      ver: String((e && e.ver) || "").slice(0, 24),
+      cuando: String((e && e.cuando) || "").slice(0, 30),
+      veces: Number(e && e.veces) || 1,
+    })).filter((e) => e.msg);
+    if (limpios.length) {
+      const previos = Array.isArray(existente.errores) ? existente.errores : [];
+      registro.errores = previos.concat(limpios).slice(-30);
+      registro.erroresAt = Date.now();
+    }
+  } else if (Array.isArray(existente.errores)) {
+    /* Sin errores nuevos, se preservan los viejos: un checkin limpio no puede
+       borrar el historial de fallas. */
+    registro.errores = existente.errores;
+    registro.erroresAt = existente.erroresAt || null;
+  }
+
   await guardarConHistorial(env, instanceId, registro);
   return json({ ok: true, estado: registro.estado });
 }

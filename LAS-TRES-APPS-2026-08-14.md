@@ -41,22 +41,24 @@ Nada de esto es deuda. Es carácter, y está bien.
 
 ## 3. Lo que NO debería separarlas, y hoy las separa
 
-### 3.1 El stack de observabilidad existe solo en amigable-123
+### 3.1 El stack de observabilidad existía solo en amigable-123 (resuelto)
 
-Seis módulos viven únicamente en el repo de amigable:
+Seis módulos vivían únicamente en el repo de amigable. **Portados a las tres el 2026-08-15**, más `salud-app.js`, que es nuevo en las tres:
 
 | Módulo | Qué hace | friendly | consultorio |
 |---|---|---|---|
-| `logger.js` | Logging multinivel, de TRACE a AUDIT | falta | falta |
-| `telemetry.js` | Cola de telemetría con buffer acotado | falta | falta |
-| `audit-store.js` | Auditoría permanente: quién hizo qué, cuándo y dónde | falta | falta |
-| `sync-queue.js` | Drenaje de telemetría, hoy en dry run | falta | falta |
-| `identity-context.js` | Puebla el contexto de identidad para todo lo anterior | falta | falta |
-| `ui-actions.js` | Toda interacción pasa por el bus, no por el botón | falta | falta |
+| `logger.js` | Logging multinivel, de TRACE a AUDIT | sí | sí |
+| `telemetry.js` | Cola de telemetría con buffer acotado | sí | sí |
+| `audit-store.js` | Auditoría permanente: quién hizo qué, cuándo y dónde | sí | sí |
+| `sync-queue.js` | Drenaje de telemetría, hoy en dry run | sí | sí |
+| `identity-context.js` | Puebla el contexto de identidad para todo lo anterior | sí | sí |
+| `ui-actions.js` | Toda interacción pasa por el bus, no por el botón | sí | sí |
 
 Los guardas que protegen **datos** sí están homologados en las tres: aislamiento de almacenamiento, hechos con cadena de hash, reconciliación, cifrado, durabilidad, identidad de dispositivo, archivo, respaldo, cartera, caja chica y planes de pago. Lo que falta en dos de tres es la capacidad de **saber qué pasó** cuando algo sale mal.
 
-Consecuencia concreta: si un cliente de friendly-123 reporta un descuadre, en amigable-123 hay un registro de auditoría para reconstruirlo y en friendly-123 no.
+Verificado en vivo en las tres: la auditoría guarda los eventos `:completado` y `:error` e ignora el resto, y `ui-actions` envuelve 15 funciones reales por app.
+
+**Y ahora hay algo que amigable tampoco tenía**: `salud-app.js`. Las tres guardaban los últimos errores en una caja negra local que nunca salía del dispositivo. Ahora viajan pegados al heartbeat que ya existe, por lista blanca de seis campos técnicos. Falta que el Worker los reciba: el código está escrito y sin desplegar.
 
 ### 3.2 consultorio-123 emitía licencias con el prefijo de friendly-123
 
@@ -98,7 +100,8 @@ No tiene landing propia ni checklist. amigable-123 tiene `ahorra.html` más `che
 ## 5. Qué haría, en este orden
 
 1. **Los códigos demo en el gate de friendly-123 y consultorio-123.** Es media hora y hoy hay un prospecto mirando friendly sin saber qué teclear.
-2. **Portar el stack de observabilidad** a las otras dos. Seis archivos que ya funcionan; el trabajo es el cableado y la verificación.
-3. **Landing y checklist de consultorio.** Confirmado como próximo por JFC.
+2. **Portar el stack de observabilidad** a las otras dos. Hecho el 2026-08-15.
+3. **Desplegar el Worker** para que los autorreportes de falla lleguen de verdad. El código está en `cloudflare-worker/worker.js`, sin desplegar.
+4. **Landing y checklist de consultorio.** Confirmado como próximo por JFC.
 
-Lo primero ya está hecho. Lo segundo es una sesión. Lo tercero, pronto.
+Los dos primeros están hechos. El tercero es un `wrangler deploy`. El cuarto, pronto.
