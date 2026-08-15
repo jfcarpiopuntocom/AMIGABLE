@@ -33,6 +33,8 @@ La diferencia de fondo de consultorio-123 no es de idioma ni de precio: **cambia
 **Solo friendly-123**
 `save.html`, la misma landing reencuadrada para Estados Unidos: tarifa horaria de $25 a $35, ROI en dólares de allá, precio de $399. `i18n.js` como capa bilingüe real.
 
+**PIN de cuatro dígitos en consultorio-123.** amigable-123 y friendly-123 usan tres (888 demo, 260 empleado, 357 contador, 789 activar). consultorio-123 usa cuatro (8888 demo, 7895 activar), **por diseño y confirmado por JFC el 2026-08-14**: detrás de ese acceso hay datos de salud. No se unifica con las hermanas por consistencia. Queda escrito en el `auth-ui.js`, en el recuadro de códigos del gate y aquí, para que nadie lo "corrija" después.
+
 Nada de esto es deuda. Es carácter, y está bien.
 
 ---
@@ -64,21 +66,19 @@ Consecuencia concreta: si un cliente de friendly-123 reporta un descuadre, en am
 
 Queda una constante interna llamada `F123_PB_URL` en `avanzado-extra.js`. Es una clave de `localStorage`, no texto visible, y renombrarla huerfanaría el valor guardado. Se deja a propósito.
 
-### 3.3 El gate de dos apps no dice qué teclear
+### 3.3 El gate de dos apps no decía qué teclear (corregido)
 
-amigable-123 muestra en la pantalla del PIN un recuadro con los códigos demo (888 dueño, 260 empleado, 357 contador, 789 activar) y un enlace a la landing. **friendly-123 y consultorio-123 no tienen ninguno de los dos.** El visitante llega a un teclado numérico sin ninguna pista.
+amigable-123 muestra en la pantalla del PIN un recuadro con los códigos demo (888 dueño, 260 empleado, 357 contador, 789 activar) y un enlace a la landing. **friendly-123 y consultorio-123 no tenían ninguno de los dos.** El visitante llegaba a un teclado numérico sin ninguna pista.
 
-En friendly-123 es peor que una omisión: su propio `checklist.html` le dice al visitante que entre con 888, y el gate no lo confirma.
+En friendly-123 era peor que una omisión: su propio `checklist.html` le dice al visitante que entre con 888, y el gate no lo confirmaba, con un prospecto mirando esa app.
 
-### 3.4 consultorio-123 no tiene puerta de entrada comercial
+**Corregido hoy** en las dos. consultorio-123 no lleva enlace a landing porque todavía no tiene una: un enlace roto es peor que ninguno.
 
-No tiene landing propia ni checklist. amigable-123 tiene `ahorra.html` más `checklist.html`; friendly-123 tiene `save.html` más `checklist.html`; consultorio-123 tiene solo el manual. No hay ninguna página que le explique a un médico por qué querría esto.
+### 3.4 consultorio-123 no tiene puerta de entrada comercial todavía
 
-### 3.5 Los PIN no siguen el mismo esquema
+No tiene landing propia ni checklist. amigable-123 tiene `ahorra.html` más `checklist.html`; friendly-123 tiene `save.html` más `checklist.html`; consultorio-123 tiene solo el manual.
 
-amigable-123 y friendly-123 usan tres dígitos: 888 demo, 260 empleado, 357 contador, 789 activar. consultorio-123 usa cuatro: 8888 demo, 7895 activar.
-
-Esto puede ser una decisión deliberada, un consultorio maneja datos de salud y un dígito más es defendible. Pero **no está documentado en ningún lado**, y hoy solo se descubre leyendo `auth-ui.js`. Si es deliberado hay que escribirlo; si no lo es, hay que unificarlo.
+**Es un pendiente conocido, no un descuido** (JFC, 2026-08-14): van pronto. Se anota aquí para que no se pierda, no como falla.
 
 ---
 
@@ -99,7 +99,6 @@ Esto puede ser una decisión deliberada, un consultorio maneja datos de salud y 
 
 1. **Los códigos demo en el gate de friendly-123 y consultorio-123.** Es media hora y hoy hay un prospecto mirando friendly sin saber qué teclear.
 2. **Portar el stack de observabilidad** a las otras dos. Seis archivos que ya funcionan; el trabajo es el cableado y la verificación.
-3. **Decidir el esquema de PIN de consultorio** y escribirlo donde se vea.
-4. **Landing y checklist de consultorio**, cuando haya a quién mostrárselos.
+3. **Landing y checklist de consultorio.** Confirmado como próximo por JFC.
 
-Lo primero y lo tercero son de hoy. Lo segundo es una sesión. Lo cuarto puede esperar a que exista el primer médico interesado.
+Lo primero ya está hecho. Lo segundo es una sesión. Lo tercero, pronto.
