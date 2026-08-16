@@ -1156,18 +1156,12 @@
   $("entrar").addEventListener("click", async function () {
     var c = normalizarCodigo($("codigo").value);
     var cuerpo = c.replace(/^AMG-/, "").replace(/-/g, "");
-    /* GUARD: si el negocio esta en ESTE dispositivo, la licencia no hace falta
-       para verlo — solo para conectarse con los demas. Exigirla aqui dejaba al
-       duenio fuera de sus propios datos por no recordar un codigo. */
-    var _hayLocal = !!leerEstadoLocal();
-    if (!_hayLocal && (c.indexOf("AMG-") !== 0 || (cuerpo.length !== 12 && cuerpo.length !== 17))) {
+    /* La licencia se exige SIEMPRE, en todos los dispositivos por igual (JFC,
+       2026-08-15). Lo unico que cambia entre un telefono y una computadora es
+       el layout, nunca quien puede entrar. */
+    if (c.indexOf("AMG-") !== 0 || (cuerpo.length !== 12 && cuerpo.length !== 17)) {
       $("msg").style.color = "#A8123A";
       $("msg").textContent = "Revisa el código: va completo, como AMG-XXXX-XXXX-XXXX.";
-      return;
-    }
-    if (_hayLocal && c && c.indexOf("AMG-") !== 0) {
-      $("msg").style.color = "#A8123A";
-      $("msg").textContent = "Esa licencia no es de amigable-123. La tuya empieza con AMG-.";
       return;
     }
     var pin = String($("pin").value || "").trim();
@@ -1197,6 +1191,7 @@
       }
       if (vale === true) {
         autorizado = true;
+        recordarLicencia(c);   /* una hora, para no reteclearla */
         $("pin").value = "";
         try {
           var d = datosDesdeLocal(local);
@@ -1219,11 +1214,9 @@
         /* Ya se ve el negocio. La conexion se levanta DESPUES y en segundo
            plano, para que las ventas de los demas sigan llegando en vivo. Si
            falla, el tablero ya esta lleno: no se avisa de nada. */
-        /* GUARD: sin licencia no hay sala a la que conectarse, y eso NO es un
-           error: el tablero ya esta lleno con los datos de aqui. */
-        if (c && c.indexOf("AMG-") === 0) {
-          conectar(c).then(function () { pedirFoto(); }).catch(function () {});
-        }
+        /* La conexion se levanta DESPUES y en segundo plano: si falla, el
+           tablero ya esta lleno con los datos de aqui y no hay nada que avisar. */
+        conectar(c).then(function () { pedirFoto(); }).catch(function () {});
         return;
       }
       /* vale === null: no se pudo juzgar aqui (secreto no disponible). Se cae
@@ -1247,6 +1240,7 @@
         return;
       }
       autorizado = true;
+      recordarLicencia(c);   /* una hora, para no reteclearla */
       $("pin").value = "";
       pulso("pidiendo tu negocio…");
       pedirFoto();
@@ -1290,6 +1284,38 @@
   })();
 
   /* Logo: se inyecta desde la constante de abajo para no repetir el base64. */
+  /* ------------------------------------------------------ RECORDAR 1 HORA
+     La licencia se pide siempre, pero no se hace teclear 17 caracteres cada
+     vez: tras una entrada valida se guarda una hora en ESTE navegador y se
+     precarga sola. Pasada la hora, se vuelve a pedir entera.
+
+     Una hora y no mas: es una sesion de trabajo. Y se guarda en
+     sessionStorage aparte de la marca de tiempo, para que cerrar el navegador
+     tambien la olvide aunque el reloj no haya vencido.
+
+     Nunca se guarda el PIN. Eso no se recuerda nunca. */
+  var K_LIC = "amigable_tablero_lic";
+  var LIC_MS = 3600000;
+
+  function recordarLicencia(cod) {
+    try { sessionStorage.setItem(K_LIC, JSON.stringify({ c: cod, t: Date.now() })); } catch (_) {}
+  }
+  function licenciaRecordada() {
+    try {
+      var o = JSON.parse(sessionStorage.getItem(K_LIC) || "null");
+      if (!o || !o.c || (Date.now() - (o.t || 0)) > LIC_MS) return "";
+      return /^AMG-/i.test(o.c) ? o.c : "";
+    } catch (_) { return ""; }
+  }
+
+  (function () {
+    var r = licenciaRecordada();
+    if (r && !$("codigo").value) {
+      $("codigo").value = r;
+      setTimeout(function () { try { $("pin").focus(); } catch (_) {} }, 250);
+    }
+  })();
+
   /* GUARD 4: la puerta se adapta a lo que hay. Si el negocio esta en ESTE
      dispositivo, la licencia sobra y el campo estorba: pedir un dato que no
      hace falta es como se pierde a la gente en la primera pantalla. */
@@ -1297,13 +1323,9 @@
     try {
       if (!leerEstadoLocal()) return;
       var cod = $("codigo");
-      cod.placeholder = "Tu licencia (opcional aquí)";
-      cod.parentNode.insertBefore(document.createElement("p"), cod).outerHTML =
+      cod.insertAdjacentHTML("beforebegin",
         '<p style="font-size:14px;line-height:1.5;margin:0 0 12px;color:#00975C;' +
-        'font-weight:700;">Tu negocio está en este dispositivo. Solo necesitas tu PIN.</p>';
-      /* El PIN pasa a ser lo primero, que es lo unico que de verdad hace falta. */
-      cod.style.order = "2";
-      setTimeout(function () { try { $("pin").focus(); } catch (_) {} }, 300);
+        'font-weight:700;">Tu negocio está en este dispositivo: se abre al instante.</p>');
     } catch (_) {}
   })();
 
