@@ -292,6 +292,13 @@
   </p>
 </div></main>
 
+<!-- MODO LOCAL. aislamiento.js es OBLIGATORIO y va PRIMERO: sin el, este
+     archivo lee localStorage sin el prefijo amig:: y no encuentra los datos de
+     la app aunque esten a dos centimetros. crypto-store.js da OCSecure, que es
+     quien puede juzgar el PIN aqui mismo sin preguntarle a nadie.
+     Los dos son del mismo origen: no son CDN y no pueden fallar por red. -->
+<script src="./aislamiento.js"></script>
+<script src="./crypto-store.js"></script>
 <script src="./salud-app.js"></script>
 <script>
 /* ============================================================================
@@ -338,6 +345,7 @@
   var ultimoDato = 0, tabla = null, vista = "productos", degradado = false;
   var tablaDe = "";   /* de que vista es la tabla que esta montada ahora mismo */
   var autorizado = false;   /* mientras sea false, nada de datos se pinta */
+  var modoLocal = false;    /* los datos salieron de este mismo dispositivo */
 
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) {
@@ -404,6 +412,9 @@
   }
   setInterval(function () {
     if (!ultimoDato) return;
+    /* En modo local sin sala, el dato no envejece: sale del mismo dispositivo.
+       Decir "sin novedades hace 40 min" ahi seria mentir. */
+    if (!ws && modoLocal) { pulso("desde este dispositivo", "vivo"); return; }
     var seg = Math.round((Date.now() - ultimoDato) / 1000);
     if (seg < 120) pulso("al día · hace " + (seg < 10 ? "un momento" : seg + " s"), "vivo");
     else pulso("sin novedades hace " + Math.round(seg / 60) + " min", "viejo");
@@ -1027,6 +1038,117 @@
      cuatro funciones de formato. Nada de ws ni de la clave. */
   window.__lienzo = { $: $, esc: esc, money: money, fecha: fecha, ordenar: ordenar };
 
+  /* ======================================================== MODO LOCAL ====
+     LO PRIMERO QUE HAY QUE INTENTAR (JFC, 2026-08-15, y con toda la razon): si
+     el tablero se abre en el MISMO dispositivo donde esta la app, los datos ya
+     estan aqui. Pedirselos por el relay a un tercero era absurdo, y si nadie
+     contestaba el duenio se quedaba mirando una pantalla vacia con sus propios
+     datos a dos centimetros.
+
+     Mismo origen = mismo localStorage. Se lee el buffer del backend
+     directamente. NO se carga mock-backend.js: arrastra media app y solo hace
+     falta leer. Si el formato cambiara, esto degrada al modo remoto en vez de
+     romperse.
+
+     El relay sigue existiendo para lo que si lo necesita: ver el negocio desde
+     OTRO dispositivo.
+     ======================================================================== */
+  var K_ESTADO = "amigable_demo_state_v4";
+
+  function leerEstadoLocal() {
+    try {
+      var ptr = localStorage.getItem(K_ESTADO + "_ptr") || "B";
+      /* Doble buffer A/B: se prueba el activo y, si esta corrupto o vacio, el
+         otro. Por eso existen dos: para que nunca haya un unico punto de fallo. */
+      var orden = [ptr, ptr === "A" ? "B" : "A"];
+      for (var i = 0; i < orden.length; i++) {
+        var raw = localStorage.getItem(K_ESTADO + "_" + orden[i]);
+        if (!raw) continue;
+        var e = JSON.parse(raw);
+        if (e && Array.isArray(e.productos)) return e;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /* Arma la misma forma que llega por el relay, para que el resto del tablero
+     no sepa ni le importe de donde vinieron los datos. */
+  function datosDesdeLocal(e) {
+    var ubic = {};
+    (e.ubicaciones || []).forEach(function (u) { ubic[u.id] = u.nombre; });
+    var prods = {}, clientesArr = e.clientes || [];
+    var cli = {};
+    clientesArr.forEach(function (c) { cli[c.id] = c.nombre; });
+
+    var productos = (e.productos || []).map(function (p) {
+      prods[p.id] = p;
+      var precio = Number(p.precio) || 0, costo = Number(p.costo) || 0;
+      return {
+        id: p.id, nombre: p.nombre, sku: p.sku || "", categoria: p.categoria || "",
+        stockActual: Number(p.stockActual) || 0, precio: precio, costo: costo,
+        margen: +(precio - costo).toFixed(2),
+        estado: estadoSimon(p),
+        ubicacionNombre: ubic[p.ubicacionId] || "",
+      };
+    });
+
+    var hoy = new Date(); hoy = hoy.getFullYear() + "-" +
+      String(hoy.getMonth() + 1).padStart(2, "0") + "-" + String(hoy.getDate()).padStart(2, "0");
+    var entra = 0, sale = 0, nHoy = 0;
+    var ventas = (e.ventas || []).map(function (v) {
+      var p = prods[v.productoId] || {};
+      var cant = Number(v.cantidad) || 0;
+      var pu = Number(v.precioUnit) || 0, cu = Number(v.costoUnit) || 0;
+      if (String(v.fecha || "").slice(0, 10) === hoy) { entra += pu * cant; sale += cu * cant; nHoy++; }
+      return {
+        fecha: v.fecha, productoNombre: p.nombre || "(producto borrado)",
+        sku: p.sku || "", categoria: p.categoria || "", cantidad: cant,
+        precioUnit: pu, costoUnit: cu,
+        clienteNombre: cli[v.clienteId] || "",
+        ubicacionNombre: ubic[v.ubicacionId] || "",
+      };
+    });
+
+    return {
+      productos: productos,
+      clientes: clientesArr.filter(function (c) { return !c.despedido; }),
+      ventas: ventas,
+      resumen: { resumenDia: {
+        entra: +entra.toFixed(2), sale: +sale.toFixed(2),
+        gananciaHoy: +(entra - sale).toFixed(2), ventasCount: nHoy,
+      } },
+    };
+  }
+
+  /* El color Simon replicado a partir de los umbrales del propio producto. Si
+     faltan, se usan los mismos valores de fabrica que la app. */
+  function estadoSimon(p) {
+    var s = Number(p.stockActual) || 0;
+    var rojo = Number(p.umbralRojo) || 2, ambar = Number(p.umbralAmarillo) || 5;
+    if (s <= 0) return "rojo";
+    if (s <= rojo) return "rojo";
+    if (s <= ambar) return "naranja";
+    return "verde";
+  }
+
+  /* El PIN en modo local se comprueba AQUI mismo, contra el secreto cifrado de
+     este dispositivo. Sin relay y sin esperar a nadie. */
+  async function pinLocalOk(pin) {
+    try {
+      /* GUARD: crypto-store se carga con la pagina, pero si por lo que sea
+         todavia no esta, se espera un poco antes de rendirse. Devolver null a
+         la primera mandaba al duenio al camino remoto sin necesidad. */
+      for (var i = 0; i < 20 && !window.OCSecure; i++) {
+        await new Promise(function (r) { setTimeout(r, 100); });
+      }
+      if (!window.OCSecure) return null;   /* null = no se puede juzgar */
+      if (window.OCSecure.migrarSiHaceFalta) { try { await window.OCSecure.migrarSiHaceFalta(); } catch (_) {} }
+      if (!window.OCSecure.verificarOwnerOEmpleado) return null;
+      var rol = await window.OCSecure.verificarOwnerOEmpleado(pin);
+      return rol === "dueno" || rol === "admin";
+    } catch (_) { return null; }
+  }
+
   /* ------------------------------------------------------------- arranque */
   function normalizarCodigo(c) {
     return String(c || "").toUpperCase().replace(/[^A-Z0-9*~$=-]/g, "");
@@ -1034,9 +1156,18 @@
   $("entrar").addEventListener("click", async function () {
     var c = normalizarCodigo($("codigo").value);
     var cuerpo = c.replace(/^AMG-/, "").replace(/-/g, "");
-    if (c.indexOf("AMG-") !== 0 || (cuerpo.length !== 12 && cuerpo.length !== 17)) {
+    /* GUARD: si el negocio esta en ESTE dispositivo, la licencia no hace falta
+       para verlo — solo para conectarse con los demas. Exigirla aqui dejaba al
+       duenio fuera de sus propios datos por no recordar un codigo. */
+    var _hayLocal = !!leerEstadoLocal();
+    if (!_hayLocal && (c.indexOf("AMG-") !== 0 || (cuerpo.length !== 12 && cuerpo.length !== 17))) {
       $("msg").style.color = "#A8123A";
       $("msg").textContent = "Revisa el código: va completo, como AMG-XXXX-XXXX-XXXX.";
+      return;
+    }
+    if (_hayLocal && c && c.indexOf("AMG-") !== 0) {
+      $("msg").style.color = "#A8123A";
+      $("msg").textContent = "Esa licencia no es de amigable-123. La tuya empieza con AMG-.";
       return;
     }
     var pin = String($("pin").value || "").trim();
@@ -1050,6 +1181,55 @@
     }
     $("entrar").disabled = true;
     $("msg").style.color = "#00975C";
+
+    /* PRIMERO LO LOCAL. Si el negocio esta en ESTE dispositivo, no hay nada que
+       pedirle a nadie: ni relay, ni esperar, ni fallar porque otro no contesto. */
+    var local = leerEstadoLocal();
+    if (local) {
+      $("msg").textContent = "Comprobando tu PIN…";
+      var vale = await pinLocalOk(pin);
+      if (vale === false) {
+        $("entrar").disabled = false;
+        $("msg").style.color = "#A8123A";
+        $("msg").textContent = "Ese PIN no abre el tablero. Tiene que ser el del dueño o el de un admin.";
+        $("pin").value = "";
+        return;
+      }
+      if (vale === true) {
+        autorizado = true;
+        $("pin").value = "";
+        try {
+          var d = datosDesdeLocal(local);
+          datos.productos = d.productos; datos.clientes = d.clientes;
+          datos.ventas = d.ventas; datos.resumen = d.resumen;
+          try { var o = JSON.parse(localStorage.getItem("amigable_owned") || "{}");
+                if (o.nombreNegocio) $("neg-nombre").textContent = o.nombreNegocio; } catch (_) {}
+          ultimoDato = Date.now();
+          modoLocal = true;
+          pulso("desde este dispositivo", "vivo");
+          mostrar();
+        } catch (err) {
+          /* Si armar los datos locales falla, se sigue al relay en vez de
+             dejar la pantalla en blanco. */
+          $("msg").textContent = "Conectando con tus dispositivos…";
+          try { await conectar(c); pedirFoto(); sinNadie(); } catch (_) {}
+          $("entrar").disabled = false;
+          return;
+        }
+        /* Ya se ve el negocio. La conexion se levanta DESPUES y en segundo
+           plano, para que las ventas de los demas sigan llegando en vivo. Si
+           falla, el tablero ya esta lleno: no se avisa de nada. */
+        /* GUARD: sin licencia no hay sala a la que conectarse, y eso NO es un
+           error: el tablero ya esta lleno con los datos de aqui. */
+        if (c && c.indexOf("AMG-") === 0) {
+          conectar(c).then(function () { pedirFoto(); }).catch(function () {});
+        }
+        return;
+      }
+      /* vale === null: no se pudo juzgar aqui (secreto no disponible). Se cae
+         al camino remoto en vez de dejar al duenio fuera. */
+    }
+
     $("msg").textContent = "Conectando con tus dispositivos…";
     try {
       await conectar(c);
@@ -1075,6 +1255,10 @@
       $("entrar").disabled = false;
       $("msg").style.color = "#A8123A";
       $("msg").textContent = "No se pudo conectar. Revisa tu internet.";
+    } finally {
+      /* GUARD: el boton vuelve SIEMPRE. Sin esto, cualquier excepcion en un
+         camino nuevo dejaba la puerta trabada y solo se salia recargando. */
+      if (!autorizado) $("entrar").disabled = false;
     }
   });
   $("codigo").addEventListener("keydown", function (e) { if (e.key === "Enter") $("entrar").click(); });
@@ -1106,6 +1290,23 @@
   })();
 
   /* Logo: se inyecta desde la constante de abajo para no repetir el base64. */
+  /* GUARD 4: la puerta se adapta a lo que hay. Si el negocio esta en ESTE
+     dispositivo, la licencia sobra y el campo estorba: pedir un dato que no
+     hace falta es como se pierde a la gente en la primera pantalla. */
+  (function () {
+    try {
+      if (!leerEstadoLocal()) return;
+      var cod = $("codigo");
+      cod.placeholder = "Tu licencia (opcional aquí)";
+      cod.parentNode.insertBefore(document.createElement("p"), cod).outerHTML =
+        '<p style="font-size:14px;line-height:1.5;margin:0 0 12px;color:#00975C;' +
+        'font-weight:700;">Tu negocio está en este dispositivo. Solo necesitas tu PIN.</p>';
+      /* El PIN pasa a ser lo primero, que es lo unico que de verdad hace falta. */
+      cod.style.order = "2";
+      setTimeout(function () { try { $("pin").focus(); } catch (_) {} }, 300);
+    } catch (_) {}
+  })();
+
   if (LOGO) { $("logo-puerta").src = LOGO; $("logo-top").src = LOGO; }
   else {
     $("logo-puerta").outerHTML = '<div style="font-family:var(--font-display);font-size:24px;font-weight:700;color:#0F1923;margin-bottom:16px;">amigable-123</div>';
