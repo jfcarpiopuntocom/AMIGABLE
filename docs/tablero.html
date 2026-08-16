@@ -416,12 +416,26 @@
     return new Promise(function (resolve) {
       if (!ws || ws.readyState !== 1) { resolve({ ok: false, datos: { error: "Sin conexión." } }); return; }
       var id = "p" + Math.random().toString(36).slice(2, 10);
+      /* Se declara ANTES del timeout: leerlo por hoisting funciona, pero
+         depender de eso es como se cuelan los bugs raros. */
+      var negativas = 0;
       var reloj = setTimeout(function () {
         if (!pedidos[id]) return;
         delete pedidos[id];
-        resolve({ ok: false, datos: { error: "Tu dispositivo no contestó. Abre la app y vuelve a intentar." } });
+        resolve({ ok: false, datos: { error: negativas
+          ? "Ese PIN no abre el tablero. Tiene que ser el del dueño o el de un admin."
+          : "Ningún dispositivo de tu equipo contestó. Abre amigable-123 y vuelve a intentar." } });
       }, 12000);
-      pedidos[id] = function (r) { clearTimeout(reloj); resolve(r); };
+      /* Se espera un SI. Un NO no cierra la puerta: en una sala con varios
+         dispositivos, el que no conoce ese PIN puede contestar antes que el que
+         si lo conoce, y rendirse al primer no rechazaba PINs validos. Los "no"
+         se cuentan solo para redactar mejor el mensaje del timeout. */
+      pedidos[id] = function (r) {
+        if (!r.ok) { negativas++; return; }
+        clearTimeout(reloj);
+        delete pedidos[id];
+        resolve(r);
+      };
       cifrar({ opId: id, deviceId: miId, tipo: TIPO_PIN, payload: { pedidoId: id, pin: pin } })
         .then(function (buf) { try { ws.send(buf); } catch (_) {} });
     });
@@ -990,7 +1004,9 @@
         delete pedidos[id];
         resolve({ ok: false, datos: { error: "Tu dispositivo no contestó. Revisa que la app esté abierta." } });
       }, 12000);
-      pedidos[id] = function (r) { clearTimeout(reloj); resolve(r); };
+      /* A diferencia del PIN, aqui la PRIMERA respuesta manda: son ordenes
+         ejecutadas contra un backend, no votos. */
+      pedidos[id] = function (r) { clearTimeout(reloj); delete pedidos[id]; resolve(r); };
       cifrar({ opId: id, deviceId: miId, tipo: TIPO_ORDEN,
                payload: { pedidoId: id, metodo: metodo, ruta: ruta, cuerpo: cuerpo || null } })
         .then(function (buf) { try { ws.send(buf); } catch (_) {} });
@@ -1002,7 +1018,8 @@
   function recibirRespuesta(p) {
     var fn = pedidos[p && p.pedido];
     if (!fn) return;
-    delete pedidos[p.pedido];
+    /* El pedido NO se borra aqui: para el PIN puede llegar mas de una respuesta
+       y solo el "si" cierra el trato. Cada handler decide cuando borrarse. */
     fn({ ok: !!p.ok, datos: p.datos });
   }
 
@@ -1023,9 +1040,11 @@
       return;
     }
     var pin = String($("pin").value || "").trim();
-    if (!/^[0-9]{3,6}$/.test(pin)) {
+    /* El PIN de amigable-123 es de 3 digitos. Se avisa antes de gastar 12 s
+       de espera contra la sala por algo que no puede ser un PIN. */
+    if (!/^[0-9]{3}$/.test(pin)) {
       $("msg").style.color = "#A8123A";
-      $("msg").textContent = "Escribe tu PIN.";
+      $("msg").textContent = pin ? "El PIN es de 3 dígitos." : "Escribe tu PIN.";
       $("pin").focus();
       return;
     }
@@ -1034,7 +1053,7 @@
     $("msg").textContent = "Conectando con tus dispositivos…";
     try {
       await conectar(c);
-      $("msg").textContent = "Comprobando tu PIN…";
+      $("msg").textContent = "Comprobando tu PIN con tu equipo…";
       var v = await verificarPin(pin);
       if (!v.ok) {
         /* Se corta la conexion: sin PIN valido este lienzo no se queda

@@ -489,15 +489,50 @@
   async function responderPin(op) {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
     const pin = String((op.payload && op.payload.pin) || "");
+    if (!pin) return;
+
+    /* BUG 1: el PIN de un ADMIN nunca abria el tablero. verificarOwnerOEmpleado
+       solo devuelve "dueno" o "empleado"; los admins se dan de alta como
+       usuarios nombrados y se verifican por /api/usuarios/verificar. Faltaba
+       ese segundo camino, asi que el guard "dueno o admin" era en realidad
+       "solo dueno". */
     let rol = "";
     try {
+      /* El secreto puede estar todavia migrando cuando llega el pedido: sin
+         esperar, un PIN valido se rechazaba por pura carrera de arranque. */
+      if (window.OCSecure && window.OCSecure.migrarSiHaceFalta) {
+        try { await window.OCSecure.migrarSiHaceFalta(); } catch (_) {}
+      }
       if (window.OCSecure && window.OCSecure.verificarOwnerOEmpleado) {
         rol = (await window.OCSecure.verificarOwnerOEmpleado(pin)) || "";
       }
+      if (rol !== "dueno") {
+        const res = await fetch("/api/usuarios/verificar", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pin: pin }),
+        });
+        if (res.ok) {
+          const u = await res.json();
+          if (u && u.rol && u.activo !== false) rol = u.rol;
+        }
+      }
     } catch (_) {}
-    /* Solo duenio y admin. Se contesta igual cuando no pasa, para que el
-       tablero pueda decir "no" en vez de quedarse esperando. */
+
     const ok = rol === "dueno" || rol === "admin";
+
+    /* BUG 2, y es el que rompia el caso real: en una sala con MAS DE UN
+       dispositivo, todos contestaban, y el tablero se quedaba con la PRIMERA
+       respuesta. Un telefono que no conoce ese PIN contestaba "no" antes que
+       el que si lo conoce, y un PIN valido quedaba rechazado.
+
+       Ahora el "no" NO se manda: quien no puede autorizar se calla, y el
+       tablero cae en su propio timeout si de verdad nadie lo reconocio. Un
+       silencio de 12 s es mejor que un rechazo falso e inmediato.
+
+       Solo se contesta el "no" cuando este dispositivo es el UNICO en la sala:
+       ahi el rechazo es informacion cierta y ahorra la espera. */
+    if (!ok && presenciaN > 2) return;
+
     const r = {
       opId: uuidCorto(), deviceId: deviceId(), tipo: TIPO_RESPUESTA,
       payload: { pedido: (op.payload && op.payload.pedidoId) || op.opId, ok: ok,
