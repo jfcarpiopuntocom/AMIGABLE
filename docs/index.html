@@ -1483,9 +1483,15 @@
     </div>
     <!-- M6: resumen por familia. Vive ARRIBA del grid y no lo altera: si
          esta seccion fallara, la cuadricula sigue igual. -->
-    <label id="invAgruparWrap" style="display:none;align-items:center;gap:9px;min-height:44px;font-size:15px;font-weight:700;cursor:pointer;margin:2px 0 6px;">
-      <input type="checkbox" id="invAgrupar" style="width:22px;height:22px;"> Agrupar por familia
-    </label>
+    <!-- "Familia" a secas no se entendia (JFC 2026-08-18). Se dice el nombre
+         completo Y se explica en una linea: son los productos que comparten la
+         raiz del codigo interno, o sea las versiones de una misma cosa. -->
+    <div id="invAgruparWrap" style="display:none;margin:2px 0 6px;">
+      <label style="display:flex;align-items:center;gap:9px;min-height:44px;font-size:15px;font-weight:700;cursor:pointer;">
+        <input type="checkbox" id="invAgrupar" style="width:22px;height:22px;"> Agrupar por serie/programa/familia
+      </label>
+      <p style="font-size:13px;color:var(--ink-soft);margin:0 0 0 31px;">Junta las versiones de una misma cosa: mismo código interno antes del guion (ALM5-V2 y ALM5-V3 son la serie ALM5).</p>
+    </div>
     <div id="invFamilias" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;"></div>
     <div class="grid-cajas" id="gridInventario"></div>
     <!-- Log de movimientos: SOLO dueño, anti-descuadre -->
@@ -3298,7 +3304,7 @@ function bloqueFoto(p, todos) {
   var html = '<div class="fotowrap"><span class="iniciales">' + escHtml(inicialesDe(p && p.nombre)) + "</span>";
   if (src) {
     html += '<img src="' + src + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">';
-    if (heredada) html += '<span class="heredada">foto de la familia</span>';
+    if (heredada) html += '<span class="heredada">foto de la serie</span>';
   }
   return html + "</div>";
 }
@@ -3452,13 +3458,16 @@ async function cargarInventario(){
     </div>
   `).join("");
   grid.classList.remove("oc-grid-fade");void grid.offsetWidth;grid.classList.add("oc-grid-fade");
-  /* M6: el interruptor solo aparece si de verdad HAY familias que agrupar.
+  /* Las categorias del pulldown salen de los productos REALES del negocio, no
+     de una lista fija: las suyas van primero porque son las que va a repetir. */
+  try { if (window.OCCategorias) window.OCCategorias.refrescar(productos); } catch (_) {}
+  /* M6: el interruptor solo aparece si de verdad HAY series/programas/familias que agrupar.
      Un negocio sin variantes no ve nada nuevo, que es la prueba M9. */
   try {
     var _wrap = document.getElementById("invAgruparWrap");
     var _chk = document.getElementById("invAgrupar");
     var _hayFam = resumenFamilias(productos).length > 0;
-    if (_wrap) _wrap.style.display = _hayFam ? "flex" : "none";
+    if (_wrap) _wrap.style.display = _hayFam ? "block" : "none";
     if (_chk && !_chk.dataset.listo) {
       _chk.dataset.listo = "1";
       _chk.checked = agruparFamiliasActivo();
@@ -3476,13 +3485,13 @@ async function cargarInventario(){
       });
     }
   } catch (_) { /* el resumen es decoracion: nunca puede tumbar el grid */ }
-  /* M6: el interruptor solo aparece si de verdad HAY familias que agrupar.
+  /* M6: el interruptor solo aparece si de verdad HAY series/programas/familias que agrupar.
      Un negocio sin variantes no ve nada nuevo, que es la prueba M9. */
   try {
     var _wrap = document.getElementById("invAgruparWrap");
     var _chk = document.getElementById("invAgrupar");
     var _hayFam = resumenFamilias(productos).length > 0;
-    if (_wrap) _wrap.style.display = _hayFam ? "flex" : "none";
+    if (_wrap) _wrap.style.display = _hayFam ? "block" : "none";
     if (_chk && !_chk.dataset.listo) {
       _chk.dataset.listo = "1";
       _chk.checked = agruparFamiliasActivo();
@@ -4102,12 +4111,6 @@ function mostrarFormNuevoProducto(codigoEscaneado){
         <input id="np-nombre" type="text" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Categoría<br>
         <input id="np-categoria" type="text" placeholder="Ej: Bar" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
-      <!-- M5 (2026-08-14): variante interna. Texto LIBRE y no una lista
-           cerrada, porque los chips del mercado cambian cada temporada y una
-           lista obliga a tocar codigo cada vez que aparece uno nuevo.
-           12 caracteres es lo que entra en la tarjeta sin romperla. -->
-      <label style="display:block;margin-top:10px;font-size:14px;">Variante o chip interno (opcional)<br>
-        <input id="np-chip" type="text" maxlength="12" placeholder="Ej: chip V2, Tuya, 433MHz" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Tipo de producto<br>
         <select id="np-tipo-producto" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;">
           <option value="normal">Normal (mercancía)</option>
@@ -4137,6 +4140,16 @@ function mostrarFormNuevoProducto(codigoEscaneado){
             <option value="LIFO">LIFO — vender primero lo más nuevo</option>
           </select></label>
       </div>
+      <!-- AL FINAL (JFC 2026-08-18): no todo el mundo maneja variantes, y las
+           que se manejan no siempre son "chips" — son colores, funciones,
+           tamanios. Preguntarlo tercero, antes que el precio, hacia que el
+           formulario pareciera de otro negocio. Texto LIBRE y no lista cerrada:
+           las variantes del mercado cambian cada temporada. -->
+      <details style="margin-top:14px;border-top:1px solid var(--azul-suave,#dde5ec);padding-top:10px;">
+        <summary style="font-size:14px;font-weight:700;cursor:pointer;">Variante (color / chip / función) — opcional</summary>
+        <label style="display:block;margin-top:8px;font-size:14px;">Solo si este producto viene en varias versiones<br>
+          <input id="np-chip" type="text" maxlength="12" placeholder="Ej: Rojo, chip V2, 433MHz" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
+      </details>
       <div id="np-msg" style="font-size:14px;margin-top:10px;font-weight:700;"></div>
       <button class="ir" style="margin-top:12px;" onclick="crearProductoNuevo('${escHtml(codigoEscaneado).replace(/'/g, "\\'")}')">Guardar producto</button>
     </div>
@@ -4147,6 +4160,14 @@ function mostrarFormNuevoProducto(codigoEscaneado){
   contenedor.querySelector("#np-perecible").addEventListener("change", (e) => {
     contenedor.querySelector("#np-fecha-wrap").style.display = e.target.checked ? "block" : "none";
   });
+  try { if (window.OCCategorias) window.OCCategorias.enganchar(contenedor.querySelector("#np-categoria")); } catch (_) {}
+  /* Nada tecleado se pierde: si se va la luz, se toca "atras" o el telefono
+     manda la app al fondo, lo escrito sigue aqui al volver. Ver borradores.js. */
+  try {
+    if (window.OCBorradores) {
+      window.OCBorradores.enganchar(contenedor.querySelector(".ficha-producto"), "alta-producto", { msgId: "np-msg" });
+    }
+  } catch (_) {}
 }
 
 async function crearProductoNuevo(codigoEscaneado){
@@ -4190,6 +4211,8 @@ async function crearProductoNuevo(codigoEscaneado){
     return;
   }
   if (!res.ok){ msg.style.color = "var(--rojo)"; msg.textContent = data.error; return; }
+  // Guardado de verdad: el borrador ya cumplio y estorbaria en el proximo alta.
+  try { if (window.OCBorradores) window.OCBorradores.limpiar("alta-producto"); } catch (_) {}
   pintarFicha(data);
 }
 
@@ -4325,37 +4348,71 @@ async function mostrarFormEditarProducto(id){
           <option value="__nueva__">+ Nueva percha…</option>
         </select></label>
       ${hermanos.length ? `<div style="margin-top:8px;font-size:14px;color:var(--ink-soft);">También en: ${hermanos.map(h => `${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)`).join(" · ")}</div>` : ""}
-      ${(() => { const ocupadas = new Set([p.ubicacionId, ...hermanos.map(h => h.ubicacionId)]); const disponibles = perchas.filter(u => !ocupadas.has(u.id)); return disponibles.length ? `
-      <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--azul-suave,#dde5ec);">
-        <label style="display:block;font-size:14px;font-weight:700;color:var(--ink);">¿También en OTRA percha? (opcional, no reemplaza la de arriba)<br>
-          <span style="font-weight:400;font-size:13px;color:var(--ink-soft);">Esto crea una copia adicional de este producto en otra percha — la "Percha principal" de arriba no cambia.</span>
-        </label>
-        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <select id="ed-nueva-percha" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;font-size:14px;">
-            ${disponibles.map(u => `<option value="${escHtml(u.id)}">${escHtml(u.nombre)}</option>`).join("")}
-          </select>
-          <button type="button" id="ed-agregar-percha" style="font-size:14px;padding:8px 12px;">+ Agregar a esa percha</button>
-        </div>
-      </div>` : ""; })()}
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Umbral alerta roja<br><input id="ed-umbral-rojo" type="number" min="0" step="1" value="${p.umbralRojo || 0}" ${inp}></label>
         <label style="flex:1;font-size:14px;">Umbral alerta amarilla<br><input id="ed-umbral-amarillo" type="number" min="0" step="1" value="${p.umbralAmarillo || 0}" ${inp}></label>
       </div>
       <label style="display:block;margin-top:10px;font-size:14px;">Categoría<br>
         <input id="ed-categoria" type="text" value="${q(p.categoria)}" ${inp}></label>
+      <!-- MISMOS CAMPOS AL CREAR Y AL EDITAR (JFC 2026-08-18): "que no cambie
+           lo que se puede editar luego, cuando uno regresa a editar". Caducidad
+           y orden de venta se podian poner al dar de alta y despues
+           DESAPARECIAN: quien se equivocaba de fecha no tenia como corregirla. -->
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:15px;font-weight:700;">
+        <input id="ed-perecible" type="checkbox" style="width:20px;height:20px;"${p.perecible ? " checked" : ""}> ¿Este producto expira?</label>
+      <div id="ed-fecha-wrap" style="display:${p.perecible ? "block" : "none"};margin-top:8px;">
+        <label style="display:block;font-size:14px;">Fecha de caducidad<br>
+          <input id="ed-fecha" type="date" value="${q(p.fechaCaducidad || "")}" ${inp}></label>
+        <label style="display:block;margin-top:8px;font-size:14px;">Orden de venta recomendado<br>
+          <select id="ed-metodo" ${inp}>
+            <option value="FIFO"${p.metodoCosteo !== "LIFO" ? " selected" : ""}>FIFO — vender primero lo que vence antes (recomendado)</option>
+            <option value="LIFO"${p.metodoCosteo === "LIFO" ? " selected" : ""}>LIFO — vender primero lo más nuevo</option>
+          </select></label>
+      </div>
       <label style="display:block;margin-top:14px;font-size:14px;color:var(--rust,#E86040);font-weight:700;">Código interno — NO cambia al renombrar; solo si lo escribes de nuevo aquí<br>
         <input id="ed-barcode" type="text" value="${q(p.barcode)}" ${inp}></label>
+      <!-- VARIANTE Y "TAMBIEN EN OTRA PERCHA" AL FINAL (JFC 2026-08-18).
+           Este bloque estaba en medio del formulario, entre la percha y los
+           umbrales, y no tiene sentido como UX: no edita este producto, CREA
+           otro. Metido a mitad de camino invitaba a tocarlo por error mientras
+           se editaba precio o costo. Va al final y plegado: quien lo busca lo
+           encuentra, quien no, no lo tropieza. -->
+      <details style="margin-top:14px;border-top:1px solid var(--azul-suave,#dde5ec);padding-top:10px;">
+        <summary style="font-size:14px;font-weight:700;cursor:pointer;">Variante (color / chip / función) — opcional</summary>
+        <label style="display:block;margin-top:8px;font-size:14px;">Solo si este producto viene en varias versiones<br>
+          <input id="ed-chip" type="text" maxlength="12" value="${q(p.chip)}" placeholder="Ej: Rojo, chip V2, 433MHz" ${inp}></label>
+      </details>
       <div id="ed-msg" style="font-size:14px;margin-top:10px;font-weight:700;"></div>
       <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
         <button class="ir" onclick="guardarEdicionProducto('${p.id}')">Guardar cambios</button>
         <button onclick="abrirFichaDesdeInventario('${p.id}')">Cancelar</button>
       </div>
+      ${(() => { const ocupadas = new Set([p.ubicacionId, ...hermanos.map(h => h.ubicacionId)]); const disponibles = perchas.filter(u => !ocupadas.has(u.id)); return disponibles.length ? `
+      <details style="margin-top:16px;padding-top:10px;border-top:1px solid var(--azul-suave,#dde5ec);">
+        <summary style="font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;">Poner este producto TAMBIÉN en otra percha</summary>
+        <p style="font-weight:400;font-size:13px;color:var(--ink-soft);margin:6px 0 0;">Crea una copia adicional en otra percha, con stock 0. La "Percha principal" de arriba no cambia y este producto no se mueve.</p>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <select id="ed-nueva-percha" style="padding:8px;border:2px solid var(--azul-medio);border-radius:4px;font-size:14px;">
+            ${disponibles.map(u => `<option value="${escHtml(u.id)}">${escHtml(u.nombre)}</option>`).join("")}
+          </select>
+          <button type="button" id="ed-agregar-percha" style="font-size:14px;padding:8px 12px;">+ Agregar a esa percha</button>
+        </div>
+      </details>` : ""; })()}
     </div>`;
   // Tipo proveedor toggle (M4): mostrar comision solo para consignacion/artista
   document.getElementById("ed-tipo-proveedor").addEventListener("change", (e) => {
     document.getElementById("ed-comision-wrap").style.display = e.target.value === "consignacion" ? "block" : "none";
   });
   attachPerchaInlineCreate(document.getElementById("ed-ubicacion"));
+  (function(){
+    const _chk = document.getElementById("ed-perecible");
+    const _wrap = document.getElementById("ed-fecha-wrap");
+    if (_chk && _wrap) _chk.addEventListener("change", (e) => {
+      _wrap.style.display = e.target.checked ? "block" : "none";
+    });
+  })();
+  // Categoria como combo mixto: se elige de la lista o se escribe otra.
+  try { if (window.OCCategorias) window.OCCategorias.enganchar(document.getElementById("ed-categoria")); } catch (_) {}
   // Blindaje #15: activar auto-guardado de borrador + ofrecer restaurar uno previo.
   _edFormActivoId = p.id;
   const _edCont = document.getElementById("ed-nombre") ? document.getElementById("ed-nombre").closest(".ficha-producto") : null;
@@ -4441,8 +4498,16 @@ async function guardarEdicionProducto(id){
   // campos undefined, asi que omitir = "no tocar ese campo".
   const v = (x) => { const el = document.getElementById(x); return el ? el.value.trim() : undefined; };
   // OJO: el SKU no se toca aqui — solo el barcode si el dueno lo digito.
-  const body = { nombre: v("ed-nombre"), precio: v("ed-precio"), costo: v("ed-costo"), proveedor: v("ed-proveedor"), categoria: v("ed-categoria"), barcode: v("ed-barcode"), ubicacionId: v("ed-ubicacion"), umbralRojo: v("ed-umbral-rojo"), umbralAmarillo: v("ed-umbral-amarillo"), tipoProveedor: v("ed-tipo-proveedor"), comisionProveedorPct: v("ed-comision-pct"), tipoProducto: v("ed-tipo-producto") };
+  const body = { nombre: v("ed-nombre"), precio: v("ed-precio"), costo: v("ed-costo"), proveedor: v("ed-proveedor"), categoria: v("ed-categoria"), barcode: v("ed-barcode"), ubicacionId: v("ed-ubicacion"), umbralRojo: v("ed-umbral-rojo"), umbralAmarillo: v("ed-umbral-amarillo"), tipoProveedor: v("ed-tipo-proveedor"), comisionProveedorPct: v("ed-comision-pct"), tipoProducto: v("ed-tipo-producto"), chip: v("ed-chip") };
   Object.keys(body).forEach(k => { if (body[k] === undefined) delete body[k]; });
+  // Caducidad: el checkbox manda. Si se desmarca, la fecha se limpia de verdad
+  // en vez de quedar colgada en la ficha diciendo que algo vence cuando no.
+  const _perec = document.getElementById("ed-perecible");
+  if (_perec) {
+    body.perecible = _perec.checked;
+    body.fechaCaducidad = _perec.checked ? (v("ed-fecha") || null) : null;
+    if (_perec.checked && v("ed-metodo") !== undefined) body.metodoCosteo = v("ed-metodo");
+  }
   const foto = await leerFotoRedimensionada(document.getElementById("ed-foto"));
   if (foto) body.foto = foto;
   const msg = document.getElementById("ed-msg");
@@ -4508,12 +4573,6 @@ async function abrirAltaProducto(){
         <input id="np-nombre" type="text" ${inp}></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Categoría<br>
         <input id="np-categoria" type="text" placeholder="Ej: Bar" ${inp}></label>
-      <!-- M5 (2026-08-14): variante interna. Texto LIBRE y no una lista
-           cerrada, porque los chips del mercado cambian cada temporada y una
-           lista obliga a tocar codigo cada vez que aparece uno nuevo.
-           12 caracteres es lo que entra en la tarjeta sin romperla. -->
-      <label style="display:block;margin-top:10px;font-size:14px;">Variante o chip interno (opcional)<br>
-        <input id="np-chip" type="text" maxlength="12" placeholder="Ej: chip V2, Tuya, 433MHz" ${inp}></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Tipo de producto<br>
         <select id="np-tipo-producto" ${inp}>
           <option value="normal">Normal (mercancía)</option>
@@ -4561,6 +4620,12 @@ async function abrirAltaProducto(){
             <option value="LIFO">LIFO — vender primero lo más nuevo</option>
           </select></label>
       </div>
+      <!-- Variante AL FINAL: ver el comentario en mostrarFormNuevoProducto(). -->
+      <details style="margin-top:14px;border-top:1px solid var(--azul-suave,#dde5ec);padding-top:10px;">
+        <summary style="font-size:14px;font-weight:700;cursor:pointer;">Variante (color / chip / función) — opcional</summary>
+        <label style="display:block;margin-top:8px;font-size:14px;">Solo si este producto viene en varias versiones<br>
+          <input id="np-chip" type="text" maxlength="12" placeholder="Ej: Rojo, chip V2, 433MHz" ${inp}></label>
+      </details>
       <div id="np-msg" style="font-size:14px;margin-top:10px;font-weight:700;"></div>
       <button class="ir" style="margin-top:12px;" onclick="crearProductoNuevo('')">Guardar producto</button>
     </div>`;
@@ -4575,6 +4640,15 @@ async function abrirAltaProducto(){
     body.querySelector("#np-comision-wrap").style.display = e.target.value === "consignacion" ? "block" : "none";
   });
   attachPerchaInlineCreate(body.querySelector("#np-ubicacion"));
+  try { if (window.OCCategorias) window.OCCategorias.enganchar(body.querySelector("#np-categoria")); } catch (_) {}
+  /* Mismo borrador que el formulario de Escanear: son el MISMO alta, con dos
+     puertas de entrada. Compartir la clave significa que lo empezado en una se
+     recupera en la otra, que es lo que espera cualquiera. */
+  try {
+    if (window.OCBorradores) {
+      window.OCBorradores.enganchar(body.querySelector(".ficha-producto"), "alta-producto", { msgId: "np-msg" });
+    }
+  } catch (_) {}
   modal.classList.add("activo");
 }
 
@@ -6162,6 +6236,7 @@ setTimeout(() => {
 <script src="./help-ui.js"></script>
 <script src="./idb-fotos.js"></script>
 <script src="./idb-archivo.js"></script>
+<script src="./borradores.js"></script>
 <script src="./vista-perchas.js"></script>
 <script src="./welcome-ui.js"></script>
 <script src="./tutorial-ui.js"></script>
