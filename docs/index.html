@@ -4549,16 +4549,34 @@ async function eliminarProductoUI(id, btn){
       ? `Vas a borrar "${nombreProd}" del inventario. Esto no se puede deshacer.`
       : "Vas a borrar este producto del inventario. Esto no se puede deshacer.",
     nombreProd))) return;
+  /* UN SOLO DELETE (caza de bugs 2026-08-18). Al quitar el patron viejo de
+     "toca otra vez" me quede sin nada que impidiera el doble disparo: dos
+     toques seguidos mandaban DOS DELETE, y el segundo devolvia 404 mostrando
+     un error sobre un producto que SI se habia borrado bien. El boton se apaga
+     mientras el borrado esta en vuelo. */
+  if (btn) {
+    if (btn.dataset.borrando === "1") return;
+    btn.dataset.borrando = "1";
+    btn.disabled = true;
+    btn.textContent = "Borrando…";
+  }
+  const soltarBoton = () => {
+    if (!btn || !btn.isConnected) return;
+    btn.dataset.borrando = "";
+    btn.disabled = false;
+    btn.textContent = "Eliminar";
+  };
   let res, data;
   try {
     res = await fetch(`${API}/productos/${id}`, { method: "DELETE" });
     data = await res.json();
   } catch (err) {
     console.error("[eliminarProductoUI]", err);
+    soltarBoton();
     await ocAlert("No se pudo conectar con el servidor. El producto NO se eliminó. Revisa tu conexión e intenta de nuevo.");
     return;
   }
-  if (!res.ok){ await ocAlert(data.error); return; }
+  if (!res.ok){ soltarBoton(); await ocAlert(data.error); return; }
   document.getElementById("fichaResultado").innerHTML = `<p style="font-weight:700;">Producto eliminado.</p>`;
   cargarInventario();
 }
@@ -6661,9 +6679,16 @@ function _ocModalMostrar(mensaje, botonesConfig) {
    app ya pinto la primera vista con un estado viejo. Se repinta lo que hay en
    pantalla para que el dueno no vea datos que ya no son. */
 window.addEventListener("oc-estado-rescatado", function () {
-  try { if (window.cargarInventario) window.cargarInventario(); } catch (_) {}
-  try { if (window.cargarPerchas) window.cargarPerchas(); } catch (_) {}
-  try { if (window.cargarUbicaciones) window.cargarUbicaciones(); } catch (_) {}
+  /* SE REPINTA LA VISTA QUE SE ESTA MIRANDO (caza de bugs 2026-08-18).
+     Antes solo repintaba Inventario, Perchas y Ubicaciones — pero la vista
+     donde el encargado esta TODO EL DIA es Hoy, y esa se quedaba con las
+     cifras viejas sin decirlo. Un rescate silencioso que deja numeros
+     equivocados en pantalla es peor que no rescatar. */
+  ["cargarHoy", "cargarInventario", "cargarPerchas", "cargarUbicaciones",
+   "cargarClientes", "cargarComisiones"].forEach(function (fn) {
+    try { if (typeof window[fn] === "function") window[fn](); } catch (_) {}
+  });
+  try { if (window.VPerchas && window.VPerchas.cargar) window.VPerchas.cargar(); } catch (_) {}
 });
 function ocConfirm(mensaje, opts) {
   opts = opts || {};
@@ -6748,6 +6773,25 @@ function ocConfirmEscribiendo(mensaje, nombreExacto, opts) {
     };
     inp.addEventListener("input", revisar);
     inp.addEventListener("keydown", (e) => { if (e.key === "Enter" && !bBorrar.disabled) bBorrar.click(); });
+
+    /* SALIDA (caza de bugs 2026-08-18). Sin esto, quien abria el dialogo de
+       borrar y se arrepentia no tenia como salir: la promesa nunca resolvia y
+       el modal quedaba trabado con el campo del reto encima de la pantalla.
+       Un dialogo destructivo tiene que ser MAS facil de cancelar que de
+       confirmar, no al reves. */
+    const salir = () => { document.removeEventListener("keydown", porTecla); limpiar(); resolve(false); };
+    const porTecla = (e) => { if (e.key === "Escape") salir(); };
+    document.addEventListener("keydown", porTecla);
+    overlay.addEventListener("click", function alClic(e) {
+      if (e.target !== overlay) return;   /* solo el fondo, no la caja */
+      overlay.removeEventListener("click", alClic);
+      salir();
+    });
+    /* Cancelar y confirmar tambien tienen que soltar el listener del teclado,
+       o se queda escuchando para siempre y el proximo Escape cierra un modal
+       que no es este. */
+    bCancelar.addEventListener("click", () => document.removeEventListener("keydown", porTecla));
+    bBorrar.addEventListener("click", () => document.removeEventListener("keydown", porTecla));
 
     overlay.style.display = "flex";
     setTimeout(() => { try { inp.focus(); } catch (_) {} }, 60);
