@@ -3728,7 +3728,9 @@ async function cargarPerchas(){
     if (res.ok) cargarPerchas();
   }));
   grid.querySelectorAll('[data-suc-borrar]').forEach(btn => btn.addEventListener('click', async () => {
-    if (!(await ocConfirm(`Borrar la sucursal "${btn.dataset.nombre}". Solo posible si no tiene perchas asignadas.`, { danger: true }))) return;
+    if (!(await ocConfirmEscribiendo(
+      `Vas a borrar la sucursal "${btn.dataset.nombre}". Solo se puede si ya no tiene perchas asignadas.`,
+      btn.dataset.nombre))) return;
     const res = await fetch(`${API}/sucursales/${btn.dataset.sucBorrar}`, { method:'DELETE' });
     const r = await res.json(); if (!res.ok) { await ocAlert(r.error); return; }
     cargarPerchas();
@@ -3763,7 +3765,9 @@ async function cargarPerchas(){
     }
   }));
   grid.querySelectorAll('[data-percha-borrar]').forEach(btn => btn.addEventListener('click', async () => {
-    if (!(await ocConfirm(`Borrar la percha "${btn.dataset.nombre}" y TODOS sus productos. Esto no se puede deshacer. ¿Seguro?`, { danger: true }))) return;
+    if (!(await ocConfirmEscribiendo(
+      `Vas a borrar la percha "${btn.dataset.nombre}" y TODOS sus productos. Esto no se puede deshacer.`,
+      btn.dataset.nombre))) return;
     const res = await fetch(`${API}/ubicaciones/${btn.dataset.perchaBorrar}`, { method:'DELETE' });
     const r = await res.json(); if (!res.ok){ await ocAlert(r.error); return; }
     cargarPerchas(); if (window.cargarUbicaciones) window.cargarUbicaciones(); cargarInventario();
@@ -4531,19 +4535,26 @@ async function guardarEdicionProducto(id){
 
 // Borrado con RE-confirmacion: primer toque arma 4s; el segundo ejecuta.
 async function eliminarProductoUI(id, btn){
-  if (btn.dataset.armado !== "1"){
-    btn.dataset.armado = "1";
-    btn.textContent = "¿Seguro? Toca otra vez";
-    setTimeout(() => { if (btn && btn.isConnected){ btn.dataset.armado = ""; btn.textContent = "Eliminar"; } }, 4000);
-    return;
-  }
+  /* MISMO CRITERIO QUE LAS PERCHAS (JFC 2026-08-18). "Toca otra vez" no es una
+     comprobacion de intencion: es el mismo gesto repetido, y en un telefono con
+     la mano llena se hace solo. Borrar un producto se lleva su historial por
+     delante, asi que se escribe su nombre, igual que para borrar una percha. */
+  let nombreProd = "";
+  try {
+    const _p = await (await fetch(`${API}/productos/${id}`)).json();
+    if (_p && _p.nombre) nombreProd = _p.nombre;
+  } catch (_) { /* si no se puede leer, ocConfirmEscribiendo cae al confirm normal */ }
+  if (!(await ocConfirmEscribiendo(
+    nombreProd
+      ? `Vas a borrar "${nombreProd}" del inventario. Esto no se puede deshacer.`
+      : "Vas a borrar este producto del inventario. Esto no se puede deshacer.",
+    nombreProd))) return;
   let res, data;
   try {
     res = await fetch(`${API}/productos/${id}`, { method: "DELETE" });
     data = await res.json();
   } catch (err) {
     console.error("[eliminarProductoUI]", err);
-    btn.dataset.armado = ""; btn.textContent = "Eliminar";
     await ocAlert("No se pudo conectar con el servidor. El producto NO se eliminó. Revisa tu conexión e intenta de nuevo.");
     return;
   }
@@ -6548,6 +6559,84 @@ function ocConfirm(mensaje, opts) {
 }
 function ocAlert(mensaje) {
   return _ocModalMostrar(mensaje, [{ label: "Aceptar", value: true }]);
+}
+
+/* ===========================================================================
+   ocConfirmEscribiendo(mensaje, nombreExacto) — borrar exige TECLEAR el nombre
+   ===========================================================================
+   JFC 2026-08-18: "en Perchas no siempre pide que se digite el nombre para
+   borrarla y es excelente check de intencionalidad del usuario".
+
+   Tenia razon en las dos mitades. Era excelente, y no era parejo: borrar una
+   percha —que se lleva TODOS sus productos por delante— salia con dos toques
+   en un dialogo generico, el mismo que confirma cualquier cosa inofensiva. Un
+   toque de mas no es una barrera; escribir el nombre si, porque obliga a mirar
+   QUE se esta borrando antes de borrarlo.
+
+   Ahora esto es la unica forma de borrar algo irreversible en la app, y no
+   depende de acordarse: el boton nace apagado y solo se enciende cuando lo
+   tecleado calza. Se compara sin acentos, sin mayusculas y sin espacios de
+   sobra — la intencion es que la persona lea el nombre, no que pelee con la
+   dieresis de su teclado.
+   =========================================================================== */
+function ocConfirmEscribiendo(mensaje, nombreExacto, opts) {
+  opts = opts || {};
+  const objetivo = String(nombreExacto == null ? "" : nombreExacto).trim();
+  // Sin un nombre que teclear no hay reto posible: se cae al confirm normal en
+  // vez de dejar pasar el borrado sin ninguna comprobacion.
+  if (!objetivo) return ocConfirm(mensaje, { danger: true });
+
+  const norm = (x) => String(x || "").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
+
+  return new Promise((resolve) => {
+    const overlay = document.getElementById("oc-modal-overlay");
+    const msgEl = document.getElementById("oc-modal-msg");
+    const botonesEl = document.getElementById("oc-modal-botones");
+    msgEl.textContent = mensaje;
+
+    const reto = document.createElement("div");
+    reto.style.cssText = "margin:14px 0 4px;";
+    reto.innerHTML =
+      '<label style="display:block;font-size:14px;font-weight:700;color:var(--ink,#211c14);">' +
+      'Para confirmar, escribe: <code style="background:var(--paper-deep,#E2E8ED);padding:2px 6px;border-radius:4px;">' +
+      escHtml(objetivo) + "</code></label>" +
+      '<input id="oc-reto-txt" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" ' +
+      'data-no-borrador="1" style="width:100%;padding:10px;margin-top:8px;border:2px solid var(--rojo,#a3392a);border-radius:4px;font-size:16px;">';
+    msgEl.insertAdjacentElement("afterend", reto);
+
+    botonesEl.innerHTML = "";
+    const limpiar = () => { try { reto.remove(); } catch (_) {} overlay.style.display = "none"; };
+
+    const bCancelar = document.createElement("button");
+    bCancelar.textContent = opts.cancelLabel || "Cancelar";
+    bCancelar.addEventListener("click", () => { limpiar(); resolve(false); });
+
+    const bBorrar = document.createElement("button");
+    bBorrar.textContent = opts.confirmLabel || "Borrar definitivamente";
+    bBorrar.disabled = true;
+    bBorrar.style.cssText = "border-color:var(--rojo,#a3392a);color:var(--rojo,#a3392a);opacity:0.45;cursor:not-allowed;";
+    bBorrar.addEventListener("click", () => {
+      if (bBorrar.disabled) return;
+      limpiar(); resolve(true);
+    });
+
+    botonesEl.appendChild(bCancelar);
+    botonesEl.appendChild(bBorrar);
+
+    const inp = reto.querySelector("#oc-reto-txt");
+    const revisar = () => {
+      const ok = norm(inp.value) === norm(objetivo);
+      bBorrar.disabled = !ok;
+      bBorrar.style.opacity = ok ? "1" : "0.45";
+      bBorrar.style.cursor = ok ? "pointer" : "not-allowed";
+    };
+    inp.addEventListener("input", revisar);
+    inp.addEventListener("keydown", (e) => { if (e.key === "Enter" && !bBorrar.disabled) bBorrar.click(); });
+
+    overlay.style.display = "flex";
+    setTimeout(() => { try { inp.focus(); } catch (_) {} }, 60);
+  });
 }
 </script>
 
