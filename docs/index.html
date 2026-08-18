@@ -5599,6 +5599,54 @@ async function cargarComisiones(){
       </details>`;
   }
 
+  /* =========================================================================
+     CORREGIR EL PORCENTAJE EN RETROSPECTIVA
+     =========================================================================
+     JFC 2026-08-18: "Editar comisiones en retrospectiva, por ejemplo editar el
+     porcentaje que se puso mal!".
+
+     El % se congelaba al vender. Si estaba mal configurado —que pasa: es un
+     numero que se teclea una vez y se usa cien veces— la unica salida era
+     anular ventas reales para rehacerlas, o sea ensuciar el historial para
+     arreglar un dato.
+
+     Se piden las DOS lecturas del mismo reparto porque la gente piensa de las
+     dos formas y ninguna es mas correcta: la promotora dice "me llevo el 10",
+     la galeria dice "retengo el 15" y el artista se lleva 85. Se escribe la que
+     se tenga en la cabeza y la otra se calcula sola.
+     ========================================================================= */
+  function editorComisionHtml(f){
+    if (!f.ventasBrutas) return "";   // sin ventas no hay nada que corregir
+    const uid = f.ubicacionId.replace(/[^a-z0-9]/gi, "");
+    const actual = f.pctEfectivo != null ? f.pctEfectivo : f.pctBase;
+    return `
+      <details style="margin-top:10px;">
+        <summary style="font-size:14px;font-weight:700;cursor:pointer;color:var(--rust,#E86040);user-select:none;">¿El porcentaje quedó mal? Corrígelo →</summary>
+        <div style="padding:10px 0 4px;">
+          <p style="font-size:13px;color:var(--ink-soft);margin:0 0 8px;">Recalcula el reparto de las ventas de este mes en esta percha. La venta, el producto y el stock no se tocan — solo el reparto. Queda constancia de qué decía antes.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <label style="font-size:13px;flex:1;min-width:120px;">Se lleva el/la asociado/a (%)<br>
+              <input type="number" id="cor-aso-${uid}" min="0" max="100" step="0.5" value="${actual}" data-no-borrador="1"
+                style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
+            <label style="font-size:13px;flex:1;min-width:120px;">Queda en la casa (%)<br>
+              <input type="number" id="cor-casa-${uid}" min="0" max="100" step="0.5" value="${(100 - actual).toFixed(2).replace(/\.?0+$/, "")}" data-no-borrador="1"
+                style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
+          </div>
+          <label style="display:block;font-size:13px;margin-top:8px;">Por qué se corrige (queda guardado)<br>
+            <input type="text" id="cor-mot-${uid}" maxlength="200" placeholder="Ej: el trato era 85/15, se tecleó al revés" data-no-borrador="1"
+              style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;">
+            <input type="checkbox" id="cor-todas-${uid}" style="width:18px;height:18px;">
+            Corregir también las que ya marqué como pagadas este mes</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+            <button type="button" data-corregir="${escHtml(f.ubicacionId)}" data-uid="${uid}" data-nombre="${escHtml(f.ubicacion)}"
+              style="font-size:14px;padding:8px 14px;border-color:var(--rust,#E86040);color:var(--rust,#E86040);">Aplicar corrección</button>
+          </div>
+          <p id="cor-msg-${uid}" style="font-size:13px;font-weight:700;margin:8px 0 0;"></p>
+        </div>
+      </details>`;
+  }
+
   const cardsHtml = filas.map(f => {
     const dormida = (f.diasSinVenta != null && f.diasSinVenta >= 7)
       ? `<span class="badge-estado rojo" style="font-size:14px;">dormida ${f.diasSinVenta}d</span>` : "";
@@ -5612,9 +5660,11 @@ async function cargarComisiones(){
       <table style="width:100%;margin-top:10px;font-size:14px;">
         <tr><td>Ventas del mes</td><td style="text-align:right;">${fmtMoney(f.ventasBrutas)}</td></tr>
         ${f.contribFija > 0 ? `<tr><td>Contrib. fija</td><td style="text-align:right;">−${fmtMoney(f.contribFija)}</td></tr>` : ""}
-        <tr><td><strong>Comisión de la asociado/a</strong></td><td style="text-align:right;"><strong>${fmtMoney(f.comisionSocio)}</strong></td></tr>
-        <tr><td>Neto para el dueño</td><td style="text-align:right;">${fmtMoney(f.netoDueno)}</td></tr>
+        <tr><td><strong>Se lleva el/la asociado/a</strong> <span style="color:var(--ink-soft);font-weight:400;">(${f.pctEfectivo != null ? f.pctEfectivo : f.pctBase}%)</span></td><td style="text-align:right;"><strong>${fmtMoney(f.comisionSocio)}</strong></td></tr>
+        <tr><td>Queda en la casa <span style="color:var(--ink-soft);">(${f.pctEfectivo != null ? (100 - f.pctEfectivo).toFixed(2).replace(/\.00$/, "") : f.pctQuedaEnCasa}%)</span></td><td style="text-align:right;">${fmtMoney(f.netoDueno)}</td></tr>
       </table>
+      ${f.ventasCorregidas ? `<p style="font-size:13px;color:var(--rust,#E86040);font-weight:700;margin:6px 0 0;">${f.ventasCorregidas} venta(s) de este mes tienen el porcentaje corregido a mano.</p>` : ""}
+      ${editorComisionHtml(f)}
       ${f.contribFijaSuperaVentas ? `<p style="font-size:14px;font-weight:700;color:#B0183E;margin:8px 0 0;">El aporte fijo ($${f.contribFija}) supera las ventas del mes — revisa el monto o el período.</p>` : ""}
       ${(f.detallePendientes && f.detallePendientes.length) ? `
       <details style="margin-top:8px;">
@@ -5633,6 +5683,71 @@ async function cargarComisiones(){
   cont.querySelectorAll("[data-abrir-promotora]").forEach(btn => btn.addEventListener("click", () => {
     abrirEditorComisionista(btn.dataset.abrirPromotora, null);
   }));
+
+  /* Los dos campos del reparto son el MISMO numero visto al reves. Se espejan
+     mientras se escribe para que nadie tenga que restar de 100 ni pueda dejar
+     un reparto que no suma. Se escribe en el que se tenga en la cabeza. */
+  cont.querySelectorAll("[data-corregir]").forEach(btn => {
+    const uid = btn.dataset.uid;
+    const inAso = document.getElementById(`cor-aso-${uid}`);
+    const inCasa = document.getElementById(`cor-casa-${uid}`);
+    const msg = document.getElementById(`cor-msg-${uid}`);
+    const limpio = (n) => Math.round(Math.max(0, Math.min(100, n)) * 100) / 100;
+    if (inAso && inCasa) {
+      let espejando = false;   // sin esto, cada uno reescribe al otro sin parar
+      const espejo = (origen, destino) => origen.addEventListener("input", () => {
+        if (espejando) return;
+        const n = Number(origen.value);
+        if (!Number.isFinite(n)) return;
+        espejando = true;
+        destino.value = String(limpio(100 - limpio(n)));
+        espejando = false;
+      });
+      espejo(inAso, inCasa);
+      espejo(inCasa, inAso);
+    }
+    btn.addEventListener("click", async () => {
+      const pct = Number(inAso ? inAso.value : NaN);
+      if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+        msg.style.color = "var(--rojo)"; msg.textContent = "El porcentaje va entre 0 y 100.";
+        return;
+      }
+      const motivo = (document.getElementById(`cor-mot-${uid}`) || {}).value || "";
+      const incluirPagadas = !!(document.getElementById(`cor-todas-${uid}`) || {}).checked;
+      /* Cambiar plata que ya se repartio no puede salir de un toque distraido:
+         se dice en numeros que va a pasar y se confirma. */
+      if (!(await ocConfirm(
+        `Las ventas de este mes en "${btn.dataset.nombre}" van a repartirse ` +
+        `${pct}% para el/la asociado/a y ${(100 - pct).toFixed(2).replace(/\.?0+$/, "")}% para la casa.` +
+        (incluirPagadas ? "\n\nIncluye las que ya marcaste como pagadas." : "\n\nSolo las que aún no has pagado.") +
+        "\n\nQueda constancia de lo que decían antes."))) return;
+      btn.disabled = true;
+      msg.style.color = "var(--ink-soft)"; msg.textContent = "Corrigiendo…";
+      let res, data;
+      try {
+        res = await fetch(`${API}/ubicaciones/${btn.dataset.corregir}/comisiones-del-mes`, {
+          method: "PATCH", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comisionPct: pct, motivo: motivo,
+            quien: (window.OCAuth && window.OCAuth.rolActual) ? window.OCAuth.rolActual() : "",
+            soloPendientes: !incluirPagadas }),
+        });
+        data = await res.json();
+      } catch (err) {
+        console.error("[corregirComision]", err);
+        btn.disabled = false;
+        msg.style.color = "var(--rojo)"; msg.textContent = "No se pudo conectar. NADA se cambió.";
+        return;
+      }
+      if (!res.ok) {
+        btn.disabled = false;
+        msg.style.color = "var(--rojo)"; msg.textContent = data.error || "No se pudo corregir.";
+        return;
+      }
+      msg.style.color = "var(--verde,#2f7a4f)";
+      msg.textContent = `Listo: ${data.corregidas} venta(s) corregida(s).`;
+      setTimeout(() => cargarComisiones(), 900);
+    });
+  });
 
   // Animar termómetros después de que el HTML esté en el DOM.
   requestAnimationFrame(() => {
