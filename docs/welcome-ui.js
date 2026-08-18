@@ -173,7 +173,7 @@ function quizasMostrar(){
 window.OCWelcome={abrir:()=>modal.classList.add("abierto")};
 
 window.addEventListener("oc-login",(e)=>{
-  // Solo mostrar al dueño (no al empleado, contador ni demo)
+  // Solo mostrar al dueño (no al encargado, contador ni demo)
   if(!e.detail||e.detail.rol!=="dueno"||e.detail.demo)return;
   const gate=document.getElementById("oc-gate");
   if(gate&&gate.style.display!=="none")return;

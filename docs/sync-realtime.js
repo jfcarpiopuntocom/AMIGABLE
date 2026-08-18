@@ -1,6 +1,6 @@
 // AMIGABLE — Cliente de sincronizacion en tiempo real (2026-07-23)
 // ============================================================================
-// QUE HACE: en cuanto el dueño se licencia (automatico) o un empleado escribe
+// QUE HACE: en cuanto el dueño se licencia (automatico) o un encargado escribe
 // UNA vez el codigo del negocio ("Unirme a mi equipo"), este dispositivo
 // queda sincronizado 24/7 PARA SIEMPRE — no es un modo evento que se prende
 // y apaga. Las VENTAS, AJUSTES, ANULACIONES y TRANSFERENCIAS de stock hechas
@@ -416,17 +416,26 @@
     /* Rutas verificadas contra mock-backend.js: el resumen se llama
        /api/dashboard, y /api/ventas/todas se agrego para el tablero (solo
        lectura, ya enriquecida con nombres). */
-    const [productos, clientes, ventas, resumen] = await Promise.all([
+    /* liquidaciones y perchas se suman para las pestanias de Comisiones y
+       Eventos del tablero (JFC 2026-08-18). Son las dos tablas mas chicas de
+       todas y evitan que el tablero tenga que rehacer la cuenta del reparto por
+       su cuenta — que es como dos pantallas terminan mostrando dos numeros
+       distintos del mismo negocio. */
+    const [productos, clientes, ventas, resumen, liquidaciones, perchas] = await Promise.all([
       get("/productos?ubicacionId=todas"),
       get("/clientes"),
       get("/ventas/todas?ubicacionId=todas"),
       get("/dashboard?ubicacionId=todas"),
+      get("/liquidaciones"),
+      get("/ubicaciones?todas=1"),
     ]);
     return {
       productos: productos || [],
       clientes: Array.isArray(clientes) ? clientes : [],
       ventas: ventas || [],
       resumen: resumen || null,
+      liquidaciones: Array.isArray(liquidaciones) ? liquidaciones : [],
+      perchas: Array.isArray(perchas) ? perchas : [],
       negocio: (function () {
         try { return (JSON.parse(localStorage.getItem("amigable_owned") || "null") || {}).nombreNegocio || ""; }
         catch (_) { return ""; }
@@ -462,6 +471,8 @@
       .concat(trocear("productos", foto.productos))
       .concat(trocear("clientes", foto.clientes))
       .concat(trocear("ventas", foto.ventas))
+      .concat(trocear("liquidaciones", foto.liquidaciones))
+      .concat(trocear("perchas", foto.perchas))
       .concat([{ tabla: "resumen", i: 0, total: 1, filas: [foto.resumen || {}] }]);
     for (let k = 0; k < trozos.length; k++) {
       if (!ws || ws.readyState !== WebSocket.OPEN) return;
@@ -480,11 +491,11 @@
 
      Por que asi y no reimplementando Avanzado dentro de tablero.html: la
      logica de negocio vive en un solo sitio. Si manana cambia como se agrega
-     un empleado, cambia en mock-backend.js y el tablero se entera solo. Dos
+     un encargado, cambia en mock-backend.js y el tablero se entera solo. Dos
      implementaciones de la misma regla es como se rompen los negocios.
      ========================================================================== */
   /* Verifica el PIN que llego del tablero y contesta SOLO el rol, nunca nada
-     mas. Un PIN de empleado o de contador no abre el tablero: ese es el punto.
+     mas. Un PIN de encargado o de contador no abre el tablero: ese es el punto.
      El PIN viaja cifrado con la clave de sala, igual que todo lo demas. */
   async function responderPin(op) {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;

@@ -33,7 +33,7 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
-  var ROL = { dueno: "Dueño", admin: "Admin", empleado: "Empleado", contador: "Contador" };
+  var ROL = { dueno: "Dueño", admin: "Admin", empleado: "Encargado", contador: "Contador" };
   function comoSeLlama(m) {
     /* El apodo manda; si no hay, el rol; si tampoco, el id corto. Nunca el
        PIN: el PIN no se enseña, se teclea. */

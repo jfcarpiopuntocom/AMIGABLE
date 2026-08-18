@@ -364,7 +364,7 @@
 
   function montarPanel(mount) {
     if (!mount) return;
-    // Solo para el dueno real. Un empleado no debe poder restaurar el negocio a
+    // Solo para el dueno real. Un encargado no debe poder restaurar el negocio a
     // un punto anterior, y en demo no hay nada real que proteger.
     try {
       var rol = (global.OCAuth && global.OCAuth.rolActual) ? String(global.OCAuth.rolActual() || "") : "";

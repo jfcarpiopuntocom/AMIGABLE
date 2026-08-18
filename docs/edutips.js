@@ -89,7 +89,7 @@
       c: "El reporte contable sale en un archivo que abre en Excel. Mandarle eso en vez de fotos del cuaderno le ahorra a el horas y a ti la factura de esas horas." },
 
     { t: "Las fotos de producto valen mas que el nombre",
-      c: "Una tarjeta con foto se reconoce sin leer. Si tienes empleados nuevos o productos parecidos entre si, poner las fotos es la hora mejor invertida de la semana." },
+      c: "Una tarjeta con foto se reconoce sin leer. Si tienes encargados nuevos o productos parecidos entre si, poner las fotos es la hora mejor invertida de la semana." },
 
     { t: "Productos que son casi el mismo",
       c: "Si vendes lo mismo en variantes que solo cambian por dentro, agrupalos por familia con un codigo comun. Se ven juntos y dejas de confundirlos al vender." },

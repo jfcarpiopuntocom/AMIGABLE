@@ -125,7 +125,7 @@
       Hacer el tutorial guiado
     </button>
   `;const AYUDA_EMPLEADO=`
-    <span class="rolTag">Guía del empleado/a</span>
+    <span class="rolTag">Guía del encargado/a</span>
     <h3>Los colores te dicen qué pasa</h3>
     <ul>
       <li><b style="color:#00C87A;">Verde</b>: bien. <b style="color:#E8A020;">Dorado</b>: hay dinero ahí. <b style="color:#F97316;">Naranja</b>: avisa al dueño pronto. <b style="color:#E8365D;">Rojo</b>: avisa ya.</li>

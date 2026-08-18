@@ -9,7 +9,7 @@
    CÓMO FUNCIONA, y esto es lo importante: el tablero NO tiene backend y NO
    reimplementa ni una regla de negocio. Manda una ORDEN cifrada y el
    dispositivo del dueño la ejecuta contra su propio /api y devuelve el
-   resultado. Si mañana cambia cómo se agrega un empleado, cambia en
+   resultado. Si mañana cambia cómo se agrega un encargado, cambia en
    mock-backend.js y esta pantalla se entera sola. Dos implementaciones de la
    misma regla es como se rompen los negocios.
 
@@ -34,7 +34,7 @@
 
   var $ = L.$, esc = L.esc, money = L.money, fecha = L.fecha, ordenar = L.ordenar;
 
-  var ROLNOM = { dueno: "Dueño", admin: "Admin", empleado: "Empleado", contador: "Contador" };
+  var ROLNOM = { dueno: "Dueño", admin: "Admin", empleado: "Encargado", contador: "Contador" };
 
   /* El detalle de un movimiento a veces es texto y a veces un objeto con los
      campos que cambiaron. Pintarlo crudo daba "[object Object]" en pantalla. */
@@ -130,7 +130,7 @@
           '<div><label for="avz-nom" style="display:block;font-size:14px;font-weight:700;margin:0 0 4px;">Nombre</label>' +
           '<input id="avz-nom" type="text" maxlength="40" style="' + campo + '"></div>' +
           '<div><label for="avz-rol" style="display:block;font-size:14px;font-weight:700;margin:0 0 4px;">Rol</label>' +
-          '<select id="avz-rol" style="' + campo + '"><option value="empleado">Empleado</option>' +
+          '<select id="avz-rol" style="' + campo + '"><option value="empleado">Encargado</option>' +
           '<option value="admin">Admin</option></select></div>' +
           '<button type="button" id="avz-add" class="btn" style="width:auto;margin:0;padding:13px 22px;">Agregar</button>' +
           "</div>" +
