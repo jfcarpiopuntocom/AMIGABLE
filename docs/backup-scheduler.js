@@ -414,7 +414,7 @@
   // respaldo o assurance. Nunca es bloqueante.
   //
   // FIX PREVENTIVO: el dueño puede loguearse y ceder el dispositivo a un
-  // empleado DENTRO de los 4s de este delay (pasa seguido en mostrador). Por
+  // encargado DENTRO de los 4s de este delay (pasa seguido en mostrador). Por
   // eso el rol se revalida DOS VECES: aquí al programar el timeout, y otra
   // vez justo antes de pintar cada popup — nunca confiar en una sola
   // lectura de rol tomada segundos antes de usarla.

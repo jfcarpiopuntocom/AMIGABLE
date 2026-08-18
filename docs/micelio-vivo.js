@@ -26,7 +26,7 @@
      al día    — habló hace poco. Todo bien.
      rezagado  — lleva un rato callado. Casi siempre es el wifi. No es grave.
      a ciegas  — lleva mucho. Ese dispositivo puede estar vendiendo duplicado.
-   Dos estados no alcanzan: un empleado que cerró la app al terminar su turno
+   Dos estados no alcanzan: un encargado que cerró la app al terminar su turno
    se vería igual de rojo que uno que lleva la mañana entera ciego, y una
    alarma que suena siempre deja de ser una alarma.
 
@@ -281,7 +281,7 @@
       }
       previo.yo = mio;
     }
-    /* El dueño y el admin además vigilan al equipo. Un empleado no recibe
+    /* El dueño y el admin además vigilan al equipo. Un encargado no recibe
        avisos de los demás: no es su trabajo perseguir a nadie. */
     var rol = rolActual();
     if (rol === "dueno" || rol === "admin") {

@@ -5,7 +5,7 @@
    se entera: todo va en try/catch y el mount es aditivo.
 
    FEATURE EXPERIMENTAL (JFC, 2026-07-22): encendida por DEFECTO desde el
-   primer login del empleado. El dueño puede apagarla en Avanzado — solo un
+   primer login del encargado. El dueño puede apagarla en Avanzado — solo un
    "0" explícito la desactiva. Apagada = no se engancha nada (ni el fetch, ni
    el botón de nav).
 
@@ -23,7 +23,7 @@
   var ZONA = "America/Guayaquil";
 
   // DEFAULT ON (JFC, 2026-07-22): antes apagado por defecto, ahora encendido
-  // para que el empleado vea Novedades desde el primer login. El dueño puede
+  // para que el encargado vea Novedades desde el primer login. El dueño puede
   // apagarla en Avanzado — solo un "0" explícito la desactiva.
   function on() {
     try { var v = localStorage.getItem(LS_ON); return v === null || v === "1"; } catch (_) { return true; }
@@ -305,11 +305,11 @@
     card.className = "tag-card";
     card.style.cssText = "text-align:left;margin-top:22px;";
     card.innerHTML =
-      '<h3 class="seccion" style="margin-top:0;">Motivación del empleado</h3>' +
-      '<p style="font-size:14px;color:var(--ink-soft,#5d5340);margin-top:0;">Le agrega a tus empleados un panel propio de "Novedades": racha de uso, puntos e insignias por buenos hábitos del turno (ventas, fotos de percha, transferencias). No compite entre empleados, no sale del dispositivo, no afecta ningún dato de negocio.</p>' +
+      '<h3 class="seccion" style="margin-top:0;">Motivación del encargado</h3>' +
+      '<p style="font-size:14px;color:var(--ink-soft,#5d5340);margin-top:0;">Le agrega a tus encargados un panel propio de "Novedades": racha de uso, puntos e insignias por buenos hábitos del turno (ventas, fotos de percha, transferencias). No compite entre encargados, no sale del dispositivo, no afecta ningún dato de negocio.</p>' +
       '<label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;cursor:pointer;">' +
         '<input type="checkbox" id="oc-nov-toggle" style="width:20px;height:20px;">' +
-        'Activar logros y racha para empleados' +
+        'Activar logros y racha para encargados' +
       '</label>';
     vista.appendChild(card);
     var chk = document.getElementById("oc-nov-toggle");
@@ -326,7 +326,7 @@
     montarSeccion();
     montarNav();
     // render() LAZY: el click del botón ya llama render(). Llamarlo aquí haría
-    // 2 fetches (dashboard + productos) en cada login aunque el empleado nunca
+    // 2 fetches (dashboard + productos) en cada login aunque el encargado nunca
     // abra Novedades. La sección queda vacía pero oculta — sin costo hasta que
     // se necesite.
   }

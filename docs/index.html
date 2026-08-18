@@ -61,6 +61,7 @@
      OC_PB_URL). Por defecto todo corre local: mock-backend.js en la demo
      estática, o server.js real en el servidor local del negocio. -->
 <script src="./pocketbase-client.js"></script>
+<script src="./estado-idb.js"></script>
 <script src="./mock-backend.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -1437,10 +1438,10 @@
     <h3 class="seccion">Alertas de hoy</h3>
     <ul class="lista-alertas" id="listaAlertas"></ul>
     <!-- Para impulsar hoy: productos estrella (el dueño los marca en Inventario).
-         Visible para TODOS, sobre todo para el empleado. Debajo de Alertas. -->
+         Visible para TODOS, sobre todo para el encargado. Debajo de Alertas. -->
     <div id="estrellaHoy"></div>
     <!-- Mood/flavor del día (12 posibles), SOLO dueño (clase fin-dueno la oculta
-         al empleado en cargarHoy). Va al fondo, debajo de todo. -->
+         al encargado en cargarHoy). Va al fondo, debajo de todo. -->
     <div id="moodHoy" class="fin-dueno"></div>
   </section>
 
@@ -1583,7 +1584,7 @@
           <label style="flex:1;min-width:140px;font-size:14px;">Cantidad pagado<br>
             <input id="resCantidadPagada" type="number" min="0" step="0.01" placeholder="$" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
           <label style="flex:1;min-width:180px;font-size:14px;">Nombre de quien recibió la plata<br>
-            <input id="resQuienRecibio" type="text" placeholder="Empleado/a" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
+            <input id="resQuienRecibio" type="text" placeholder="Encargado/a" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;"></label>
         </div>
         <label style="display:block;margin-top:8px;font-size:14px;">Notas<br>
           <textarea id="resNotas" placeholder="Cualquier detalle adicional" style="width:100%;padding:8px;border:2px solid var(--rust);border-radius:4px;min-height:44px;font-family:inherit;"></textarea></label>
@@ -1703,7 +1704,7 @@
 
   <!-- VISTA: COMISIONES (solo dueño) -->
   <!-- VISTA: CLIENTES (JFC 2026-07-07) — codigo unico + estaciones RFM.
-       El empleado ve la lista y puede registrar clientes; los montos y la
+       El encargado ve la lista y puede registrar clientes; los montos y la
        matriz de estaciones son SOLO del dueno (cargarClientes aplica el rol). -->
   <section id="vista-clientes" class="vista">
     <h3 class="seccion" style="margin-top:0;">Mis Clientes</h3>
@@ -1755,8 +1756,8 @@
     <div id="matrizClientes" style="margin-top:10px;"></div>
 
     <!-- Importar CSV de clientes (JFC 2026-07-07): SOLO dueno, al fondo fondo.
-         cargarClientes() lo muestra/oculta segun rol. El empleado JAMAS lo ve:
-         para el empleado solo existe el alta manual de arriba. -->
+         cargarClientes() lo muestra/oculta segun rol. El encargado JAMAS lo ve:
+         para el encargado solo existe el alta manual de arriba. -->
     <details id="cliImportarBloque" style="display:none;margin-top:34px;padding-top:16px;border-top:2px solid var(--linea,#D7E0E8);">
       <summary style="cursor:pointer;font-size:14px;font-weight:700;color:var(--ink-soft);list-style:none;">▸ Importar cartera desde un archivo (opcional)</summary>
       <div style="margin-top:10px;">
@@ -1769,12 +1770,12 @@
 
   <section id="vista-comisiones" class="vista">
     <h3 class="seccion" style="margin-top:0;">Comisiones</h3>
-    <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Lo que le debes a cada promotor/a este mes, calculado venta por venta — sin Excel, sin sorpresas.</p>
+    <p style="font-size:14px;color:var(--ink-soft);margin-top:0;">Lo que le debes a cada asociado/a este mes, calculado venta por venta — sin Excel, sin sorpresas.</p>
     <details style="margin:-4px 0 12px;font-size:14px;">
       <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
       <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:4px;border:1px solid var(--azul-suave,#dde5ec);">
         <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Cada percha con socio/consignación acumula su comisión automáticamente, venta por venta.</p>
-        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Marca "pagado" cuando le entregues el dinero al promotor/a — queda en cero para el próximo mes.</p>
+        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. Marca "pagado" cuando le entregues el dinero al asociado/a — queda en cero para el próximo mes.</p>
         <p style="margin:0;font-size:14px;color:var(--ink);">3. Puedes enviar el detalle por WhatsApp para que el socio concilie exactamente qué ventas cubre el pago.</p>
       </div>
     </details>
@@ -1843,7 +1844,7 @@
     <div class="tabla-wrap"><table class="reporte" id="tablaValorizado"></table></div>
 
     <!-- PUNTOS DE RETORNO (micelio Fase B, 2026-07-28). Lo pinta
-         reconciliacion.js; se autolimita al dueno real (vacio para empleado y
+         reconciliacion.js; se autolimita al dueno real (vacio para encargado y
          para demo). Ver docs/reconciliacion.js: compara pero NUNCA corrige. -->
     <div id="oc-reconciliacion-mount"></div>
 
@@ -1915,7 +1916,7 @@ function fmtMoney(n){
 // tarjetas exclusivas del dueno (fin-dueno: Entro/Salio/Ganancia/Inventario/mood)
 // se muestren segun el rol RECIEN conocido. Antes, cargarHoy() corria una sola
 // vez al cargar (rol aun null -> se ocultaban) y para el dueno nunca se repetia,
-// asi que el dueno veia lo mismo que un empleado. Idempotente y barato.
+// asi que el dueno veia lo mismo que un encargado. Idempotente y barato.
 window.addEventListener("oc-login", function () {
   try { if (typeof cargarHoy === "function") cargarHoy(); } catch (_) {}
 });
@@ -2381,7 +2382,7 @@ function tarjetaCliente(c, esDueno, ctx) {
   // idea es que el cliente nunca vuelva a re-teclear lo que ya escribió antes.
   // Privacidad por rol (auditoria Hugo/Paco/Luis, JFC 2026-07-29): contacto,
   // notas e historial de eventos/montos son datos del cliente que el
-  // empleado no necesita ver completos para hacer su trabajo — mismo
+  // encargado no necesita ver completos para hacer su trabajo — mismo
   // criterio que ya aplicaba "dato" (compras/monto) unas lineas arriba,
   // ahora extendido a telefono/email/notas/eventos.
   const contactoPartes = [];
@@ -2404,7 +2405,7 @@ function tarjetaCliente(c, esDueno, ctx) {
   const editKey = "cliedit-" + c.id;
   const panelEditAbierto = window.OCClienteEditOpen && window.OCClienteEditOpen.has(editKey);
   const btnEditar = `<button onclick="toggleEditarContacto('${editKey}')" style="margin-top:8px;font-size:14px;padding:4px 12px;background:#F4F7FA;border:1.5px solid var(--azul-medio,#2E6278);border-radius:4px;color:#1E4258 !important;-webkit-text-fill-color:#1E4258 !important;cursor:pointer;">Editar contacto ✎</button>`;
-  // Privacidad (auditoria Hugo/Paco/Luis, 2026-07-29): para empleado/contador
+  // Privacidad (auditoria Hugo/Paco/Luis, 2026-07-29): para encargado/contador
   // el panel de edicion NO trae precargado telefono/email/notas — verlos
   // aqui seria el mismo leak que ya se cerro en la tarjeta, solo que via el
   // formulario de edicion. Se omiten los campos por completo (en vez de
@@ -2469,7 +2470,7 @@ function tarjetaCliente(c, esDueno, ctx) {
       </div>${campoHora}
     </div>` : "";
   /* Fiado / abono. Solo el dueno registra movimientos de cartera: un
-     empleado puede vender, pero no decidir a quien se le fia. */
+     encargado puede vender, pero no decidir a quien se le fia. */
   const btnFiar = esDueno
     ? `<button class="btn-mini" style="background:#E8A020;color:#0F1923;"
         onclick="fiarCliente('${c.id}','${escHtml(c.nombre)}')">Fiar / abonar</button>` : "";
@@ -2506,7 +2507,7 @@ function toggleEditarContacto(key) {
   renderListaViva(buscarEl ? buscarEl.value : "");
 }
 async function guardarContactoCliente(id) {
-  // Empleado/contador no tienen los campos de telefono/email/notas en el
+  // Encargado/contador no tienen los campos de telefono/email/notas en el
   // DOM (panel de edicion recortado por privacidad) — solo se manda lo que
   // exista, para no pisar con "" un dato que esta persona ni siquiera vio.
   const nombreEl = document.getElementById(`oc-edit-nombre-${id}`);
@@ -2627,7 +2628,7 @@ function renderListaViva(query){
   const esDueno = rolCli === "dueno" || rolCli === "admin";
   pintarBotonesOrdenCliente();
   const q = normalizarTexto(query || "");
-  // Modo restringido (auditoria Hugo/Paco/Luis, JFC 2026-07-29): el empleado
+  // Modo restringido (auditoria Hugo/Paco/Luis, JFC 2026-07-29): el encargado
   // no ve NADA hasta buscar algo real, y el resultado se capa — nunca puede
   // hojear la cartera completa de un tiron. No es "seguridad dura" (esta
   // app no tiene servidor que la imponga): es friccion deliberada y
@@ -2747,7 +2748,7 @@ async function cargarClientes(){
       mc.innerHTML = (typeof htmlComportamiento === "string" ? htmlComportamiento : "") + htmlEstaciones;
   }
   poblarSelectClientes(grupos);
-  // Importar CSV: solo el dueno lo ve (regla JFC). El empleado se queda con el
+  // Importar CSV: solo el dueno lo ve (regla JFC). El encargado se queda con el
   // alta manual de arriba.
   const importBloque = document.getElementById("cliImportarBloque");
   if (importBloque) {
@@ -2813,7 +2814,7 @@ function parsearCSV(texto){
   return filas;
 }
 // Importacion de clientes por CSV — SOLO dueno (el bloque ni se muestra al
-// empleado). Toda la validacion pesada ocurre tambien en el mock; aqui se
+// encargado). Toda la validacion pesada ocurre tambien en el mock; aqui se
 // filtra lo obvio para dar feedback rapido y no mandar basura.
 function inicializarImportCSV(){
   const inp = document.getElementById("cliCsvFile");
@@ -3029,7 +3030,7 @@ async function cargarHoy(){
   document.getElementById("heroTitulo").textContent = titulos[data.semaforoGeneral] || "Tu negocio hoy";
   // Plata del negocio (ganancia/entra/sale/inventario): dueño Y admin (admin
   // es co-dueño, no personal — mismo criterio ya documentado en el panel de
-  // Equipo). El empleado sigue sin verla — solo el conteo de ventas.
+  // Equipo). El encargado sigue sin verla — solo el conteo de ventas.
   const rolHoyAhora = window.OCAuth && window.OCAuth.rolActual ? window.OCAuth.rolActual() : "";
   const esDuenoHoy = rolHoyAhora === "dueno" || rolHoyAhora === "admin";
   document.getElementById("heroSubtitulo").innerHTML = esDuenoHoy
@@ -3055,7 +3056,7 @@ async function cargarHoy(){
     ).join("");
   }
 
-  // Para impulsar hoy: productos estrella de la percha actual (empleado los ve).
+  // Para impulsar hoy: productos estrella de la percha actual (encargado los ve).
   try {
     const prods = await fetch(`${API}/productos?ubicacionId=${ubicacionActual}`).then(r => r.json());
     const estrellas = (Array.isArray(prods) ? prods : []).filter(p => p.estrella);
@@ -3070,7 +3071,7 @@ async function cargarHoy(){
   } catch (_) { /* sin estrellas: el bloque queda vacío */ }
   // #16 (2026-07-28, corregido tras feedback de JFC — "no antes de TODO, solo
   // antes de Alertas de hoy, el semaforo 'Necesitas actuar hoy' se queda arriba"):
-  // en la vista del Empleado, "Para impulsar hoy" va justo ANTES de "Alertas
+  // en la vista del Encargado, "Para impulsar hoy" va justo ANTES de "Alertas
   // de hoy" (los urgentes rojo/naranja), pero DEBAJO del semaforo hero y de
   // las tarjetas de resumen — es un ajuste de orden acotado, no un rediseño.
   try {
@@ -3088,7 +3089,7 @@ async function cargarHoy(){
   } catch (_) { /* reorden es cosmetico — nunca debe romper el resto de Hoy */ }
 
   // Mood/flavor del día, SOLO dueño (moodHoy tiene clase fin-dueno, ya oculta al
-  // empleado arriba). Estable por día del año.
+  // encargado arriba). Estable por día del año.
   const mood = document.getElementById("moodHoy");
   if (mood && esDuenoHoy) {
     const ahora = new Date();
@@ -3388,7 +3389,7 @@ async function duplicarComoVariante(id) {
 
 async function cargarInventario(){
   // El "+" de alta libre es de dueño Y admin (admin es co-dueño); el
-  // empleado ni lo ve (dos capas). rolInvAhora se reusa mas abajo para
+  // encargado ni lo ve (dos capas). rolInvAhora se reusa mas abajo para
   // esDuenoInv, en vez de volver a llamar rolActual() por separado y
   // arriesgar que uno de los dos checks se quede desactualizado.
   const rolInvAhora = window.OCAuth && window.OCAuth.rolActual ? window.OCAuth.rolActual() : "";
@@ -3544,7 +3545,7 @@ async function cargarInventario(){
     btn.addEventListener("click", (ev) => { ev.stopPropagation(); abrirEdicionDesdeInventario(btn.dataset.editarDirecto); });
   });
 
-  // Estrella: dueño marca/desmarca productos para que el empleado los promueva
+  // Estrella: dueño marca/desmarca productos para que el encargado los promueva
   grid.querySelectorAll("[data-estrella-toggle]").forEach(btn => {
     btn.addEventListener("click", async () => {
       const id = btn.dataset.estrellaToggle;
@@ -3571,13 +3572,13 @@ async function cargarInventario(){
   }
 }
 
-// Escapa HTML — el log muestra "motivo" tecleado por el empleado (via prompt),
+// Escapa HTML — el log muestra "motivo" tecleado por el encargado (via prompt),
 // nunca debe insertarse crudo en innerHTML (riesgo de XSS almacenado).
 function escHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// Log de movimientos recientes — el dueño vigila ajustes del empleado
+// Log de movimientos recientes — el dueño vigila ajustes del encargado
 async function cargarLogAjustes(){
   // Microcirugia 5 (2026-07-08): fetch sin guard dejaba el log de ajustes en
   // blanco sin ningun aviso si /actividad fallaba.
@@ -3599,7 +3600,7 @@ async function cargarLogAjustes(){
     const extra = m.tipo === 'ajuste' ? ` (${m.detalle.delta > 0 ? '+' : ''}${m.detalle.delta}) — ${escHtml(m.detalle.motivo)}` : m.tipo === 'venta' ? ` × ${m.detalle.cantidad} = $${m.detalle.total}` : m.tipo === 'estrella' ? ` ${escHtml(m.detalle.accion)}` : '';
     // Atribución multi-usuario (2026-07-08): mostrar QUIÉN hizo el movimiento.
     // El dato ya viajaba en cada movimiento (mov() lo guarda); antes no se pintaba.
-    // "Sistema" (dueño por PIN clásico, sin empleado nombrado) no se muestra.
+    // "Sistema" (dueño por PIN clásico, sin encargado nombrado) no se muestra.
     const quien = (m.usuarioNombre && m.usuarioNombre !== 'Sistema')
       ? ` <span style="font-size:14px;font-weight:700;color:var(--azul-medio,#2c4a68);">· ${escHtml(m.usuarioNombre)}</span>` : '';
     return `<div style="padding:6px 0;border-bottom:1px solid var(--linea,#e0d6c0);font-size:14px;color:var(--ink);"><span>${icono}</span> <strong>${detalle}</strong>${extra}${quien} <span style="color:var(--ink-soft);margin-left:8px;">${fecha}</span></div>`;
@@ -3638,10 +3639,10 @@ function renderPerchaCard(u, sucursalesDisp, promotorasDisp) {
         <select data-percha-mover="${u.id}" style="font-size:14px;padding:4px 6px;border:1px solid var(--azul-medio);border-radius:4px;margin-left:4px;">
           <option value="">— Sin sucursal —</option>${optsS}
         </select></label>
-      <label style="font-size:14px;color:var(--ink-soft);">Promotor/a:
+      <label style="font-size:14px;color:var(--ink-soft);">Asociado/a:
         <select data-percha-promotor="${u.id}" style="font-size:14px;padding:4px 6px;border:1px solid var(--azul-medio);border-radius:4px;margin-left:4px;">
           <option value="">— Ninguno —</option>${(promotorasDisp||[]).map(pr => `<option value="${pr.id}"${u.promotoraId === pr.id ? ' selected' : ''}>${escHtml(pr.nombre)}</option>`).join('')}
-          <option value="__nuevo__">+ Nuevo/a promotor/a…</option>
+          <option value="__nuevo__">+ Nuevo/a asociado/a…</option>
         </select></label>
     </div>
   </div>`;
@@ -3763,7 +3764,7 @@ async function cargarPerchas(){
     const res = await fetch(`${API}/ubicaciones/${sel.dataset.perchaMover}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sucursalId }) });
     if (res.ok) cargarPerchas();
   }));
-  // Asignar promotor/a a la percha (alimenta el panel de fotos y comisiones)
+  // Asignar asociado/a a la percha (alimenta el panel de fotos y comisiones)
   grid.querySelectorAll('[data-percha-promotor]').forEach(sel => sel.addEventListener('change', async () => {
     if (sel.value === '__nuevo__') {
       const nombre = ((await promptSeguro('Nombre del nuevo/a comisionista:')) || '').trim();
@@ -4100,7 +4101,7 @@ function mostrarFormNuevoProducto(codigoEscaneado){
       <label style="display:block;margin-top:10px;font-size:14px;">Nombre<br>
         <input id="np-nombre" type="text" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Categoría<br>
-        <input id="np-categoria" type="text" placeholder="Ej: Licores" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
+        <input id="np-categoria" type="text" placeholder="Ej: Bar" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <!-- M5 (2026-08-14): variante interna. Texto LIBRE y no una lista
            cerrada, porque los chips del mercado cambian cada temporada y una
            lista obliga a tocar codigo cada vez que aparece uno nuevo.
@@ -4195,7 +4196,7 @@ async function crearProductoNuevo(codigoEscaneado){
 // ============================================================================
 // EDICION LIBRE DE LA FICHA (solo dueno). Todo editable: nombre, foto, precio,
 // proveedor, categoria y el CODIGO INTERNO — que NO cambia al renombrar: solo
-// cambia si el dueno lo digita de nuevo en su campo propio. El empleado NUNCA
+// cambia si el dueno lo digita de nuevo en su campo propio. El encargado NUNCA
 // ve estos botones (dos capas de management).
 // ============================================================================
 // === Blindaje anti-perdida de datos (#15, 2026-07-28) ===================
@@ -4506,7 +4507,7 @@ async function abrirAltaProducto(){
       <label style="display:block;margin-top:10px;font-size:14px;">Nombre<br>
         <input id="np-nombre" type="text" ${inp}></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Categoría<br>
-        <input id="np-categoria" type="text" placeholder="Ej: Licores" ${inp}></label>
+        <input id="np-categoria" type="text" placeholder="Ej: Bar" ${inp}></label>
       <!-- M5 (2026-08-14): variante interna. Texto LIBRE y no una lista
            cerrada, porque los chips del mercado cambian cada temporada y una
            lista obliga a tocar codigo cada vez que aparece uno nuevo.
@@ -4589,7 +4590,7 @@ let fichaTargetActual = "fichaResultado";
 function pintarFicha(p){
   const contenedor = document.getElementById(fichaTargetActual) || document.getElementById("fichaResultado");
   // Costo/margen y editar/eliminar: dueño Y admin (admin es co-dueño). El
-  // empleado no ve costo/margen ni puede editar/eliminar la ficha.
+  // encargado no ve costo/margen ni puede editar/eliminar la ficha.
   const rolFichaAhora = window.OCAuth && window.OCAuth.rolActual ? window.OCAuth.rolActual() : "";
   const esDuenoOAdminFicha = rolFichaAhora === "dueno" || rolFichaAhora === "admin";
   contenedor.innerHTML = `
@@ -5117,14 +5118,14 @@ async function cargarActividad(){
   }));
 }
 
-// --- GESTIÓN DE COMISIONISTAS (promotores/as): agregar y archivar ---
+// --- GESTIÓN DE COMISIONISTAS (asociados/as): agregar y archivar ---
 // Agregado JFC 2026-07-23: antes solo se podían ASIGNAR promotoras ya
 // existentes a una percha (Inventario → Perchas), pero no había forma de
 // darlas de alta ni de archivarlas desde la app. Este panel usa los mismos
 // endpoints que ya existían en el backend (POST /api/promotoras y
 // DELETE /api/promotoras/:id) — no toca nada del cálculo de comisiones.
 // Agregado JFC 2026-07-23 (parte 2): un/a comisionista puede venir de 3
-// fuentes distintas — (a) nombre libre por texto, (b) un empleado ya dado
+// fuentes distintas — (a) nombre libre por texto, (b) un encargado ya dado
 // de alta en Avanzado→Equipo (/api/usuarios), o (c) un proveedor/artista
 // que ya vende en consignación (nombre único derivado de productos con
 // tipoProveedor==="consignacion"). En los 3 casos el resultado final es el
@@ -5184,14 +5185,14 @@ function renderListaPromotorasViva(query){
 async function renderGestionPromotoras(){
   const box = document.getElementById("gestionPromotoras");
   if (!box) return;
-  let lista, empleados = [], proveedoresConsig = [];
+  let lista, encargados = [], proveedoresConsig = [];
   try {
     lista = await (await fetch(`${API}/promotoras`)).json();
   } catch (_) {
     box.innerHTML = '<p style="font-size:14px;color:var(--rojo,#a3392a);">No se pudo cargar la lista de comisionistas.</p>';
     return;
   }
-  try { empleados = await (await fetch(`${API}/usuarios`)).json(); } catch (_) { empleados = []; }
+  try { encargados = await (await fetch(`${API}/usuarios`)).json(); } catch (_) { encargados = []; }
   try {
     const prods = await (await fetch(`${API}/productos?todas=1`)).json();
     const nombres = new Set();
@@ -5199,11 +5200,11 @@ async function renderGestionPromotoras(){
     proveedoresConsig = [...nombres].sort((a,b) => a.localeCompare(b, "es"));
   } catch (_) { proveedoresConsig = []; }
   box.innerHTML = `
-    <h3 class="seccion" style="font-size:15px;margin-top:0;">Comisionistas (promotores/as)</h3>
+    <h3 class="seccion" style="font-size:15px;margin-top:0;">Comisionistas (asociados/as)</h3>
     <div class="tag-card" style="padding:14px;display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="libre" checked> Nombre libre</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="empleado"> Un/a empleado/a</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="empleado"> Un/a encargado/a</label>
         <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="proveedor"> Un/a proveedor/a o artista</label>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
@@ -5226,7 +5227,7 @@ async function renderGestionPromotoras(){
         </div>
       </details>
       <div style="margin-top:10px;"><button class="ir" id="btnAltaPromotora" style="padding:10px 18px;">+ Agregar comisionista</button></div>
-      <p style="font-size:14px;color:var(--ink-soft);margin:0;">Un/a empleado/a o un/a proveedor/a también puede ser comisionista a la vez — elegirlo aquí no le quita su otro rol.</p>
+      <p style="font-size:14px;color:var(--ink-soft);margin:0;">Un/a encargado/a o un/a proveedor/a también puede ser comisionista a la vez — elegirlo aquí no le quita su otro rol.</p>
     </div>
     <p id="promMsg" style="font-size:14px;font-weight:700;margin:8px 0 0;"></p>
 
@@ -5259,7 +5260,7 @@ async function renderGestionPromotoras(){
     if (v === "libre"){ inputTexto.style.display = ""; selectNombre.style.display = "none"; }
     else if (v === "empleado"){
       inputTexto.style.display = "none"; selectNombre.style.display = "";
-      poblarSelect(empleados.map(u => u.nombre), empleados.length ? "— Elige un/a empleado/a —" : "No hay empleados dados de alta (Avanzado → Equipo)");
+      poblarSelect(encargados.map(u => u.nombre), encargados.length ? "— Elige un/a encargado/a —" : "No hay encargados dados de alta (Avanzado → Equipo)");
     } else {
       inputTexto.style.display = "none"; selectNombre.style.display = "";
       poblarSelect(proveedoresConsig, proveedoresConsig.length ? "— Elige un/a proveedor/a o artista —" : "No hay proveedores en consignación todavía");
@@ -5391,7 +5392,7 @@ async function abrirEditorComisionista(id, pr){
   _atarFilasComision(caja);
 }
 
-// --- VISTA COMISIONES (reparto de comisiones a promotores/as) ---
+// --- VISTA COMISIONES (reparto de comisiones a asociados/as) ---
 async function cargarComisiones(){
   renderGestionPromotoras();
   // Microcirugia 11 (2026-07-08): Promise.all sin guard dejaba Comisiones en blanco.
@@ -5414,9 +5415,9 @@ async function cargarComisiones(){
     return;
   }
 
-  // Rec 04 + 09: ranking de promotores/as con su mejor SKU y alerta de dormido.
+  // Rec 04 + 09: ranking de asociados/as con su mejor SKU y alerta de dormido.
   const rankHtml = (Array.isArray(ranking) && ranking.length) ? `
-    <h3 class="seccion" style="font-size:15px;margin-top:0;">Ranking de promotores/as</h3>
+    <h3 class="seccion" style="font-size:15px;margin-top:0;">Ranking de asociados/as</h3>
     <div style="margin-bottom:20px;">${ranking.map((r, i) => {
       const med = medallaOC(i);
       const dormido = (r.diasSinVenta != null && r.diasSinVenta >= 7)
@@ -5506,7 +5507,7 @@ async function cargarComisiones(){
               document.getElementById('sim-net-${uid}').innerHTML=fmtMoney(neto);
             })(+this.value)">
           <div style="display:flex;gap:16px;font-size:14px;margin-top:4px;">
-            <span>Comisión promotor/a: <strong id="sim-com-${uid}" style="color:#C0392B;">${fmtMoney(f.comisionSocio)}</strong></span>
+            <span>Comisión asociado/a: <strong id="sim-com-${uid}" style="color:#C0392B;">${fmtMoney(f.comisionSocio)}</strong></span>
             <span>Tu neto: <strong id="sim-net-${uid}" style="color:#009A5A;">${fmtMoney(f.netoDueno)}</strong></span>
           </div>
         </div>
@@ -5522,11 +5523,11 @@ async function cargarComisiones(){
         <strong style="font-size:16px;">${escHtml(f.ubicacion)}</strong>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">${dormida}<span class="badge-estado ${f.estado === "pagado" ? "verde" : f.estado === "sin ventas" ? "amarillo" : "rojo"}">${f.estado}</span></div>
       </div>
-      ${f.promotorNombre ? `<div style="font-size:14px;color:var(--ink-soft);margin-top:4px;">Promotor/a: <button type="button" data-abrir-promotora="${f.promotoraId}" style="background:transparent;border:none;padding:0;cursor:pointer;font-weight:700;color:var(--azul-medio,#2c4a68);text-decoration:underline;">${escHtml(f.promotorNombre)}</button>${f.origenComision === "percha" ? ' <span style="font-size:14px;color:var(--ink-soft);">(usando comisión estándar de esta percha, no la del comisionista)</span>' : ""}</div>` : ""}
+      ${f.promotorNombre ? `<div style="font-size:14px;color:var(--ink-soft);margin-top:4px;">Asociado/a: <button type="button" data-abrir-promotora="${f.promotoraId}" style="background:transparent;border:none;padding:0;cursor:pointer;font-weight:700;color:var(--azul-medio,#2c4a68);text-decoration:underline;">${escHtml(f.promotorNombre)}</button>${f.origenComision === "percha" ? ' <span style="font-size:14px;color:var(--ink-soft);">(usando comisión estándar de esta percha, no la del comisionista)</span>' : ""}</div>` : ""}
       <table style="width:100%;margin-top:10px;font-size:14px;">
         <tr><td>Ventas del mes</td><td style="text-align:right;">${fmtMoney(f.ventasBrutas)}</td></tr>
         ${f.contribFija > 0 ? `<tr><td>Contrib. fija</td><td style="text-align:right;">−${fmtMoney(f.contribFija)}</td></tr>` : ""}
-        <tr><td><strong>Comisión de la promotor/a</strong></td><td style="text-align:right;"><strong>${fmtMoney(f.comisionSocio)}</strong></td></tr>
+        <tr><td><strong>Comisión de la asociado/a</strong></td><td style="text-align:right;"><strong>${fmtMoney(f.comisionSocio)}</strong></td></tr>
         <tr><td>Neto para el dueño</td><td style="text-align:right;">${fmtMoney(f.netoDueno)}</td></tr>
       </table>
       ${f.contribFijaSuperaVentas ? `<p style="font-size:14px;font-weight:700;color:#B0183E;margin:8px 0 0;">El aporte fijo ($${f.contribFija}) supera las ventas del mes — revisa el monto o el período.</p>` : ""}
@@ -5634,7 +5635,7 @@ window.addEventListener("oc-login", () => setTimeout(ofrecerResumenSemanalSiToca
 
 // MEJORA 3 — Recibo instantáneo al pagar comisión.
 // Después de marcar como pagado, la app arma un mini-recibo en WhatsApp listo
-// para enviarle a la promotora/socio. Un toque cierra el ciclo sin salir de la app.
+// para enviarle a la asociada/socio. Un toque cierra el ciclo sin salir de la app.
 // ============================================================================
 // EVALUACIÓN DE CLIENTES (2026-07-09) — escala 1-5: ⭐ Cumplimiento + ❤️ Actitud.
 // Tap acumulativo: tocar el mismo valor N ya encendido → limpia (0 = sin calificar).
@@ -5796,7 +5797,7 @@ async function reactivarCliente(clienteId, nombre) {
 }
 
 async function marcarComisionPagada(ubicacionId, promotorNombre, monto){
-  if (!(await ocConfirm("¿Confirmas que ya le pagaste a la promotor/a lo que corresponde este mes?"))) return;
+  if (!(await ocConfirm("¿Confirmas que ya le pagaste a la asociado/a lo que corresponde este mes?"))) return;
   // try/catch #1 (auditoria 2026-07-23): antes un fallo de red aqui tiraba una
   // excepcion no atrapada, y si el servidor respondia con error, fallaba en
   // silencio total sin avisar nada al dueño (parecia que ya se habia pagado).
@@ -5811,13 +5812,13 @@ async function marcarComisionPagada(ubicacionId, promotorNombre, monto){
   }
   if (!res.ok) { await ocAlert(r.error || "No se pudo marcar el pago."); return; }
   cargarComisiones();
-  // Recibo para WhatsApp: solo se ofrece si hay nombre de promotora y monto > 0.
+  // Recibo para WhatsApp: solo se ofrece si hay nombre de asociado/a y monto > 0.
   if (promotorNombre && monto > 0) {
     const neg = (function(){ try { const s = document.getElementById("oc-negocio-nombre"); return s ? s.textContent.trim() : ""; } catch(_){ return ""; } })();
     const mes = new Date().toLocaleDateString("es", { month: "long", year: "numeric" });
     const recibo = [
       `*Pago de comisión confirmado*`,
-      `Promotor/a: ${promotorNombre}`,
+      `Asociado/a: ${promotorNombre}`,
       `Monto: ${fmtMoney(monto)}`,
       `Mes: ${mes}`,
       neg ? `Negocio: ${neg}` : "",
@@ -6153,7 +6154,7 @@ setTimeout(() => {
      Si este archivo no carga, la app vende igual: solo se pierde el aviso. -->
 <script src="./micelio-vivo.js"></script>
 <script src="./micelio-ui.js"></script>
-<!-- Novedades: gamificación experimental del empleado (FEATURE EXPERIMENTAL,
+<!-- Novedades: gamificación experimental del encargado (FEATURE EXPERIMENTAL,
      JFC 2026-07-22). Módulo aparte, encendida por DEFECTO (el dueño puede
      apagarla en Avanzado con un "0" explícito).
      Ver novedades.js para el detalle — no toca ventas/inventario reales. -->
@@ -6455,6 +6456,14 @@ function _ocModalMostrar(mensaje, botonesConfig) {
     overlay.style.display = "flex";
   });
 }
+/* El rescate desde IndexedDB (mock-backend.js) puede llegar despues de que la
+   app ya pinto la primera vista con un estado viejo. Se repinta lo que hay en
+   pantalla para que el dueno no vea datos que ya no son. */
+window.addEventListener("oc-estado-rescatado", function () {
+  try { if (window.cargarInventario) window.cargarInventario(); } catch (_) {}
+  try { if (window.cargarPerchas) window.cargarPerchas(); } catch (_) {}
+  try { if (window.cargarUbicaciones) window.cargarUbicaciones(); } catch (_) {}
+});
 function ocConfirm(mensaje, opts) {
   opts = opts || {};
   return _ocModalMostrar(mensaje, [

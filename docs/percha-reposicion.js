@@ -11,7 +11,7 @@
  * VISTA POR ROL (más control según quién mira):
  *   - dueño/admin: cantidad sugerida (hasta umbralAmarillo+1), costo estimado
  *     por línea y total de la orden de compra.
- *   - empleado/encargado: solo qué se está acabando y su prioridad, con el
+ *   - encargado/encargado: solo qué se está acabando y su prioridad, con el
  *     mensaje "avísale al dueño" — sin costos.
  *
  * CÓMO SE ENGANCHA SIN TOCAR vista-perchas.js: delegación sobre el click de

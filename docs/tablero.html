@@ -457,6 +457,16 @@
   function sinNadie() {
     setTimeout(function () {
       if (ultimoDato) return;
+      /* ULTIMA RED (JFC 2026-08-17). Antes esto dejaba las pestanias vacias
+         aunque el negocio estuviera guardado en ESTE mismo navegador. Si hay
+         datos aqui, se pintan: una pantalla en blanco delante de alguien que
+         tiene todos sus datos en ese computador es el peor final posible. */
+      if (pintarDesdeLocal()) {
+        $("cierre").innerHTML = "<strong>Ningún otro dispositivo de tu equipo contestó.</strong>" +
+          "Esto es lo que hay guardado en este computador. Si tu equipo abre amigable-123, " +
+          "esta pantalla se actualiza sola.";
+        return;
+      }
       pulso("ningún dispositivo conectado", "solo");
       $("cierre").innerHTML = "<strong>Ningún dispositivo de tu equipo está conectado.</strong>" +
         "Abre amigable-123 y esta pantalla se llena sola.";
@@ -1143,10 +1153,49 @@
       }
       if (!window.OCSecure) return null;   /* null = no se puede juzgar */
       if (window.OCSecure.migrarSiHaceFalta) { try { await window.OCSecure.migrarSiHaceFalta(); } catch (_) {} }
+      /* Si el intento esta en penalizacion por fallos previos EN LA APP, el
+         verificador devuelve null igual que si no hubiera secreto. Se
+         distingue aqui: no es lo mismo "no puedo juzgar" que "espera 40 s", y
+         mandar a alguien penalizado al relay solo le da una pantalla vacia
+         (bug en vivo, PC de la hermana de JFC, 2026-08-17). */
+      try {
+        if (window.OCSecure.segundosBloqueo) {
+          var esp = Number(window.OCSecure.segundosBloqueo("login")) || 0;
+          if (esp > 0) return { bloqueado: esp };
+        }
+      } catch (_) {}
       if (!window.OCSecure.verificarOwnerOEmpleado) return null;
       var rol = await window.OCSecure.verificarOwnerOEmpleado(pin);
       return rol === "dueno" || rol === "admin";
     } catch (_) { return null; }
+  }
+
+  /* ------------------------------------------------------------------------
+     PINTAR CON LO QUE HAY AQUI. El negocio vive en ESTE dispositivo: si por lo
+     que sea el camino local no se pudo tomar (PIN penalizado, secreto no
+     disponible), no hay ninguna razon para que las pestanias salgan vacias.
+     Devuelve true si de verdad pinto algo.
+     ------------------------------------------------------------------------ */
+  function pintarDesdeLocal() {
+    try {
+      var e = leerEstadoLocal();
+      if (!e) return false;
+      var d = datosDesdeLocal(e);
+      /* Un estado local vacio no es un tablero: es una app recien instalada.
+         Pintarlo taparia el mensaje honesto de "no hay nadie conectado". */
+      if (!(d.productos || []).length && !(d.ventas || []).length) return false;
+      datos.productos = d.productos; datos.clientes = d.clientes;
+      datos.ventas = d.ventas; datos.resumen = d.resumen;
+      try {
+        var o = JSON.parse(localStorage.getItem("amigable_owned") || "{}");
+        if (o.nombreNegocio) $("neg-nombre").textContent = o.nombreNegocio;
+      } catch (_) {}
+      ultimoDato = Date.now();
+      modoLocal = true;
+      pulso("desde este dispositivo", "vivo");
+      mostrar();
+      return true;
+    } catch (_) { return false; }
   }
 
   /* ------------------------------------------------------------- arranque */
@@ -1182,6 +1231,14 @@
     if (local) {
       $("msg").textContent = "Comprobando tu PIN…";
       var vale = await pinLocalOk(pin);
+      if (vale && typeof vale === "object" && vale.bloqueado) {
+        $("entrar").disabled = false;
+        $("msg").style.color = "#A8123A";
+        $("msg").textContent = "Demasiados intentos fallidos. Espera " + vale.bloqueado +
+          " s y vuelve a escribir tu PIN — no es que el PIN este mal.";
+        $("pin").value = "";
+        return;
+      }
       if (vale === false) {
         $("entrar").disabled = false;
         $("msg").style.color = "#A8123A";
@@ -1194,15 +1251,7 @@
         recordarLicencia(c);   /* una hora, para no reteclearla */
         $("pin").value = "";
         try {
-          var d = datosDesdeLocal(local);
-          datos.productos = d.productos; datos.clientes = d.clientes;
-          datos.ventas = d.ventas; datos.resumen = d.resumen;
-          try { var o = JSON.parse(localStorage.getItem("amigable_owned") || "{}");
-                if (o.nombreNegocio) $("neg-nombre").textContent = o.nombreNegocio; } catch (_) {}
-          ultimoDato = Date.now();
-          modoLocal = true;
-          pulso("desde este dispositivo", "vivo");
-          mostrar();
+          if (!pintarDesdeLocal()) throw new Error("estado local vacio");
         } catch (err) {
           /* Si armar los datos locales falla, se sigue al relay en vez de
              dejar la pantalla en blanco. */
@@ -1242,6 +1291,11 @@
       autorizado = true;
       recordarLicencia(c);   /* una hora, para no reteclearla */
       $("pin").value = "";
+      /* EL PIN YA PASO. Si el negocio tambien esta en ESTE dispositivo, se
+         pinta ya mismo en vez de esperar a que alguien de la sala conteste.
+         Antes, si nadie contestaba, la duenia se quedaba mirando las pestanias
+         vacias sentada delante del computador donde estan todos sus datos. */
+      pintarDesdeLocal();
       pulso("pidiendo tu negocio…");
       pedirFoto();
       sinNadie();
@@ -1256,6 +1310,45 @@
     }
   });
   $("codigo").addEventListener("keydown", function (e) { if (e.key === "Enter") $("entrar").click(); });
+
+  /* ------------------------------------------------ LOS GUIONES LOS PONE LA APP
+     A nadie se le hace teclear "-" despues de AMG (JFC 2026-08-18). Los guiones
+     y los bloques de cuatro son ADEMAS lo unico que delata la forma de la
+     licencia, y eso es bueno: ayuda a reconocerla en una nota, un chat o una
+     captura de pantalla. Asi que se muestran siempre, y se ponen solos.
+
+     Solo mecanica de formato: no inventa el "AMG" ni cambia lo que la persona
+     escribio, solo mete los guiones en las posiciones 3, 8 y 13 y respeta los
+     simbolos de verificacion de Crockford (* ~ $ =), que son parte del codigo. */
+  (function () {
+    var inp = $("codigo");
+    inp.setAttribute("autocapitalize", "characters");
+    inp.setAttribute("autocorrect", "off");
+    inp.setAttribute("maxlength", "24");
+
+    function formatear(raw) {
+      var v = String(raw || "").toUpperCase().replace(/[^A-Z0-9*~$=]/g, "");
+      var out = v.slice(0, 3);
+      for (var i = 3; i < v.length; i += 4) out += "-" + v.slice(i, i + 4);
+      return out;
+    }
+    /* Se cuentan los caracteres UTILES a la izquierda del cursor y se reponen
+       despues de formatear: sin esto, editar en medio del codigo tira el cursor
+       al final en cada tecla y es imposible corregir un caracter. */
+    function utilesHasta(txt, pos) {
+      return String(txt || "").slice(0, pos).replace(/[^A-Za-z0-9*~$=]/g, "").length;
+    }
+    inp.addEventListener("input", function () {
+      var antes = utilesHasta(inp.value, inp.selectionStart == null ? inp.value.length : inp.selectionStart);
+      var nuevo = formatear(inp.value);
+      if (nuevo === inp.value) return;
+      inp.value = nuevo;
+      var pos = 0, vistos = 0;
+      while (pos < nuevo.length && vistos < antes) { if (nuevo[pos] !== "-") vistos++; pos++; }
+      while (pos < nuevo.length && nuevo[pos] === "-") pos++;
+      try { inp.setSelectionRange(pos, pos); } catch (_) {}
+    });
+  })();
 
   /* El código puede venir en el enlace, para no teclearlo en el teléfono.
      Se limpia de la barra de direcciones apenas se lee: no tiene por qué

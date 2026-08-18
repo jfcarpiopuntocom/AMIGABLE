@@ -1,6 +1,6 @@
 // AMIGABLE — Cliente de sincronizacion en tiempo real (2026-07-23)
 // ============================================================================
-// QUE HACE: en cuanto el dueño se licencia (automatico) o un empleado escribe
+// QUE HACE: en cuanto el dueño se licencia (automatico) o un encargado escribe
 // UNA vez el codigo del negocio ("Unirme a mi equipo"), este dispositivo
 // queda sincronizado 24/7 PARA SIEMPRE — no es un modo evento que se prende
 // y apaga. Las VENTAS, AJUSTES, ANULACIONES y TRANSFERENCIAS de stock hechas
@@ -480,11 +480,11 @@
 
      Por que asi y no reimplementando Avanzado dentro de tablero.html: la
      logica de negocio vive en un solo sitio. Si manana cambia como se agrega
-     un empleado, cambia en mock-backend.js y el tablero se entera solo. Dos
+     un encargado, cambia en mock-backend.js y el tablero se entera solo. Dos
      implementaciones de la misma regla es como se rompen los negocios.
      ========================================================================== */
   /* Verifica el PIN que llego del tablero y contesta SOLO el rol, nunca nada
-     mas. Un PIN de empleado o de contador no abre el tablero: ese es el punto.
+     mas. Un PIN de encargado o de contador no abre el tablero: ese es el punto.
      El PIN viaja cifrado con la clave de sala, igual que todo lo demas. */
   async function responderPin(op) {
     if (!ws || ws.readyState !== WebSocket.OPEN) return;

@@ -130,7 +130,7 @@
           global.AMG.PlanPagos.fechaEnPalabras(e.proximoVencimiento);
         el.appendChild(p);
       }
-      /* Anular el acuerdo. Solo el dueno, igual que fiar: un empleado no
+      /* Anular el acuerdo. Solo el dueno, igual que fiar: un encargado no
          renegocia. El motor NO borra el plan viejo, emite plan_pago_anulado,
          asi que el historial muestra que hubo una renegociacion en vez de
          esconderla. Y el saldo no se toca: anular un acuerdo no perdona una
@@ -498,7 +498,7 @@
   }
 
   global.addEventListener("oc-login", function () { setTimeout(montar, 600); });
-  /* Al cerrar sesion la alerta desaparece: un empleado no debe ver la lista
+  /* Al cerrar sesion la alerta desaparece: un encargado no debe ver la lista
      global de quien debe, ni siquiera de refilon. */
   global.addEventListener("oc-logout", function () {
     var c = document.getElementById("pp-hoy");
