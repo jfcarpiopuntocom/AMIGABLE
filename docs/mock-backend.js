@@ -140,7 +140,151 @@ if(periodo==="semana"){const d=new Date(anio,mes-1,dia);const diaSemana=(d.getDa
 // producto/percha — asi un mismo comisionista mantiene su % aunque rote de percha. Cada percha
 // puede hacer "switch off" con usarComisionPropia:true para usar su propia comision estandar
 // en vez de la del comisionista (ej: ese producto puntual paga distinto).
-function fuenteComisionDe(u){if(u.promotoraId&&!u.usarComisionPropia){const pr=promotoras.find(x=>x.id===u.promotoraId);if(pr)return{fuente:pr,origen:"comisionista"}}return{fuente:u,origen:"percha"}}function calcularSplitVenta(u,montoBruto,acumuladoPrevio){if(!u||u.tipo==="propio"||!u.tipo)return null;const{fuente,origen}=fuenteComisionDe(u);const comisionPct=comisionVigente(fuente,acumuladoPrevio+montoBruto);const montoComisionSocio=+(montoBruto*(comisionPct/100)).toFixed(2);return{comisionPct:comisionPct,origenComision:origen,montoBruto:+montoBruto.toFixed(2),montoComisionSocio:montoComisionSocio,montoNetoDueno:+(montoBruto-montoComisionSocio).toFixed(2)}}/* CONTRIBUCION FIJA POR EVENTO (JFC 2026-08-06). Spec confirmada: monto fijo
+
+  /* ==========================================================================
+     MOTOR DE TRATOS — una sola cuenta para todas las formas de repartir
+     ==========================================================================
+     JFC, 2026-08-18: "lo de a quien se le cobra es lo que quiero que sea ductil
+     y flexible en cada negocio, une ambas formas".
+
+     EL PROBLEMA QUE RESUELVE. Habia dos maneras de decir lo mismo y cada app
+     entendia una: la promotora piensa "me llevo el 10", la galeria piensa
+     "retengo el 15 y el artista se lleva 85". Es el MISMO reparto leido al
+     reves, pero como cada negocio lo dice a su manera, forzar una sola forma
+     obliga a la mitad de la gente a restar de cabeza cada vez.
+
+     LA DECISION. Se guarda SIEMPRE un solo numero canonico —`comisionSocio`,
+     lo que se lleva el asociado— y la lectura preferida se guarda aparte, como
+     preferencia de presentacion. Asi:
+
+       - Ningun trato existente cambia de valor. Cero migracion, y nadie cobra
+         distinto maniana por este cambio.
+       - Cada negocio escribe y lee en su idioma: `lecturaPreferida` decide si
+         la UI muestra "se lleva" o "la casa retiene".
+       - Las dos lecturas son siempre coherentes porque una se deriva de la
+         otra: es imposible guardar un reparto que no sume 100.
+
+     DE DONDE SALE EL PORCENTAJE, en orden de prioridad:
+       1. El trato propio de la persona (promotora.comisionBase), salvo que la
+          percha diga explicitamente que manda el suyo (usarComisionPropia).
+       2. El de la percha (ubicacion.comisionSocio).
+     Esto es lo que permite que LA MISMA PERSONA sea vendedora al 10% en una
+     percha y artista al 85% en otra: el trato no vive en la persona ni en la
+     percha, vive en el cruce de las dos.
+
+     Y ENCIMA, opcionales y combinables:
+       - `contribFija`: aporte fijo que el asociado pone al evento ANTES del %.
+         Se descuenta del bruto y el % se aplica a lo que queda.
+       - `escalasComision`: el % sube al acercarse a la meta del mes.
+       - `minimoGarantizado`: piso en dinero para el asociado. Si el % da menos,
+         se le paga el piso — util para "te aseguro $50 por la feria, o el 20%,
+         lo que sea mayor".
+
+     GUARD: escalas y aporte fijo no se combinan. El modelo escalonado calcula
+     el % venta por venta con el acumulado del mes, y restar un fijo ahi
+     obligaria a recalcular retroactivamente cada venta ya registrada. Si estan
+     los dos, manda la escala y el fijo se ignora — se dice en `avisos`, no en
+     silencio.
+     ========================================================================== */
+  function resolverTrato(u, opciones) {
+    opciones = opciones || {};
+    var avisos = [];
+    if (!u) return null;
+
+    /* Percha propia: no reparte con nadie. Devolver null y no un trato al 0%
+       es la diferencia entre "no aplica" y "le toca cero", que no es lo mismo
+       ni en la pantalla ni en un reporte. */
+    if (!u.tipo || u.tipo === "propio") return null;
+
+    /* 1. De donde sale el porcentaje */
+    var fuente = u, origen = "percha";
+    try {
+      if (u.promotoraId && !u.usarComisionPropia && typeof promotoras !== "undefined") {
+        var pr = promotoras.find(function (x) { return x.id === u.promotoraId; });
+        /* Solo se usa el trato de la persona si de verdad tiene uno definido.
+           Un comisionista recien creado sin % no puede dejar la percha en cero. */
+        if (pr && (Number(pr.comisionBase) > 0 || Number(pr.comisionSocio) > 0)) {
+          fuente = pr; origen = "comisionista";
+        }
+      }
+    } catch (_) {}
+
+    var pctBase = Number(fuente.comisionBase !== undefined ? fuente.comisionBase : fuente.comisionSocio) || 0;
+    if (pctBase < 0) pctBase = 0;
+    if (pctBase > 100) pctBase = 100;
+
+    /* 2. Escalas por meta, si las hay */
+    var escalas = Array.isArray(fuente.escalasComision) ? fuente.escalasComision : [];
+    var meta = Number(fuente.metaMensual) || 0;
+    var contrib = Math.max(0, Number(u.contribFija) || 0);
+    var tieneEscalas = escalas.length > 0 && meta > 0;
+
+    if (tieneEscalas && contrib > 0) {
+      avisos.push("El aporte fijo se ignora: esta percha usa escalas por meta, y las dos cosas juntas obligarian a recalcular cada venta ya registrada.");
+      contrib = 0;
+    }
+
+    return {
+      /* CANONICO: lo que se lleva el asociado. Todo lo demas se deriva. */
+      pct: pctBase,
+      pctCasa: +(100 - pctBase).toFixed(2),
+      /* Como lo dice ESTE negocio. Solo afecta la presentacion. */
+      lectura: (u.lecturaPreferida === "casa") ? "casa" : "asociado",
+      modalidad: pctBase >= 50 ? "artista" : "vendedor",
+      origen: origen,
+      fuenteId: origen === "comisionista" ? (u.promotoraId || null) : u.id,
+      contribFija: contrib,
+      escalas: tieneEscalas ? escalas.slice() : [],
+      metaMensual: meta,
+      minimoGarantizado: Math.max(0, Number(u.minimoGarantizado) || 0),
+      avisos: avisos
+    };
+  }
+
+  /* El % que toca a ESTA venta, ya con las escalas aplicadas si las hay. */
+  function pctDeLaVenta(trato, acumuladoConEsta) {
+    if (!trato) return 0;
+    if (!trato.escalas.length || !trato.metaMensual) return trato.pct;
+    var pctMeta = (acumuladoConEsta / trato.metaMensual) * 100;
+    var ordenadas = trato.escalas.slice().sort(function (a, b) { return a.hasta - b.hasta; });
+    var tramo = ordenadas.find(function (e) { return pctMeta <= e.hasta; }) || ordenadas[ordenadas.length - 1];
+    var p = Number(tramo.comision);
+    return Number.isFinite(p) ? Math.max(0, Math.min(100, p)) : trato.pct;
+  }
+
+  /* El reparto de UNA venta. Invariante que nunca se rompe:
+     comision + neto == bruto, siempre, hasta el centavo. */
+  function repartir(trato, montoBruto, acumuladoPrevio) {
+    if (!trato) return null;
+    var bruto = Math.max(0, Number(montoBruto) || 0);
+    var pct = pctDeLaVenta(trato, (Number(acumuladoPrevio) || 0) + bruto);
+
+    /* El aporte fijo sale ANTES del %: es lo que el asociado pone para estar
+       ahi, no parte de lo que vendio. Si el aporte supera la venta, la base es
+       cero y no negativa — nadie le debe plata a la casa por vender poco. */
+    var base = trato.contribFija > 0 ? Math.max(0, bruto - trato.contribFija) : bruto;
+    var comision = +(base * (pct / 100)).toFixed(2);
+
+    if (trato.minimoGarantizado > 0 && comision < trato.minimoGarantizado) {
+      comision = Math.min(trato.minimoGarantizado, bruto);   /* nunca mas que lo vendido */
+    }
+    if (comision > bruto) comision = bruto;
+
+    return {
+      comisionPct: pct,
+      origenComision: trato.origen,
+      montoBruto: +bruto.toFixed(2),
+      contribFijaAplicada: trato.contribFija > 0 ? +Math.min(trato.contribFija, bruto).toFixed(2) : 0,
+      montoComisionSocio: comision,
+      montoNetoDueno: +(bruto - comision).toFixed(2)
+    };
+  }
+
+  /* Nombres viejos conservados como puerta de entrada: el resto del archivo los
+     llama y cambiarlos seria tocar decenas de sitios sin ganar nada. */
+  function fuenteComisionDe(u){const t=resolverTrato(u);if(!t)return{fuente:u,origen:"percha"};if(t.origen==="comisionista"){const pr=promotoras.find(x=>x.id===u.promotoraId);if(pr)return{fuente:pr,origen:"comisionista"}}return{fuente:u,origen:"percha"}}
+  function calcularSplitVenta(u,montoBruto,acumuladoPrevio){return repartir(resolverTrato(u),montoBruto,acumuladoPrevio)}
+/* CONTRIBUCION FIJA POR EVENTO (JFC 2026-08-06). Spec confirmada: monto fijo
    que el artista/facilitador aporta al evento/percha ANTES de calcular el %
    del venue -- "costos primero, luego %": Neto = (Bruto - fijo) x (1 - %);
    Comision = (Bruto - fijo) x %. Guardado en u.contribFija (por defecto 0).
@@ -150,7 +294,7 @@ function fuenteComisionDe(u){if(u.promotoraId&&!u.usarComisionPropia){const pr=p
    CADA venta ya registrada -- demasiado invasivo para hacerlo bien sin mas
    tiempo. El endpoint de edicion de percha (mas abajo) bloquea combinar
    contribFija>0 con escalasComision, asi que aqui NUNCA coexisten. */
-function getLiquidaciones(){return ubicaciones.filter(u=>u.tipo&&u.tipo!=="propio").map(u=>{const ventasMes=ventas.filter(v=>v.ubicacionId===u.id&&esDelMesActual(v.fecha)&&v.split);const ventasBrutas=ventasMes.reduce((a,v)=>a+v.split.montoBruto,0);let comisionSocio=ventasMes.reduce((a,v)=>a+v.split.montoComisionSocio,0);let netoDueno=ventasMes.reduce((a,v)=>a+v.split.montoNetoDueno,0);const{fuente,origen}=fuenteComisionDe(u);const pctBase=Number(fuente.comisionBase!==undefined?fuente.comisionBase:fuente.comisionSocio)||0;const contribFija=Number(u.contribFija)||0;const tieneEscalas=Array.isArray(fuente.escalasComision)&&fuente.escalasComision.length>0;if(contribFija>0&&!tieneEscalas){const baseEfectiva=Math.max(0,ventasBrutas-contribFija);comisionSocio=+(baseEfectiva*(pctBase/100)).toFixed(2);netoDueno=+(baseEfectiva-comisionSocio).toFixed(2)}const pendientes=ventasMes.filter(v=>!v.liquidada);const detallePendientes=agruparPendientesPorProducto(pendientes);const ultima=ventas.filter(v=>v.ubicacionId===u.id).reduce((mx,v)=>v.fecha>mx?v.fecha:mx,"");const diasSinVenta=ultima?Math.floor((Date.now()-new Date(ultima).getTime())/864e5):null;const prom=u.promotoraId?promotoras.find(x=>x.id===u.promotoraId):null;const metaEfectiva=Number(fuente.metaMensual)||0;return{ubicacionId:u.id,ubicacion:u.nombre,tipo:u.tipo,metaMensual:metaEfectiva,cumplimientoMeta:metaEfectiva?+(ventasBrutas/metaEfectiva*100).toFixed(1):null,ventasBrutas:+ventasBrutas.toFixed(2),contribFija:+contribFija.toFixed(2),comisionSocio:+comisionSocio.toFixed(2),netoDueno:+netoDueno.toFixed(2),contribFijaSuperaVentas:contribFija>ventasBrutas,estado:ventasMes.length===0?"sin ventas":pendientes.length===0?"pagado":"pendiente",ventasPendientes:pendientes.length,diasSinVenta:diasSinVenta,promotorNombre:prom?prom.nombre:null,promotoraId:u.promotoraId||null,origenComision:origen,pctBase:pctBase,usarComisionPropia:!!u.usarComisionPropia,detallePendientes:detallePendientes,pctQuedaEnCasa:+(100-pctBase).toFixed(2),pctEfectivo:ventasBrutas>0?+(comisionSocio/ventasBrutas*100).toFixed(2):pctBase,modalidad:pctBase>=50?"artista":"vendedor",ventasCorregidas:ventasMes.filter(v=>v.split&&v.split.corregida).length}})}/* ===========================================================================
+function getLiquidaciones(){return ubicaciones.filter(u=>u.tipo&&u.tipo!=="propio").map(u=>{const ventasMes=ventas.filter(v=>v.ubicacionId===u.id&&esDelMesActual(v.fecha)&&v.split);const ventasBrutas=ventasMes.reduce((a,v)=>a+v.split.montoBruto,0);let comisionSocio=ventasMes.reduce((a,v)=>a+v.split.montoComisionSocio,0);let netoDueno=ventasMes.reduce((a,v)=>a+v.split.montoNetoDueno,0);const{fuente,origen}=fuenteComisionDe(u);const pctBase=Number(fuente.comisionBase!==undefined?fuente.comisionBase:fuente.comisionSocio)||0;const contribFija=Number(u.contribFija)||0;const tieneEscalas=Array.isArray(fuente.escalasComision)&&fuente.escalasComision.length>0;if(contribFija>0&&!tieneEscalas){const baseEfectiva=Math.max(0,ventasBrutas-contribFija);comisionSocio=+(baseEfectiva*(pctBase/100)).toFixed(2);netoDueno=+(baseEfectiva-comisionSocio).toFixed(2)}const pendientes=ventasMes.filter(v=>!v.liquidada);const detallePendientes=agruparPendientesPorProducto(pendientes);const ultima=ventas.filter(v=>v.ubicacionId===u.id).reduce((mx,v)=>v.fecha>mx?v.fecha:mx,"");const diasSinVenta=ultima?Math.floor((Date.now()-new Date(ultima).getTime())/864e5):null;const prom=u.promotoraId?promotoras.find(x=>x.id===u.promotoraId):null;const metaEfectiva=Number(fuente.metaMensual)||0;return{ubicacionId:u.id,ubicacion:u.nombre,tipo:u.tipo,metaMensual:metaEfectiva,cumplimientoMeta:metaEfectiva?+(ventasBrutas/metaEfectiva*100).toFixed(1):null,ventasBrutas:+ventasBrutas.toFixed(2),contribFija:+contribFija.toFixed(2),comisionSocio:+comisionSocio.toFixed(2),netoDueno:+netoDueno.toFixed(2),contribFijaSuperaVentas:contribFija>ventasBrutas,estado:ventasMes.length===0?"sin ventas":pendientes.length===0?"pagado":"pendiente",ventasPendientes:pendientes.length,diasSinVenta:diasSinVenta,promotorNombre:prom?prom.nombre:null,promotoraId:u.promotoraId||null,origenComision:origen,pctBase:pctBase,usarComisionPropia:!!u.usarComisionPropia,detallePendientes:detallePendientes,...(function(){const t=resolverTrato(u)||{};return{lecturaPreferida:t.lectura||"asociado",minimoGarantizado:t.minimoGarantizado||0,tieneEscalas:!!(t.escalas&&t.escalas.length),avisosTrato:t.avisos||[]}})(),pctQuedaEnCasa:+(100-pctBase).toFixed(2),pctEfectivo:ventasBrutas>0?+(comisionSocio/ventasBrutas*100).toFixed(2):pctBase,modalidad:pctBase>=50?"artista":"vendedor",ventasCorregidas:ventasMes.filter(v=>v.split&&v.split.corregida).length}})}/* ===========================================================================
    PANORAMA DE UNA PERCHA — todo lo que cuelga de ella, en una sola llamada
    ===========================================================================
    JFC 2026-08-18: "Al abrir una Percha, debe visualizarse TODO lo que esta
@@ -457,7 +601,7 @@ const J=(obj,status)=>new Response(JSON.stringify(obj),{status:status||200,heade
   console.warn("[estado-idb] se recuperaron cambios que no cabian en localStorage (rev "+espejo._rev+")");
   /* La UI ya se pinto con el estado viejo: se le avisa para que se repinte. */
   try{window.dispatchEvent(new CustomEvent("oc-estado-rescatado"))}catch(_){}
-}catch(_){}})();try{if(!localStorage.getItem("amigable_autoheal_888_v1")){localStorage.setItem("amigable_autoheal_888_v1","1");const estadoRealmenteVacio=productos.length===0&&ubicaciones.length===0&&ventas.length===0&&clientes.length===0&&movimientos.length===0&&sucursales.length===0&&promotoras.length===0;if(estadoRealmenteVacio){try{const raw=localStorage.getItem(OC_STATE_KEY);if(raw)localStorage.setItem(OC_STATE_KEY+"_rescate_"+Date.now(),raw);const ptr=localStorage.getItem(OC_STATE_PTR);if(ptr){const bufRaw=localStorage.getItem(OC_STATE_KEY+"_"+ptr);if(bufRaw)localStorage.setItem(OC_STATE_KEY+"_rescate_"+Date.now(),bufRaw)}}catch(_){}localStorage.removeItem(OC_STATE_KEY);try{localStorage.removeItem(OC_STATE_KEY+"_A");localStorage.removeItem(OC_STATE_KEY+"_B");localStorage.removeItem(OC_STATE_PTR)}catch(_){}location.reload()}}}catch(_){}const realFetch=window.fetch.bind(window);window.fetch=async function(url,opts){if(url&&typeof url==="object"&&url.url){const req=url;opts=opts||{};if(!opts.method&&req.method)opts.method=req.method;if(!opts.body&&req.method&&req.method!=="GET"&&typeof req.clone==="function"){try{opts.body=await req.clone().text()}catch(_){}}url=req.url}let debePersistir=false;try{const u=new URL(url,window.location.origin);if(!u.pathname.startsWith("/api"))return realFetch(url,opts);const path=u.pathname;const q=u.searchParams;let body={};if(opts&&opts.body){try{body=(function(){try{return JSON.parse(opts.body)}catch(_){return{}}})()}catch(_){body={}}}const method=(opts&&opts.method?opts.method:"GET").toUpperCase();debePersistir=["POST","PUT","PATCH","DELETE"].includes(method)&&!path.startsWith("/api/sync")&&path!=="/api/respaldo/exportar";const uid=q.get("ubicacionId");let m;if((m=path.match(/^\/api\/productos\/([^/]+)$/))&&opts&&opts.method==="PATCH"){const p=productos.find(x=>x.id===m[1]);if(!p)return J({error:"Producto no encontrado."},404);if(body.fechaCaducidad!==undefined&&body.fechaCaducidad!==null&&body.fechaCaducidad!==""&&!fechaValida(body.fechaCaducidad))return J({error:"La fecha de caducidad no es válida (usa AAAA-MM-DD)."},400);const CAMPOS=["nombre","categoria","precio","costo","proveedor","foto","barcode","sku","chip","perecible","fechaCaducidad","metodoCosteo","ubicacionId","tipoProveedor","umbralRojo","umbralAmarillo","comisionProveedorPct","tipoProducto"];CAMPOS.forEach(k=>{if(body[k]===undefined)return;if(k==="precio"||k==="costo"||k==="umbralRojo"||k==="umbralAmarillo"||k==="comisionProveedorPct"){p[k]=Number(body[k])||0;return}if(k==="chip"){p[k]=String(body[k]||"").trim().slice(0,12);return}if(k==="perecible"){p[k]=!!body[k];return}p[k]=body[k]});mov("edicion",{producto:p.nombre,sku:p.sku,ubicacion:nombreUbic(p.ubicacionId)});return J(ficha(p))}if((m=path.match(/^\/api\/productos\/([^/]+)$/))&&opts&&opts.method==="DELETE"){const i=productos.findIndex(x=>x.id===m[1]);if(i===-1)return J({error:"Producto no encontrado."},404);const enTransito=transferencias.find(t=>(t.estado==="en_transito"||t.estado==="solicitada")&&(t.productoOrigenId===m[1]||t.productoDestinoId===m[1]));if(enTransito)return J({error:`"${productos[i].nombre}" tiene una transferencia pendiente (${enTransito.cantidad} unidades, ${enTransito.estado}). Recibela o rechazala antes de borrarlo.`},400);const borrado=productos.splice(i,1)[0];mov("baja",{producto:borrado.nombre,sku:borrado.sku,ubicacion:nombreUbic(borrado.ubicacionId)});return J({ok:true})}if(path==="/api/modo")return J({modo:"demo-estatico"});if(path==="/api/ubicaciones"&&(!opts||opts.method!=="POST")){const soloActivas=q.get("todas")!=="1";return J(soloActivas?ubicaciones.filter(u=>u.activa!==false):ubicaciones)}if(path==="/api/ubicaciones"&&opts&&opts.method==="POST"){if(!body.nombre||!body.nombre.trim())return J({error:"El nombre de la ubicación es obligatorio."},400);const nueva={id:uuid("u"),nombre:body.nombre.trim(),tipo:body.tipo||"propio",activa:true,comisionSocio:Number(body.comisionSocio)||0,metaMensual:Number(body.metaMensual)||0,escalasComision:Array.isArray(body.escalasComision)?body.escalasComision:[],contribFija:Math.max(0,Number(body.contribFija)||0),sucursalId:body.sucursalId||null,esFeria:!!body.esFeria,esEvento:!!body.esEvento};ubicaciones.push(nueva);gastosMensuales[nueva.id]=0;mov("ubicacion-alta",{ubicacion:nueva.nombre});return J(nueva)}if((m=path.match(/^\/api\/ubicaciones\/([^/]+)$/))&&opts&&opts.method==="PUT"){const u=ubicaciones.find(x=>x.id===m[1]);if(!u)return J({error:"Ubicación no encontrada."},404);if(body.nombre&&body.nombre.trim())u.nombre=body.nombre.trim();if(body.tipo)u.tipo=body.tipo;if("sucursalId"in body)u.sucursalId=body.sucursalId||null;if("promotoraId"in body)u.promotoraId=body.promotoraId||null;if("esEvento"in body)u.esEvento=!!body.esEvento;if("usarComisionPropia"in body)u.usarComisionPropia=!!body.usarComisionPropia;const tocaComision="comisionSocio"in body||"metaMensual"in body||"escalasComision"in body||"usarComisionPropia"in body;if("comisionSocio"in body)u.comisionSocio=Math.max(0,Math.min(100,Number(body.comisionSocio)||0));if("metaMensual"in body)u.metaMensual=Math.max(0,Number(body.metaMensual)||0);
+}catch(_){}})();try{if(!localStorage.getItem("amigable_autoheal_888_v1")){localStorage.setItem("amigable_autoheal_888_v1","1");const estadoRealmenteVacio=productos.length===0&&ubicaciones.length===0&&ventas.length===0&&clientes.length===0&&movimientos.length===0&&sucursales.length===0&&promotoras.length===0;if(estadoRealmenteVacio){try{const raw=localStorage.getItem(OC_STATE_KEY);if(raw)localStorage.setItem(OC_STATE_KEY+"_rescate_"+Date.now(),raw);const ptr=localStorage.getItem(OC_STATE_PTR);if(ptr){const bufRaw=localStorage.getItem(OC_STATE_KEY+"_"+ptr);if(bufRaw)localStorage.setItem(OC_STATE_KEY+"_rescate_"+Date.now(),bufRaw)}}catch(_){}localStorage.removeItem(OC_STATE_KEY);try{localStorage.removeItem(OC_STATE_KEY+"_A");localStorage.removeItem(OC_STATE_KEY+"_B");localStorage.removeItem(OC_STATE_PTR)}catch(_){}location.reload()}}}catch(_){}const realFetch=window.fetch.bind(window);window.fetch=async function(url,opts){if(url&&typeof url==="object"&&url.url){const req=url;opts=opts||{};if(!opts.method&&req.method)opts.method=req.method;if(!opts.body&&req.method&&req.method!=="GET"&&typeof req.clone==="function"){try{opts.body=await req.clone().text()}catch(_){}}url=req.url}let debePersistir=false;try{const u=new URL(url,window.location.origin);if(!u.pathname.startsWith("/api"))return realFetch(url,opts);const path=u.pathname;const q=u.searchParams;let body={};if(opts&&opts.body){try{body=(function(){try{return JSON.parse(opts.body)}catch(_){return{}}})()}catch(_){body={}}}const method=(opts&&opts.method?opts.method:"GET").toUpperCase();debePersistir=["POST","PUT","PATCH","DELETE"].includes(method)&&!path.startsWith("/api/sync")&&path!=="/api/respaldo/exportar";const uid=q.get("ubicacionId");let m;if((m=path.match(/^\/api\/productos\/([^/]+)$/))&&opts&&opts.method==="PATCH"){const p=productos.find(x=>x.id===m[1]);if(!p)return J({error:"Producto no encontrado."},404);if(body.fechaCaducidad!==undefined&&body.fechaCaducidad!==null&&body.fechaCaducidad!==""&&!fechaValida(body.fechaCaducidad))return J({error:"La fecha de caducidad no es válida (usa AAAA-MM-DD)."},400);const CAMPOS=["nombre","categoria","precio","costo","proveedor","foto","barcode","sku","chip","perecible","fechaCaducidad","metodoCosteo","ubicacionId","tipoProveedor","umbralRojo","umbralAmarillo","comisionProveedorPct","tipoProducto"];CAMPOS.forEach(k=>{if(body[k]===undefined)return;if(k==="precio"||k==="costo"||k==="umbralRojo"||k==="umbralAmarillo"||k==="comisionProveedorPct"){p[k]=Number(body[k])||0;return}if(k==="chip"){p[k]=String(body[k]||"").trim().slice(0,12);return}if(k==="perecible"){p[k]=!!body[k];return}p[k]=body[k]});mov("edicion",{producto:p.nombre,sku:p.sku,ubicacion:nombreUbic(p.ubicacionId)});return J(ficha(p))}if((m=path.match(/^\/api\/productos\/([^/]+)$/))&&opts&&opts.method==="DELETE"){const i=productos.findIndex(x=>x.id===m[1]);if(i===-1)return J({error:"Producto no encontrado."},404);const enTransito=transferencias.find(t=>(t.estado==="en_transito"||t.estado==="solicitada")&&(t.productoOrigenId===m[1]||t.productoDestinoId===m[1]));if(enTransito)return J({error:`"${productos[i].nombre}" tiene una transferencia pendiente (${enTransito.cantidad} unidades, ${enTransito.estado}). Recibela o rechazala antes de borrarlo.`},400);const borrado=productos.splice(i,1)[0];mov("baja",{producto:borrado.nombre,sku:borrado.sku,ubicacion:nombreUbic(borrado.ubicacionId)});return J({ok:true})}if(path==="/api/modo")return J({modo:"demo-estatico"});if(path==="/api/ubicaciones"&&(!opts||opts.method!=="POST")){const soloActivas=q.get("todas")!=="1";return J(soloActivas?ubicaciones.filter(u=>u.activa!==false):ubicaciones)}if(path==="/api/ubicaciones"&&opts&&opts.method==="POST"){if(!body.nombre||!body.nombre.trim())return J({error:"El nombre de la ubicación es obligatorio."},400);const nueva={id:uuid("u"),nombre:body.nombre.trim(),tipo:body.tipo||"propio",activa:true,comisionSocio:Number(body.comisionSocio)||0,metaMensual:Number(body.metaMensual)||0,escalasComision:Array.isArray(body.escalasComision)?body.escalasComision:[],contribFija:Math.max(0,Number(body.contribFija)||0),sucursalId:body.sucursalId||null,esFeria:!!body.esFeria,esEvento:!!body.esEvento,lecturaPreferida:body.lecturaPreferida==="casa"?"casa":"asociado",minimoGarantizado:Math.max(0,Number(body.minimoGarantizado)||0)};ubicaciones.push(nueva);gastosMensuales[nueva.id]=0;mov("ubicacion-alta",{ubicacion:nueva.nombre});return J(nueva)}if((m=path.match(/^\/api\/ubicaciones\/([^/]+)$/))&&opts&&opts.method==="PUT"){const u=ubicaciones.find(x=>x.id===m[1]);if(!u)return J({error:"Ubicación no encontrada."},404);if(body.nombre&&body.nombre.trim())u.nombre=body.nombre.trim();if(body.tipo)u.tipo=body.tipo;if("sucursalId"in body)u.sucursalId=body.sucursalId||null;if("promotoraId"in body)u.promotoraId=body.promotoraId||null;if("esEvento"in body)u.esEvento=!!body.esEvento;if("usarComisionPropia"in body)u.usarComisionPropia=!!body.usarComisionPropia;/* LO EXPLICITO Y MAS RECIENTE MANDA (JFC 2026-08-18). Si el duenio escribe un porcentaje EN ESTA PERCHA, quiere decir "este trato, aqui" — aunque la persona asignada tenga otro trato propio en otras perchas. Sin esto, escribir 85 en la percha no hacia nada visible porque seguia ganando el % de la persona, y el duenio no tenia como saber por que. Se puede desactivar mandando usarComisionPropia:false en la misma peticion. */if(("comisionSocio"in body||"pctQuedaEnCasa"in body)&&!("usarComisionPropia"in body))u.usarComisionPropia=true;if("pctQuedaEnCasa"in body){const pc=Number(body.pctQuedaEnCasa);if(!Number.isFinite(pc)||pc<0||pc>100)return J({error:"Lo que retiene la casa va entre 0 y 100."},400);u.comisionSocio=+(100-pc).toFixed(2);u.lecturaPreferida="casa"}if("lecturaPreferida"in body)u.lecturaPreferida=body.lecturaPreferida==="casa"?"casa":"asociado";if("minimoGarantizado"in body)u.minimoGarantizado=Math.max(0,Number(body.minimoGarantizado)||0);const tocaComision="comisionSocio"in body||"metaMensual"in body||"escalasComision"in body||"usarComisionPropia"in body;if("comisionSocio"in body)u.comisionSocio=Math.max(0,Math.min(100,Number(body.comisionSocio)||0));if("metaMensual"in body)u.metaMensual=Math.max(0,Number(body.metaMensual)||0);
 /* CONTRIBUCION FIJA (JFC 2026-08-06): aporte/costo fijo que el artista o
    facilitador da al evento/percha ANTES del %. Guard: no coexiste con
    escalasComision -- el modelo escalonado ya calcula el % venta-por-venta

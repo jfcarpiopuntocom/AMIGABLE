@@ -3841,7 +3841,12 @@ function _comisionRepintarBarra(caja){
   const barra = caja.querySelector('#oc-com-barra');
   if (barra) barra.innerHTML = _comisionBarraHtml(_comisionLeerFilas(caja).filter(e => e.hasta > 0));
 }
+/* En cual de los dos campos escribio el duenio. No cambia ningun calculo: es el
+   idioma en el que este negocio piensa el reparto, y se guarda para mostrarselo
+   siempre asi. */
+let _ocLecturaPreferida = 'asociado';
 async function abrirEditorComision(id, u){
+  _ocLecturaPreferida = (u && u.lecturaPreferida === 'casa') ? 'casa' : 'asociado';
   if (!u) return;
   const overlay = document.getElementById('oc-comision-overlay');
   const caja = document.getElementById('oc-comision-caja');
@@ -3864,11 +3869,22 @@ async function abrirEditorComision(id, u){
       ${toggleHtml}
       <div id="oc-com-camposPropios" style="${(u.promotoraId && !u.usarComisionPropia) ? "pointer-events:none;background:var(--azul-suave,#dde5ec);border-radius:4px;padding:8px;" : ""}">
         <div style="display:flex;gap:10px;margin-top:10px;">
-          <label style="flex:1;font-size:14px;">Comisión base %<br><input id="oc-com-base" type="number" min="0" max="100" step="1" value="${Number(u.comisionSocio)||0}" ${inp}></label>
+          <label style="flex:1;font-size:14px;">Se lleva el/la asociado/a %<br><input id="oc-com-base" type="number" min="0" max="100" step="0.5" value="${Number(u.comisionSocio)||0}" ${inp}></label>
+          <label style="flex:1;font-size:14px;">Queda en la casa %<br><input id="oc-com-casa" type="number" min="0" max="100" step="0.5" value="${+(100-(Number(u.comisionSocio)||0)).toFixed(2)}" ${inp}></label>
           <label style="flex:1;font-size:14px;">Meta mensual $<br><input id="oc-com-meta" type="number" min="0" step="1" value="${Number(u.metaMensual)||0}" ${inp}></label>
         </div>
         <label style="display:block;margin-top:10px;font-size:14px;">Contrib. fija por evento $ <span style="font-weight:400;color:var(--ink-soft);">(costo o aporte fijo que se resta ANTES de aplicar el % — ej. gastos del venue)</span><br><input id="oc-com-fija" type="number" min="0" step="1" value="${Number(u.contribFija)||0}" ${inp}></label>
         <p style="font-size:13px;color:var(--ink-soft);margin:4px 0 0;">La contribución fija y los tramos de comisión no se combinan — usa uno u otro por percha/evento.</p>
+        <label style="display:block;margin-top:10px;font-size:14px;">Mínimo garantizado $ <span style="font-weight:400;color:var(--ink-soft);">(opcional — si el % da menos que esto, se le paga esto. Nunca más de lo que se vendió)</span><br><input id="oc-com-minimo" type="number" min="0" step="1" value="${Number(u.minimoGarantizado)||0}" ${inp}></label>
+        <!-- LAS DOS FORMAS DE DECIR EL MISMO TRATO (JFC 2026-08-18): "lo de a
+             quien se le cobra es lo que quiero que sea ductil y flexible en
+             cada negocio". La promotora piensa "me llevo el 10"; la galería
+             piensa "retengo el 15 y el artista se lleva 85". Es el mismo
+             reparto leído al revés, así que se escribe en el campo que uno
+             tenga en la cabeza y el otro se calcula solo. Se guarda un único
+             número —lo que se lleva el asociado— y aparte cómo lo dice este
+             negocio, para mostrárselo siempre en su idioma. -->
+        <div id="oc-com-modalidad" style="margin-top:12px;padding:10px;border-radius:6px;background:var(--paper-deep,#E2E8ED);font-size:14px;"></div>
         <div style="margin-top:14px;font-size:14px;font-weight:700;">Tramos de comisión (opcional)</div>
         <div id="oc-com-barra">${_comisionBarraHtml(escalas)}</div>
         <div id="oc-com-filas">${escalas.map((e, i) => _comisionFilaHtml(e.hasta, e.comision, i)).join('')}</div>
@@ -3887,6 +3903,45 @@ async function abrirEditorComision(id, u){
     _atarFilasComision(caja);
   };
   document.getElementById('oc-com-agregar').addEventListener('click', agregarFila);
+  /* LOS DOS CAMPOS SON EL MISMO NUMERO VISTO AL REVES (JFC 2026-08-18: "lo de a
+     quien se le cobra es lo que quiero que sea ductil y flexible en cada
+     negocio"). La promotora piensa "me llevo el 10"; la galeria piensa "retengo
+     el 15 y el artista se lleva 85". Se escribe en el campo que uno tenga en la
+     cabeza y el otro se calcula solo, asi que es imposible dejar un reparto que
+     no suma 100. Se recuerda en cual escribio: ese es el idioma de su negocio y
+     es el que la app le va a mostrar despues. */
+  (function () {
+    const inAso = document.getElementById('oc-com-base');
+    const inCasa = document.getElementById('oc-com-casa');
+    const cartel = document.getElementById('oc-com-modalidad');
+    if (!inAso || !inCasa) return;
+    let espejando = false;
+    const limpio = (n) => Math.round(Math.max(0, Math.min(100, n)) * 100) / 100;
+    function pintarModalidad() {
+      if (!cartel) return;
+      const pp = limpio(Number(inAso.value) || 0);
+      const esArtista = pp >= 50;
+      cartel.innerHTML = esArtista
+        ? '<strong>Modalidad artista.</strong> Se lleva el <strong>' + pp + '%</strong> y le deja <strong>' + (+(100 - pp).toFixed(2)) + '%</strong> a la casa anfitriona.'
+        : '<strong>Modalidad vendedor/a.</strong> Se lleva el <strong>' + pp + '%</strong> y la casa retiene <strong>' + (+(100 - pp).toFixed(2)) + '%</strong>.';
+      cartel.style.borderLeft = '4px solid ' + (esArtista ? '#6b4a9e' : '#2f7a4f');
+    }
+    function espejo(origen, destino, lectura) {
+      origen.addEventListener('input', () => {
+        if (espejando) return;
+        const n = Number(origen.value);
+        if (!Number.isFinite(n)) return;
+        espejando = true;
+        destino.value = String(limpio(100 - limpio(n)));
+        espejando = false;
+        _ocLecturaPreferida = lectura;
+        pintarModalidad();
+      });
+    }
+    espejo(inAso, inCasa, 'asociado');
+    espejo(inCasa, inAso, 'casa');
+    pintarModalidad();
+  })();
   const chkPropia = document.getElementById('oc-com-propia');
   if (chkPropia) chkPropia.addEventListener('change', () => {
     document.getElementById('oc-com-camposPropios').style.opacity = chkPropia.checked ? '1' : '.45';
@@ -3899,6 +3954,8 @@ async function abrirEditorComision(id, u){
     if (filas.some(f => f.hasta <= 0)) { msg.style.color = 'var(--rojo,#a3392a)'; msg.textContent = 'Cada tramo necesita un % de meta mayor a 0.'; return; }
     const body = {
       comisionSocio: document.getElementById('oc-com-base').value,
+      minimoGarantizado: (document.getElementById('oc-com-minimo') || {}).value || 0,
+      lecturaPreferida: _ocLecturaPreferida,
       metaMensual: document.getElementById('oc-com-meta').value,
       contribFija: document.getElementById('oc-com-fija').value,
       escalasComision: filas
