@@ -25,7 +25,17 @@ y hay que actualizar este archivo en el mismo commit.**
 
 ---
 
-## REGLA 1 — NUNCA SE PIERDE TRABAJO DE JFC
+## REGLA 1 — FOTO ANTES DE TOCAR NADA
+
+```bash
+bash .claude/snapshot.sh "antes-de-lo-que-sea"
+```
+
+Rama de respaldo fechada + tar fuera del repo (incluye lo NO rastreado, que es
+justo lo que no sobrevive a un clon nuevo) + sha256 de todo .js/.html/.json/.md.
+Se corre ANTES de empezar, no después. Sin excusa y sin preguntar.
+
+## REGLA 1b — NUNCA SE PIERDE TRABAJO DE JFC
 
 - **Jamás sobrescribir un archivo completo entre apps hermanas.** Se injerta
   cambio por cambio. Las tres apps divergieron hace rato: `cp` de una a otra
@@ -35,7 +45,13 @@ y hay que actualizar este archivo en el mismo commit.**
 
 ---
 
-## REGLA 2 — NO PARAR
+## REGLA 2 — TRABAJO LOCAL, PUSHES FRECUENTÍSIMOS
+
+El trabajo es local. Se commitea y se pushea seguido — no un commit gigante al
+final. Cada paso que queda verde se pushea. Nada se queda sólo en el disco de
+un contenedor que se recicla.
+
+## REGLA 2b — NO PARAR
 
 JFC deja trabajo corriendo de noche. No detenerse a pedir permiso a mitad de
 una tarea aprobada. Se para sólo si hay una contradicción real que puede
