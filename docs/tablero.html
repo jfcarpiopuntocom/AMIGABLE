@@ -262,6 +262,48 @@
   <div id="tabla"></div>
   <div class="cierre" id="cierre"></div>
 
+  <!-- CALCULADORA DE COSTO UNITARIO (JFC 2026-08-18).
+       "Queremos permitirles calcular costo unitario (en el tablero!,
+       recordemos que la app es de combate para la accion y el tablero es para
+       revisar con calma)".
+       Eso es exactamente por que vive AQUI y no en la app: sacar el costo real
+       de una unidad es una cuenta de sentarse, con la factura del proveedor
+       delante — no algo que se hace con el cliente esperando en el mostrador.
+       No guarda nada: el tablero es un lienzo. Da el numero para que el dueno
+       lo escriba en la ficha del producto desde la app. -->
+  <section id="costo-unit" style="margin:26px 0 0;">
+    <h2 style="font-size:19px;margin:0 0 4px;">Costo unitario real</h2>
+    <p style="font-size:14px;color:#5A6B7A;margin:0 0 12px;max-width:640px;">
+      Lo que de verdad te cuesta UNA unidad, con el flete, la aduana y lo que se
+      rompe en el camino repartido encima. Casi siempre es más que el precio de
+      la factura, y es el número con el que se decide un precio de venta.
+    </p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      <label style="font-size:13px;font-weight:700;">Pagaste en total<br>
+        <input id="cu-total" type="number" min="0" step="0.01" placeholder="0.00"
+          style="width:150px;padding:9px;margin-top:4px;border:2px solid #C7D3DD;border-radius:6px;font-size:16px;"></label>
+      <label style="font-size:13px;font-weight:700;">Flete y envío<br>
+        <input id="cu-flete" type="number" min="0" step="0.01" placeholder="0.00"
+          style="width:130px;padding:9px;margin-top:4px;border:2px solid #C7D3DD;border-radius:6px;font-size:16px;"></label>
+      <label style="font-size:13px;font-weight:700;">Impuestos y aduana<br>
+        <input id="cu-imp" type="number" min="0" step="0.01" placeholder="0.00"
+          style="width:150px;padding:9px;margin-top:4px;border:2px solid #C7D3DD;border-radius:6px;font-size:16px;"></label>
+      <label style="font-size:13px;font-weight:700;">Otros gastos<br>
+        <input id="cu-otros" type="number" min="0" step="0.01" placeholder="0.00"
+          style="width:130px;padding:9px;margin-top:4px;border:2px solid #C7D3DD;border-radius:6px;font-size:16px;"></label>
+      <label style="font-size:13px;font-weight:700;">Unidades que llegaron<br>
+        <input id="cu-unid" type="number" min="1" step="1" placeholder="1"
+          style="width:150px;padding:9px;margin-top:4px;border:2px solid #C7D3DD;border-radius:6px;font-size:16px;"></label>
+      <label style="font-size:13px;font-weight:700;">Se rompen o se pierden (%)<br>
+        <input id="cu-merma" type="number" min="0" max="99" step="0.5" placeholder="0"
+          style="width:180px;padding:9px;margin-top:4px;border:2px solid #C7D3DD;border-radius:6px;font-size:16px;"></label>
+      <label style="font-size:13px;font-weight:700;">A qué precio lo vendes<br>
+        <input id="cu-precio" type="number" min="0" step="0.01" placeholder="0.00"
+          style="width:160px;padding:9px;margin-top:4px;border:2px solid #C7D3DD;border-radius:6px;font-size:16px;"></label>
+    </div>
+    <div id="cu-out" style="margin-top:14px;font-size:15px;line-height:1.6;"></div>
+  </section>
+
   <!-- QUIEN ESTA EN EL LOOP. Va al PIE a proposito: no es lo primero que se
        mira cada manana, pero es lo que hay que revisar antes de creerse los
        numeros de arriba. Si un dispositivo lleva horas a ciegas, las cifras
@@ -664,7 +706,253 @@
           "Filtra por fecha en la columna y exporta a PDF para tu contador.";
       },
     },
+
+    /* Eventos va JUSTO DESPUES de Ventas y Clientes, como se pidio. */
+    eventos: {
+      nombre: "Eventos",
+      cols: [
+        { title: "Evento", field: "evento", minWidth: 200, widthGrow: 3 },
+        { title: "Fecha", field: "fecha", width: 120 },
+        { title: "Ventas", field: "ventas", width: 90, hozAlign: "right", cssClass: "num" },
+        { title: "Entradas", field: "unidades", width: 100, hozAlign: "right", cssClass: "num" },
+        { title: "Personas", field: "personas", width: 100, hozAlign: "right", cssClass: "num",
+          formatter: function (c) { return c.getValue() || "—"; } },
+        { title: "Recaudado", field: "recaudado", width: 125, hozAlign: "right", cssClass: "num",
+          formatter: function (c) { return money(c.getValue()); } },
+        { title: "Ganancia", field: "ganancia", width: 120, hozAlign: "right", cssClass: "num",
+          formatter: function (c) { return money(c.getValue()); } },
+        { title: "Comisión", field: "comision", width: 120, hozAlign: "right", cssClass: "num",
+          formatter: function (c) { return money(c.getValue()); } },
+        { title: "Percha", field: "perchas", width: 160 },
+        { title: "Compradores", field: "compradores", width: 130, hozAlign: "right", cssClass: "num" },
+        { title: "Última venta", field: "ultimaVenta", width: 130 },
+      ],
+      filas: filasEventos,
+      cierre: function (f) {
+        if (!f.length) {
+          return "<strong>Todavía no hay eventos.</strong>" +
+            "Un evento aparece aquí en cuanto vendes un producto de tipo " +
+            "Ticket/Evento y le escribes el nombre de la función o la clase.";
+        }
+        var rec = f.reduce(function (a, v) { return a + (Number(v.recaudado) || 0); }, 0);
+        var gan = f.reduce(function (a, v) { return a + (Number(v.ganancia) || 0); }, 0);
+        var com = f.reduce(function (a, v) { return a + (Number(v.comision) || 0); }, 0);
+        var top = f.slice().sort(function (a, b) { return b.recaudado - a.recaudado; })[0];
+        return "<strong>" + plural(f.length, "evento", "eventos") + " · " + money(rec) +
+          " recaudado, " + money(gan) + " de ganancia" +
+          (com > 0 ? ", " + money(com) + " en comisiones" : "") + ".</strong>" +
+          (top ? "El que más dejó: " + esc(top.evento) + " con " + money(top.recaudado) + ". " : "") +
+          "Cada fila junta TODAS las ventas de esa función, sin importar el producto ni la percha.";
+      },
+    },
+
+    comisiones: {
+      nombre: "Comisiones",
+      cols: [
+        { title: "Quién cobra", field: "quien", minWidth: 170, widthGrow: 2 },
+        { title: "Trato", field: "percha", minWidth: 160, widthGrow: 2 },
+        { title: "Modalidad", field: "modalidad", width: 190 },
+        { title: "%", field: "pct", width: 85, hozAlign: "right", cssClass: "num",
+          formatter: function (c) { return (Number(c.getValue()) || 0) + "%"; } },
+        { title: "% casa", field: "pctCasa", width: 95, hozAlign: "right", cssClass: "num",
+          formatter: function (c) { return (Number(c.getValue()) || 0) + "%"; } },
+        { title: "Vendido", field: "ventasBrutas", width: 120, hozAlign: "right", cssClass: "num",
+          formatter: function (c) { return money(c.getValue()); } },
+        { title: "Se lleva", field: "comision", width: 120, hozAlign: "right", cssClass: "num",
+          formatter: function (c) { return money(c.getValue()); } },
+        { title: "Queda en casa", field: "casa", width: 140, hozAlign: "right", cssClass: "num",
+          formatter: function (c) { return money(c.getValue()); } },
+        { title: "Estado", field: "estado", width: 120, formatter: function (c) {
+            var v = String(c.getValue() || "");
+            var bg = v === "pagado" ? "#00C87A" : "#E8A020";
+            return '<span style="display:inline-block;padding:3px 11px;border-radius:20px;font-size:13px;' +
+              'font-weight:700;background:' + bg + ';color:#0F1923;">' + esc(v) + "</span>";
+          } },
+        { title: "Corregidas", field: "corregidas", width: 120, hozAlign: "right", cssClass: "num",
+          formatter: function (c) { return Number(c.getValue()) ? c.getValue() : "—"; } },
+      ],
+      filas: filasComisiones,
+      cierre: function (f) {
+        if (!f.length) {
+          return "<strong>Ninguna percha reparte comisión todavía.</strong>" +
+            "Las perchas de tipo socio, consignación o feria aparecen aquí solas " +
+            "en cuanto venden.";
+        }
+        var deb = f.reduce(function (a, v) { return a + (Number(v.comision) || 0); }, 0);
+        var casa = f.reduce(function (a, v) { return a + (Number(v.casa) || 0); }, 0);
+        var pend = f.filter(function (v) { return v.estado === "pendiente"; });
+        var corr = f.reduce(function (a, v) { return a + (Number(v.corregidas) || 0); }, 0);
+        /* Los dos botones cambian la lectura del MISMO dato, no piden nada al
+           equipo. Por eso el cambio es instantaneo aunque no haya internet. */
+        return "<strong>" + money(deb) + " para quienes cobran comisión · " +
+          money(casa) + " queda en la casa</strong>" +
+          (pend.length ? "Sin liquidar: " + pend.map(function (v) { return esc(v.quien); }).join(", ") + ". " : "Todo liquidado. ") +
+          (corr ? corr + " venta(s) con el porcentaje corregido a mano. " : "") +
+          'Ver por: <button type="button" data-agr="percha"' +
+          (agruparComisionesPor === "percha" ? ' style="font-weight:700;text-decoration:underline;"' : "") +
+          ">trato/percha</button> · " +
+          '<button type="button" data-agr="persona"' +
+          (agruparComisionesPor === "persona" ? ' style="font-weight:700;text-decoration:underline;"' : "") +
+          ">persona</button>" +
+          " — la misma persona puede ser vendedora en una percha y artista en otra, " +
+          "con % distintos, y las dos cosas son ciertas a la vez.";
+      },
+    },
   };
+
+  /* ======================================================================
+     PESTANIA EVENTOS — la actividad desplegada POR EVENTO
+     ======================================================================
+     JFC 2026-08-18: "Despliegue de actividad POR EVENTO, cuando se trate de
+     eventos, tanto ventas como cambios etc (...) que sea la siguiente pestania
+     a Ventas y Clientes".
+
+     Un evento no es una percha ni un producto: es una funcion, una clase, una
+     feria con fecha. Sus ventas quedaban desperdigadas en la lista general y
+     para saber como fue "el concierto del sabado" habia que filtrar a ojo por
+     fecha y rezar. Aqui cada evento es UNA fila con todo lo suyo.
+
+     Se agrupa por nombre de evento y NO por producto: el mismo ticket puede
+     venderse para tres funciones distintas, y tres productos distintos pueden
+     pertenecer al mismo evento. El nombre es lo que la gente escribio y lo que
+     va a buscar.
+     ====================================================================== */
+  function filasEventos() {
+    var porEvento = {};
+    (datos.ventas || []).forEach(function (v) {
+      var nombre = String(v.eventoNombre || "").trim();
+      /* Sin nombre de evento no hay evento. Los productos tipo ticket que se
+         vendieron sin llenar el dato caen en un grupo aparte y honesto, en vez
+         de inventarles una funcion o de desaparecer de la vista. */
+      if (!nombre) {
+        if (v.tipoProducto !== "ticket") return;
+        nombre = "(ticket sin nombre de evento)";
+      }
+      var k = nombre.toLowerCase();
+      if (!porEvento[k]) porEvento[k] = {
+        evento: nombre, fecha: v.eventoFecha || "", ventas: 0, unidades: 0,
+        recaudado: 0, costo: 0, personas: 0, comision: 0, casa: 0,
+        perchas: {}, compradores: {}, ultima: "", corregidas: 0,
+      };
+      var g = porEvento[k];
+      var cant = Number(v.cantidad) || 0;
+      g.ventas++;
+      g.unidades += cant;
+      g.recaudado += (Number(v.precioUnit) || 0) * cant;
+      g.costo += (Number(v.costoUnit) || 0) * cant;
+      g.personas += Number(v.eventoPersonas) || 0;
+      g.comision += Number(v.comisionAsociado) || 0;
+      if (v.netoCasa != null) g.casa += Number(v.netoCasa) || 0;
+      if (v.comisionCorregida) g.corregidas++;
+      if (v.ubicacionNombre) g.perchas[v.ubicacionNombre] = 1;
+      var quien = v.pagador || v.clienteNombre;
+      if (quien) g.compradores[quien] = 1;
+      /* La fecha del evento la escribe una persona y puede venir vacia en unas
+         ventas y llena en otras: se toma la primera que aparezca. */
+      if (!g.fecha && v.eventoFecha) g.fecha = v.eventoFecha;
+      if (String(v.fecha || "") > g.ultima) g.ultima = v.fecha;
+    });
+    return Object.keys(porEvento).map(function (k) {
+      var g = porEvento[k];
+      return {
+        evento: g.evento,
+        fecha: g.fecha || "",
+        ventas: g.ventas,
+        unidades: g.unidades,
+        personas: g.personas || null,
+        recaudado: +g.recaudado.toFixed(2),
+        ganancia: +(g.recaudado - g.costo).toFixed(2),
+        comision: +g.comision.toFixed(2),
+        casa: +g.casa.toFixed(2),
+        perchas: Object.keys(g.perchas).join(", "),
+        compradores: Object.keys(g.compradores).length,
+        ultimaVenta: String(g.ultima || "").slice(0, 10),
+        corregidas: g.corregidas,
+      };
+    }).sort(function (a, b) {
+      /* Lo mas reciente arriba: un evento de anteayer importa mas que uno de
+         hace ocho meses, y el que abre el tablero viene de vivirlo. */
+      return String(b.ultimaVenta).localeCompare(String(a.ultimaVenta));
+    });
+  }
+
+  /* ======================================================================
+     PESTANIA COMISIONES — liquidar, y poder mirarlo de todas las formas
+     ======================================================================
+     JFC 2026-08-18: "agreguemos otro tab de Comisiones, para hacer
+     liquidaciones, y variados reportes por comisionista/promotora o artista
+     (cuando el artista por ejemplo le deja 15% al local (...) y se lleva el
+     resto) (...) debe agrupar lo de cada comisionista PERO admitir a la vez
+     que cada uno puede tener tratos y % distintos con la casa anfitriona".
+
+     Esa ultima parte es la que manda el diseno. La misma persona puede ser
+     vendedora en una percha al 10% y artista en otra al 85%, y las dos cosas
+     son ciertas al mismo tiempo. Por eso NO se guarda un porcentaje por
+     persona: se agrupa la plata real de cada trato y se muestra el % efectivo
+     que sale de esa plata. Un unico numero por persona seria mentira en cuanto
+     alguien tenga dos tratos, que es el caso normal, no el raro.
+
+     Se puede mirar por percha (un trato = una fila) o por persona (todos sus
+     tratos sumados). Las dos lecturas salen del mismo dato.
+     ====================================================================== */
+  var agruparComisionesPor = "percha";
+
+  function filasComisiones() {
+    var liq = datos.liquidaciones || [];
+    if (agruparComisionesPor === "percha") {
+      return liq.map(function (l) {
+        var pct = l.pctEfectivo != null ? l.pctEfectivo : (l.pctBase || 0);
+        return {
+          quien: l.asociadoNombre || l.promotorNombre || "(sin asociado/a asignado)",
+          percha: l.ubicacion,
+          modalidad: pct >= 50 ? "Artista — la casa retiene" : "Vendedor/a — se lleva",
+          pct: pct,
+          pctCasa: +(100 - pct).toFixed(2),
+          ventasBrutas: l.ventasBrutas || 0,
+          comision: l.comisionSocio || 0,
+          casa: l.netoDueno != null ? l.netoDueno : +((l.ventasBrutas || 0) - (l.comisionSocio || 0)).toFixed(2),
+          estado: l.estado || "",
+          pendientes: l.ventasPendientes || 0,
+          corregidas: l.ventasCorregidas || 0,
+        };
+      }).sort(function (a, b) { return b.comision - a.comision; });
+    }
+    /* Por persona: se SUMA la plata de todos sus tratos y el % se deriva del
+       total. Alguien con 10% en una percha y 85% en otra sale con su % real
+       combinado, que es un dato util y no una etiqueta inventada. */
+    var porQuien = {};
+    (datos.liquidaciones || []).forEach(function (l) {
+      var quien = l.asociadoNombre || l.promotorNombre || "(sin asociado/a asignado)";
+      if (!porQuien[quien]) porQuien[quien] = {
+        quien: quien, perchas: [], ventasBrutas: 0, comision: 0, casa: 0,
+        pendientes: 0, corregidas: 0,
+      };
+      var g = porQuien[quien];
+      g.perchas.push(l.ubicacion + " (" + (l.pctEfectivo != null ? l.pctEfectivo : l.pctBase || 0) + "%)");
+      g.ventasBrutas += l.ventasBrutas || 0;
+      g.comision += l.comisionSocio || 0;
+      g.casa += l.netoDueno != null ? l.netoDueno : ((l.ventasBrutas || 0) - (l.comisionSocio || 0));
+      g.pendientes += l.ventasPendientes || 0;
+      g.corregidas += l.ventasCorregidas || 0;
+    });
+    return Object.keys(porQuien).map(function (k) {
+      var g = porQuien[k];
+      var pct = g.ventasBrutas > 0 ? +(g.comision / g.ventasBrutas * 100).toFixed(2) : 0;
+      return {
+        quien: g.quien,
+        percha: g.perchas.join(" · "),
+        modalidad: g.perchas.length > 1 ? "Varios tratos" : (pct >= 50 ? "Artista — la casa retiene" : "Vendedor/a — se lleva"),
+        pct: pct,
+        pctCasa: +(100 - pct).toFixed(2),
+        ventasBrutas: +g.ventasBrutas.toFixed(2),
+        comision: +g.comision.toFixed(2),
+        casa: +g.casa.toFixed(2),
+        estado: g.pendientes ? "pendiente" : "pagado",
+        pendientes: g.pendientes,
+        corregidas: g.corregidas,
+      };
+    }).sort(function (a, b) { return b.comision - a.comision; });
+  }
 
   function mostrar() {
     $("puerta").style.display = "none";
@@ -735,6 +1023,15 @@
       exportar(b.dataset.x);
     });
     $("buscar").addEventListener("input", function () { filtrar(this.value); });
+    /* Agrupar Comisiones por trato o por persona. Vive en el pie porque es una
+       lectura del dato que ya esta en pantalla, no un filtro nuevo: no pide
+       nada al equipo y funciona igual sin internet. */
+    $("cierre").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-agr]");
+      if (!b) return;
+      agruparComisionesPor = b.dataset.agr;
+      pintarTabla();
+    });
   }
 
   /* Un solo campo que busca en TODAS las columnas: el dueño no piensa en
@@ -1102,6 +1399,14 @@
       };
     });
 
+    /* Quien cobra en cada percha. Se resuelve una vez y no percha por venta. */
+    var asoc = {};
+    (e.ubicaciones || []).forEach(function (u) {
+      if (!u.promotoraId) return;
+      var pr = (e.promotoras || []).find(function (x) { return x.id === u.promotoraId; });
+      if (pr) asoc[u.id] = pr.nombre;
+    });
+
     var hoy = new Date(); hoy = hoy.getFullYear() + "-" +
       String(hoy.getMonth() + 1).padStart(2, "0") + "-" + String(hoy.getDate()).padStart(2, "0");
     var entra = 0, sale = 0, nHoy = 0;
@@ -1111,18 +1416,72 @@
       var pu = Number(v.precioUnit) || 0, cu = Number(v.costoUnit) || 0;
       if (String(v.fecha || "").slice(0, 10) === hoy) { entra += pu * cant; sale += cu * cant; nHoy++; }
       return {
-        fecha: v.fecha, productoNombre: p.nombre || "(producto borrado)",
+        id: v.id, fecha: v.fecha, productoNombre: p.nombre || "(producto borrado)",
         sku: p.sku || "", categoria: p.categoria || "", cantidad: cant,
         precioUnit: pu, costoUnit: cu,
         clienteNombre: cli[v.clienteId] || "",
+        ubicacionId: v.ubicacionId,
         ubicacionNombre: ubic[v.ubicacionId] || "",
+        /* Lo mismo que manda /api/ventas/todas por el relay: sin esto, las
+           pestanias de Eventos y Comisiones funcionarian conectadas al equipo y
+           quedarian vacias en el propio dispositivo del duenio, que es
+           exactamente el bug que ya nos costo un tablero en blanco. */
+        tipoProducto: p.tipoProducto || "normal",
+        eventoNombre: (v.info && v.info.nombreEvento) || "",
+        eventoFecha: (v.info && v.info.fechaEvento) || "",
+        eventoPersonas: (v.info && v.info.numPersonas) || null,
+        pagador: (v.info && v.info.nombrePagador) || "",
+        comisionPct: v.split ? v.split.comisionPct : null,
+        comisionAsociado: v.split ? v.split.montoComisionSocio : 0,
+        netoCasa: v.split ? v.split.montoNetoDueno : null,
+        comisionCorregida: !!(v.split && v.split.corregida),
+        liquidada: !!v.liquidada,
+        asociadoNombre: asoc[v.ubicacionId] || "",
       };
+    });
+
+    /* LIQUIDACIONES EN LOCAL. Cuando el tablero se abre conectado al equipo,
+       estas llegan calculadas por el backend. Aqui se rehacen con la misma
+       definicion —agrupar el mes por percha— para que la pestania de Comisiones
+       diga lo mismo por los dos caminos. Se suma la plata REAL de cada venta,
+       no se reaplica un porcentaje: si alguien corrigio una comision en
+       retrospectiva, este total ya la trae corregida. */
+    var mesActual = new Date().toISOString().slice(0, 7);
+    var liqPorPercha = {};
+    ventas.forEach(function (v) {
+      if (String(v.fecha || "").slice(0, 7) !== mesActual) return;
+      if (v.comisionPct == null) return;              /* percha propia: no reparte */
+      var id = v.ubicacionId || "";
+      if (!liqPorPercha[id]) liqPorPercha[id] = {
+        ubicacionId: id, ubicacion: ubic[id] || "(percha borrada)",
+        asociadoNombre: v.asociadoNombre || "", ventasBrutas: 0,
+        comisionSocio: 0, netoDueno: 0, ventasPendientes: 0,
+        ventasCorregidas: 0, transacciones: 0,
+      };
+      var g = liqPorPercha[id];
+      g.ventasBrutas += (Number(v.precioUnit) || 0) * (Number(v.cantidad) || 0);
+      g.comisionSocio += Number(v.comisionAsociado) || 0;
+      g.netoDueno += Number(v.netoCasa) || 0;
+      g.transacciones++;
+      if (!v.liquidada) g.ventasPendientes++;
+      if (v.comisionCorregida) g.ventasCorregidas++;
+    });
+    var liquidaciones = Object.keys(liqPorPercha).map(function (k) {
+      var g = liqPorPercha[k];
+      g.ventasBrutas = +g.ventasBrutas.toFixed(2);
+      g.comisionSocio = +g.comisionSocio.toFixed(2);
+      g.netoDueno = +g.netoDueno.toFixed(2);
+      g.pctEfectivo = g.ventasBrutas > 0 ? +(g.comisionSocio / g.ventasBrutas * 100).toFixed(2) : 0;
+      g.estado = g.ventasPendientes === 0 ? "pagado" : "pendiente";
+      return g;
     });
 
     return {
       productos: productos,
       clientes: clientesArr.filter(function (c) { return !c.despedido; }),
       ventas: ventas,
+      liquidaciones: liquidaciones,
+      perchas: e.ubicaciones || [],
       resumen: { resumenDia: {
         entra: +entra.toFixed(2), sale: +sale.toFixed(2),
         gananciaHoy: +(entra - sale).toFixed(2), ventasCount: nHoy,
@@ -1186,6 +1545,7 @@
       if (!(d.productos || []).length && !(d.ventas || []).length) return false;
       datos.productos = d.productos; datos.clientes = d.clientes;
       datos.ventas = d.ventas; datos.resumen = d.resumen;
+      datos.liquidaciones = d.liquidaciones; datos.perchas = d.perchas;
       try {
         var o = JSON.parse(localStorage.getItem("amigable_owned") || "{}");
         if (o.nombreNegocio) $("neg-nombre").textContent = o.nombreNegocio;
@@ -1197,6 +1557,81 @@
       return true;
     } catch (_) { return false; }
   }
+
+  /* ==================================================== COSTO UNITARIO REAL
+     Todo lo que se paga por traer una caja se reparte entre las unidades que
+     de verdad quedan vendibles. Las que se rompen no desaparecen del costo: su
+     plata se la comen las que sobreviven, que es por que el costo real casi
+     siempre es mayor que "la factura dividido para las unidades".
+
+     No guarda nada: el tablero es un lienzo. Da el numero para que se escriba
+     en la ficha del producto desde la app.
+     ====================================================================== */
+  (function () {
+    var ids = ["cu-total", "cu-flete", "cu-imp", "cu-otros", "cu-unid", "cu-merma", "cu-precio"];
+    var out = $("cu-out");
+    if (!out) return;
+    var num = function (id) { var v = Number(($(id) || {}).value); return Number.isFinite(v) ? v : 0; };
+
+    function calcular() {
+      var unidades = num("cu-unid");
+      var desembolso = num("cu-total") + num("cu-flete") + num("cu-imp") + num("cu-otros");
+      if (!unidades || unidades <= 0 || desembolso <= 0) {
+        out.innerHTML = '<span style="color:#5A6B7A;">Escribe al menos cuánto pagaste y cuántas unidades llegaron.</span>';
+        return;
+      }
+      var merma = Math.max(0, Math.min(99, num("cu-merma")));
+      var vendibles = unidades * (1 - merma / 100);
+      /* Si la merma deja menos de una unidad, la division se vuelve absurda y
+         escupiria un costo gigante presentado como si fuera un dato. */
+      if (vendibles < 1) {
+        out.innerHTML = '<span style="color:#A8123A;font-weight:700;">Con esa merma no queda ni una unidad vendible. Revisa el porcentaje.</span>';
+        return;
+      }
+      var unitarioBruto = desembolso / unidades;
+      var unitarioReal = desembolso / vendibles;
+      var precio = num("cu-precio");
+
+      var html = '<div style="display:flex;gap:20px;flex-wrap:wrap;">';
+      html += '<div><div style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#5A6B7A;font-weight:700;">Te cuesta cada una</div>' +
+        '<div style="font-size:26px;font-weight:700;">' + money(unitarioReal) + "</div>" +
+        '<div style="font-size:13px;color:#5A6B7A;">' + vendibles.toFixed(vendibles % 1 ? 1 : 0) + " vendibles de " + unidades + "</div></div>";
+      if (merma > 0) {
+        html += '<div><div style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#5A6B7A;font-weight:700;">Sin contar lo que se rompe</div>' +
+          '<div style="font-size:26px;font-weight:700;color:#5A6B7A;">' + money(unitarioBruto) + "</div>" +
+          '<div style="font-size:13px;color:#5A6B7A;">la merma le suma ' + money(unitarioReal - unitarioBruto) + "</div></div>";
+      }
+      if (precio > 0) {
+        var margen = precio - unitarioReal;
+        var pct = precio > 0 ? (margen / precio) * 100 : 0;
+        var col = margen <= 0 ? "#A8123A" : pct < 20 ? "#B8760A" : "#00975C";
+        html += '<div><div style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#5A6B7A;font-weight:700;">Ganas por unidad</div>' +
+          '<div style="font-size:26px;font-weight:700;color:' + col + ';">' + money(margen) + "</div>" +
+          '<div style="font-size:13px;color:#5A6B7A;">' + pct.toFixed(1) + "% del precio</div></div>";
+        /* El punto de equilibrio contesta la pregunta que sigue siempre despues
+           de la primera: cuantas hay que vender para no perder. */
+        if (margen > 0) {
+          var equilibrio = Math.ceil(desembolso / margen);
+          html += '<div><div style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#5A6B7A;font-weight:700;">Para recuperar lo invertido</div>' +
+            '<div style="font-size:26px;font-weight:700;">' + equilibrio + "</div>" +
+            '<div style="font-size:13px;color:#5A6B7A;">unidades vendidas</div></div>';
+        }
+      }
+      html += "</div>";
+      if (precio > 0 && precio <= unitarioReal) {
+        html += '<p style="margin:12px 0 0;color:#A8123A;font-weight:700;">A ' + money(precio) +
+          " estarías vendiendo con pérdida: cada unidad te cuesta " + money(unitarioReal) + ".</p>";
+      }
+      html += '<p style="margin:12px 0 0;font-size:13px;color:#5A6B7A;">Este número no se guarda solo. Escríbelo como "Costo" en la ficha del producto desde la app.</p>';
+      out.innerHTML = html;
+    }
+
+    ids.forEach(function (id) {
+      var el = $(id);
+      if (el) el.addEventListener("input", calcular);
+    });
+    calcular();
+  })();
 
   /* ------------------------------------------------------------- arranque */
   function normalizarCodigo(c) {

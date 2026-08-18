@@ -416,17 +416,26 @@
     /* Rutas verificadas contra mock-backend.js: el resumen se llama
        /api/dashboard, y /api/ventas/todas se agrego para el tablero (solo
        lectura, ya enriquecida con nombres). */
-    const [productos, clientes, ventas, resumen] = await Promise.all([
+    /* liquidaciones y perchas se suman para las pestanias de Comisiones y
+       Eventos del tablero (JFC 2026-08-18). Son las dos tablas mas chicas de
+       todas y evitan que el tablero tenga que rehacer la cuenta del reparto por
+       su cuenta — que es como dos pantallas terminan mostrando dos numeros
+       distintos del mismo negocio. */
+    const [productos, clientes, ventas, resumen, liquidaciones, perchas] = await Promise.all([
       get("/productos?ubicacionId=todas"),
       get("/clientes"),
       get("/ventas/todas?ubicacionId=todas"),
       get("/dashboard?ubicacionId=todas"),
+      get("/liquidaciones"),
+      get("/ubicaciones?todas=1"),
     ]);
     return {
       productos: productos || [],
       clientes: Array.isArray(clientes) ? clientes : [],
       ventas: ventas || [],
       resumen: resumen || null,
+      liquidaciones: Array.isArray(liquidaciones) ? liquidaciones : [],
+      perchas: Array.isArray(perchas) ? perchas : [],
       negocio: (function () {
         try { return (JSON.parse(localStorage.getItem("amigable_owned") || "null") || {}).nombreNegocio || ""; }
         catch (_) { return ""; }
@@ -462,6 +471,8 @@
       .concat(trocear("productos", foto.productos))
       .concat(trocear("clientes", foto.clientes))
       .concat(trocear("ventas", foto.ventas))
+      .concat(trocear("liquidaciones", foto.liquidaciones))
+      .concat(trocear("perchas", foto.perchas))
       .concat([{ tabla: "resumen", i: 0, total: 1, filas: [foto.resumen || {}] }]);
     for (let k = 0; k < trozos.length; k++) {
       if (!ws || ws.readyState !== WebSocket.OPEN) return;
