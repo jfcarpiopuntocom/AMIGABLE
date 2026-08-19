@@ -1,3 +1,4 @@
+// COMPARTIDO: portado y mantenido identico entre apps hermanas a proposito.
 (function(){"use strict";
 const FLAG="amigable_bienvenida_v3"; // subir version = volver a mostrarla
 // v3 (2026-07-16): bug corregido — auth-ui.js marcaba esta flag como "vista"

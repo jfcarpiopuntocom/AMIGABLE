@@ -1,3 +1,4 @@
+// COMPARTIDO: portado y mantenido identico entre apps hermanas a proposito.
 const MASTER_CODE_DEFAULT="POSCUENCA-MAESTRO-2026";const PIN_XOR_KEY="oc-pin-r-v1";(function(){
 /* GUARD DE CONTEXTO SEGURO (JFC 2026-07-22) — NO BORRAR, es puramente aditivo.
    crypto.subtle SOLO existe en contexto seguro (https:// o localhost). Si el
