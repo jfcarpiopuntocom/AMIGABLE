@@ -1902,6 +1902,20 @@
 </div>
 
 <script>
+/* CATEGORIAS SUGERIDAS (JFC 2026-08-15). Un <datalist> es lo mixto que pedia:
+   despliega las opciones y aun asi deja escribir una nueva. Nativo, sin
+   libreria, y en iOS y Android se comporta como un desplegable normal.
+   La lista sale de lo que el negocio YA usa: nadie impone un catalogo, y a la
+   segunda semana cada quien tiene el suyo. */
+function ocLlenarCategorias(productos) {
+  try {
+    const dl = document.getElementById("oc-categorias");
+    if (!dl) return;
+    const vistas = [...new Set((productos || []).map(p => (p.categoria || "").trim()).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, "es"));
+    dl.innerHTML = vistas.map(c => `<option value="${c.replace(/"/g, "&quot;")}">`).join("");
+  } catch (_) {}
+}
 const API = "/api";
 let ubicaciones = [];
 let ubicacionActual = "todas";
@@ -3070,7 +3084,7 @@ async function cargarHoy(){
   } catch (_) { /* sin estrellas: el bloque queda vacío */ }
   // #16 (2026-07-28, corregido tras feedback de JFC — "no antes de TODO, solo
   // antes de Alertas de hoy, el semaforo 'Necesitas actuar hoy' se queda arriba"):
-  // en la vista del Empleado, "Para impulsar hoy" va justo ANTES de "Alertas
+  // en la vista del Encargado, "Para impulsar hoy" va justo ANTES de "Alertas
   // de hoy" (los urgentes rojo/naranja), pero DEBAJO del semaforo hero y de
   // las tarjetas de resumen — es un ajuste de orden acotado, no un rediseño.
   try {
@@ -3406,6 +3420,9 @@ async function cargarInventario(){
     grid.innerHTML = `<p>No se pudo cargar el inventario. Revisa tu conexion e intenta de nuevo.</p>`;
     return;
   }
+  /* Las categorias sugeridas se recalculan con cada carga: si el duenio creo
+     una nueva hace un minuto, ya aparece en el desplegable. */
+  ocLlenarCategorias(productos);
   if (!Array.isArray(productos)){
     grid.innerHTML = `<p>No se pudo leer el inventario (respuesta inesperada del servidor).</p>`;
     return;
@@ -4091,7 +4108,7 @@ function mostrarFormNuevoProducto(codigoEscaneado){
   fichaTargetActual = "fichaResultado";
   const contenedor = document.getElementById(fichaTargetActual);
   contenedor.innerHTML = `
-    <div class="ficha-producto tag-card" style="text-align:left;">
+    <div class="ficha-producto tag-card" style="text-align:left;" data-borrador="alta-producto">
       <div class="titulo">Nuevo producto</div>
       ${codigoEscaneado
         ? `<div class="linea"><strong>Código:</strong> ${codigoEscaneado}</div>`
@@ -4100,7 +4117,7 @@ function mostrarFormNuevoProducto(codigoEscaneado){
       <label style="display:block;margin-top:10px;font-size:14px;">Nombre<br>
         <input id="np-nombre" type="text" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Categoría<br>
-        <input id="np-categoria" type="text" placeholder="Ej: Licores" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
+        <input id="np-categoria" type="text" list="oc-categorias" autocomplete="off" placeholder="Elige o escribe una" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"><datalist id="oc-categorias"></datalist></label>
       <!-- M5 (2026-08-14): variante interna. Texto LIBRE y no una lista
            cerrada, porque los chips del mercado cambian cada temporada y una
            lista obliga a tocar codigo cada vez que aparece uno nuevo.
@@ -4148,6 +4165,9 @@ function mostrarFormNuevoProducto(codigoEscaneado){
   });
 }
 
+async /* Tras un alta exitosa hay que llamar a OCBorrador.limpiar("alta-producto"):
+   sin eso, el borrador reaparece en el formulario siguiente. Ver el final de
+   esta funcion. */
 async function crearProductoNuevo(codigoEscaneado){
   // FIX (bug IDs duplicados np-*): mostrarFormNuevoProducto() y abrirAltaProducto()
   // pintan formularios con los MISMOS id="np-*" en DOS contenedores que coexisten
@@ -4189,6 +4209,9 @@ async function crearProductoNuevo(codigoEscaneado){
     return;
   }
   if (!res.ok){ msg.style.color = "var(--rojo)"; msg.textContent = data.error; return; }
+  /* El producto ya quedo guardado de verdad: el borrador cumplio y se va. Sin
+     esto reaparecia en el alta siguiente con los datos del anterior. */
+  try { if (window.OCBorrador) window.OCBorrador.limpiar("alta-producto"); } catch (_) {}
   pintarFicha(data);
 }
 
@@ -4326,7 +4349,7 @@ async function mostrarFormEditarProducto(id){
       ${hermanos.length ? `<div style="margin-top:8px;font-size:14px;color:var(--ink-soft);">También en: ${hermanos.map(h => `${escHtml(h.ubicacionNombre || "sin percha")} (${h.stockActual}u)`).join(" · ")}</div>` : ""}
       ${(() => { const ocupadas = new Set([p.ubicacionId, ...hermanos.map(h => h.ubicacionId)]); const disponibles = perchas.filter(u => !ocupadas.has(u.id)); return disponibles.length ? `
       <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--azul-suave,#dde5ec);">
-        <label style="display:block;font-size:14px;font-weight:700;color:var(--ink);">¿También en OTRA percha? (opcional, no reemplaza la de arriba)<br>
+        <label style="display:block;font-size:14px;font-weight:700;color:var(--ink);">¿Ponerlo también en otra percha (opcional)<br>
           <span style="font-weight:400;font-size:13px;color:var(--ink-soft);">Esto crea una copia adicional de este producto en otra percha — la "Percha principal" de arriba no cambia.</span>
         </label>
         <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -4341,7 +4364,7 @@ async function mostrarFormEditarProducto(id){
         <label style="flex:1;font-size:14px;">Umbral alerta amarilla<br><input id="ed-umbral-amarillo" type="number" min="0" step="1" value="${p.umbralAmarillo || 0}" ${inp}></label>
       </div>
       <label style="display:block;margin-top:10px;font-size:14px;">Categoría<br>
-        <input id="ed-categoria" type="text" value="${q(p.categoria)}" ${inp}></label>
+        <input id="ed-categoria" type="text" list="oc-categorias" autocomplete="off" value="${q(p.categoria)}" ${inp}></label>
       <label style="display:block;margin-top:14px;font-size:14px;color:var(--rust,#E86040);font-weight:700;">Código interno — NO cambia al renombrar; solo si lo escribes de nuevo aquí<br>
         <input id="ed-barcode" type="text" value="${q(p.barcode)}" ${inp}></label>
       <div id="ed-msg" style="font-size:14px;margin-top:10px;font-weight:700;"></div>
@@ -4499,7 +4522,7 @@ async function abrirAltaProducto(){
   try { perchasAlta = await (await fetch(`${API}/ubicaciones`)).json(); if (!Array.isArray(perchasAlta)) perchasAlta = []; } catch(_){}
   const inp = 'style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"';
   body.innerHTML = `
-    <div class="ficha-producto tag-card" style="text-align:left;">
+    <div class="ficha-producto tag-card" style="text-align:left;" data-borrador="alta-producto">
       <div class="titulo">Nuevo producto</div>
       <label style="display:block;margin-top:10px;font-size:14px;">Código de barras / interno<br>
         <input id="np-barcode" type="text" placeholder="Escanea o escribe el código" ${inp}></label>
@@ -6153,6 +6176,14 @@ setTimeout(() => {
      Si este archivo no carga, la app vende igual: solo se pierde el aviso. -->
 <script src="./micelio-vivo.js"></script>
 <script src="./micelio-ui.js"></script>
+<!-- BORRADORES (2026-08-15): que un back del navegador, una llamada o una
+     caida de internet no borren lo ya tecleado. Nunca guarda PINs ni claves.
+     Si no carga, los formularios funcionan igual: solo se pierde la red. -->
+<script src="./borrador-formularios.js"></script>
+<!-- BORRADORES (2026-08-15): que un back del navegador, una llamada o una
+     caida de internet no borren lo ya tecleado. Nunca guarda PINs ni claves.
+     Si no carga, los formularios funcionan igual: solo se pierde la red. -->
+<script src="./borrador-formularios.js"></script>
 <!-- Novedades: gamificación experimental del empleado (FEATURE EXPERIMENTAL,
      JFC 2026-07-22). Módulo aparte, encendida por DEFECTO (el dueño puede
      apagarla en Avanzado con un "0" explícito).

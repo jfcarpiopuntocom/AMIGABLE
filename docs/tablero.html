@@ -1036,7 +1036,15 @@
 
   /* El puente para tablero-avanzado.js. Se expone lo minimo: pedir, y las
      cuatro funciones de formato. Nada de ws ni de la clave. */
-  window.__lienzo = { $: $, esc: esc, money: money, fecha: fecha, ordenar: ordenar };
+  window.__lienzo = {
+    $: $, esc: esc, money: money, fecha: fecha, ordenar: ordenar,
+    /* EL BUG DE LA HERMANA DE JFC (2026-08-15): las secciones de Avanzado
+       pedian TODO por el relay, incluso con el tablero abierto en el mismo
+       equipo donde esta la app. Si la app no estaba abierta en otra pestana,
+       nadie contestaba y los tabs quedaban vacios con sus datos ahi mismo.
+       Ahora Avanzado lee primero de aqui y solo usa el relay si no hay nada. */
+    estadoLocal: function () { return leerEstadoLocal(); },
+  };
 
   /* ======================================================== MODO LOCAL ====
      LO PRIMERO QUE HAY QUE INTENTAR (JFC, 2026-08-15, y con toda la razon): si

@@ -34,7 +34,30 @@
 
   var $ = L.$, esc = L.esc, money = L.money, fecha = L.fecha, ordenar = L.ordenar;
 
-  var ROLNOM = { dueno: "Dueño", admin: "Admin", empleado: "Empleado", contador: "Contador" };
+  /* "Encargado", no "empleado" (JFC 2026-08-15): esto no es control de
+     personal, es quien esta a cargo de un local o unas perchas. */
+  var ROLNOM = { dueno: "Dueño", admin: "Admin", empleado: "Encargado", contador: "Contador" };
+
+  /* LEER PRIMERO DE ESTE DISPOSITIVO. Si el negocio esta aqui, los datos ya
+     estan aqui: pedirlos por el relay y esperar a que otro conteste es como
+     los tabs quedaban vacios con la informacion a dos centimetros. El relay
+     queda para lo que si lo necesita: mirar desde OTRO equipo. */
+  function local() {
+    try { return L.estadoLocal ? L.estadoLocal() : null; } catch (_) { return null; }
+  }
+
+  /* Pide por el relay SOLO si no hay nada local. Devuelve la misma forma que
+     ordenar(), para que las secciones no sepan de donde vino. */
+  async function traer(ruta, deLocal) {
+    var e = local();
+    if (e) {
+      try {
+        var d = deLocal(e);
+        if (d != null) return { ok: true, datos: d, local: true };
+      } catch (_) {}
+    }
+    return await ordenar("GET", ruta);
+  }
 
   /* El detalle de un movimiento a veces es texto y a veces un objeto con los
      campos que cambiaron. Pintarlo crudo daba "[object Object]" en pantalla. */
@@ -102,7 +125,11 @@
       nombre: "Mi equipo",
       pintar: async function (c) {
         cargando(c, "Pidiendo la lista a tu dispositivo…");
-        var r = await ordenar("GET", "/api/usuarios");
+        var r = await traer("/api/usuarios", function (e) {
+          return (e.usuarios || []).map(function (u) {
+            return { id: u.id, nombre: u.nombre, email: u.email, rol: u.rol, activo: u.activo };
+          });
+        });
         if (!r.ok || !Array.isArray(r.datos)) return noLlego(c, r, "No llegó la lista.");
 
         var filas = r.datos.map(function (u) {
@@ -130,7 +157,7 @@
           '<div><label for="avz-nom" style="display:block;font-size:14px;font-weight:700;margin:0 0 4px;">Nombre</label>' +
           '<input id="avz-nom" type="text" maxlength="40" style="' + campo + '"></div>' +
           '<div><label for="avz-rol" style="display:block;font-size:14px;font-weight:700;margin:0 0 4px;">Rol</label>' +
-          '<select id="avz-rol" style="' + campo + '"><option value="empleado">Empleado</option>' +
+          '<select id="avz-rol" style="' + campo + '"><option value="empleado">Encargado</option>' +
           '<option value="admin">Admin</option></select></div>' +
           '<button type="button" id="avz-add" class="btn" style="width:auto;margin:0;padding:13px 22px;">Agregar</button>' +
           "</div>" +
@@ -144,7 +171,11 @@
             msg("Pidiendo el cambio a tu dispositivo…");
             var r2 = await ordenar("PATCH", "/api/usuarios/" + b.dataset.u, { activo: b.dataset.act === "1" });
             b.disabled = false;
-            if (!r2.ok) { msg((r2.datos && r2.datos.error) || "No se pudo.", true); return; }
+            if (!r2.ok) {
+              msg((r2.datos && r2.datos.error) ||
+                "Para cambiar esto, abre amigable-123 en este equipo o en el teléfono.", true);
+              return;
+            }
             msg("Hecho.");
             AVZ.equipo.pintar(c);
           });
@@ -158,7 +189,11 @@
           msg("Pidiendo a tu dispositivo que lo agregue…");
           var r2 = await ordenar("POST", "/api/usuarios", { nombre: nombre, rol: document.getElementById("avz-rol").value });
           add.disabled = false;
-          if (!r2.ok) { msg((r2.datos && r2.datos.error) || "No se pudo agregar.", true); return; }
+          if (!r2.ok) {
+            msg((r2.datos && r2.datos.error) ||
+              "Para agregar a alguien, abre amigable-123 en este equipo o en el teléfono. Desde aquí solo se puede consultar.", true);
+            return;
+          }
           msg('"' + nombre + '" agregado. Su PIN está en tu dispositivo.');
           AVZ.equipo.pintar(c);
         });
@@ -169,7 +204,9 @@
       nombre: "Log de actividad",
       pintar: async function (c) {
         cargando(c, "Pidiendo el registro…");
-        var r = await ordenar("GET", "/api/actividad");
+        var r = await traer("/api/actividad", function (e) {
+          return (e.movimientos || []).slice().reverse().slice(0, 100);
+        });
         if (!r.ok || !Array.isArray(r.datos)) return noLlego(c, r, "No llegó el registro.");
         c.innerHTML =
           '<p style="font-size:15px;line-height:1.55;margin:0 0 12px;">Los últimos ' +
@@ -218,7 +255,17 @@
       nombre: "Transferencias",
       pintar: async function (c) {
         cargando(c, "Pidiendo las transferencias…");
-        var r = await ordenar("GET", "/api/transferencias");
+        var r = await traer("/api/transferencias", function (e) {
+          var ubic = {}, prods = {};
+          (e.ubicaciones || []).forEach(function (u) { ubic[u.id] = u.nombre; });
+          (e.productos || []).forEach(function (p) { prods[p.id] = p.nombre; });
+          return (e.transferencias || []).slice().reverse().map(function (t) {
+            return { fecha: t.fecha, cantidad: t.cantidad, estado: t.estado,
+              productoNombre: t.productoNombre || prods[t.productoOrigenId] || "",
+              origenNombre: t.origenNombre || ubic[t.origenId] || "",
+              destinoNombre: t.destinoNombre || ubic[t.destinoId] || "" };
+          });
+        });
         if (!r.ok || !Array.isArray(r.datos)) return noLlego(c, r, "No llegaron.");
         var COL = { pendiente: ["#FFC700", "#3D2E00"], aceptada: ["#00C87A", "#0A2E1E"], rechazada: ["#E8365D", "#FFFFFF"] };
         c.innerHTML =
