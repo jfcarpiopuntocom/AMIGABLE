@@ -91,6 +91,7 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
       <p style="font-size:13px;color:var(--ink-soft);">Tu licencia — compártela con cada celular nuevo UNA sola vez:</p>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <code id="oc-sync-codigo-actual" style="font-size:16px;font-weight:700;background:var(--paper-deep,#E2E8ED);padding:6px 12px;border-radius:6px;">${escHtml(licenciaMostrada)}</code>
+            <span id="oc-sync-huella" style="font-family:var(--font-mono,monospace);font-size:15px;font-weight:700;color:#0F1923;"></span>
         <div id="oc-sync-qr" style="margin-top:8px;"></div>
         ${salaDistinta ? `<div style="margin-top:10px;padding:10px;border:2px solid #E86040;border-radius:6px;">
           <p style="font-size:13px;margin:0 0 8px;color:var(--ink);"><strong>Tus dispositivos están sincronizados con otro código tuyo:</strong>
@@ -165,6 +166,22 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
       cont.innerHTML = `<img src="${q.createDataURL(4, 4)}" width="120" height="120" alt="QR del código de tu negocio" style="border-radius:6px;">`;
     } catch (_) { /* QR es un extra visual — si falla, el código en texto ya basta */ }
   }
+  /* HUELLA JUNTO AL CODIGO (portado de friendly-123, 2026-08-19; se habia
+     quedado fuera del primer port de hoy). Quien se une, al terminar de
+     mergear, recalcula la suya: si le da la misma, el merge quedo verificado
+     y se le puede decir en pantalla. Es un recibo comprobable por una
+     persona, sin tener que confiar en que "seguro se sincronizo". */
+  function pintarHuella() {
+    try {
+      const el = document.getElementById("oc-sync-huella");
+      if (!el) return;
+      const h = window.OCSync && window.OCSync.huella ? window.OCSync.huella() : null;
+      el.textContent = h && h.corta ? " · " + h.corta : "";
+      el.title = h ? h.perchas + " perchas, " + h.productos + " productos" : "";
+    } catch (_) {}
+  }
+  pintarHuella();
+  try { window.addEventListener("oc-micelio-cambio", pintarHuella); } catch (_) {}
   if (salaActiva) pintarQR(salaActiva);
 
   document.getElementById("oc-sync-activar").addEventListener("click", (ev) => {
@@ -192,6 +209,7 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
     document.getElementById("oc-sync-activo").style.display = "block";
     document.getElementById("oc-sync-codigo-actual").textContent = codigo.trim();
     pintarQR(codigo.trim());
+    pintarHuella();
   });
   const btnCompartir = document.getElementById("oc-sync-compartir");
   if (btnCompartir) btnCompartir.addEventListener("click", () => {
@@ -202,10 +220,11 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
     // Ojo (2026-07-23): esto se manda UNA vez por celular nuevo, nunca por
     // venta ni por evento — el texto lo dice explícito para que nadie piense
     // que hay que repetirlo antes de cada feria.
+    const _h = (function () { try { const x = window.OCSync && window.OCSync.huella ? window.OCSync.huella() : null; return x && x.corta ? x.corta : ""; } catch (_) { return ""; } })();
     const texto = [
       `Únete a nuestro equipo en AMIGABLE-123${negocio ? " (" + negocio + ")" : ""}.`,
       `Abre la app y toca "¿Nuevo en este equipo?" en la pantalla de PIN, pega este código UNA sola vez:`,
-      codigo,
+      codigo + (_h ? " · " + _h : ""),
       ``,
       `No hace falta repetirlo — tu celular queda sincronizado con el equipo para siempre.`,
     ].join("\n");
