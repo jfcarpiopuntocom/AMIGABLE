@@ -223,8 +223,13 @@
     function ofrecerRecarga(esperado, sirviendo) {
       try {
         if (document.getElementById("oc-version-vieja")) return;
-        var esES = false;
-        try { esES = !!(window.OCI18n && window.OCI18n.getLang() === "es"); } catch (_) {}
+        // FIX (JFC 2026-08-20, bug A4): este archivo se porto de friendly-123
+        // (que si tiene OCI18n) sin adaptar -- amigable-123 NO tiene sistema
+        // bilingue (ver backup-scheduler.js), asi que esES siempre daba false
+        // y el aviso salia en ingles a usuarios que no lo leen. Default true:
+        // esta app es 100% espanol.
+        var esES = true;
+        try { if (window.OCI18n) esES = window.OCI18n.getLang() === "es"; } catch (_) {}
         var d = document.createElement("div");
         d.id = "oc-version-vieja";
         d.setAttribute("role", "status");

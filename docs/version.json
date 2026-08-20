@@ -3,6 +3,6 @@
   "fecha": "2026-07-17",
   "changelog": "amigable-123 convierte la tarea de manejar un negocio en algo vivo: tus productos hablan en colores que se encienden solos cuando hace falta actuar. Funciona sin internet, tus datos siguen siendo tuyos, sin suscripciones, sin anuncios. Tu negocio, a color.",
   "requerida": false,
-  "shell": "amigable-shell-v90",
+  "shell": "amigable-shell-v91",
   "apagar": []
 }

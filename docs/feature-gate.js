@@ -31,10 +31,23 @@
       .catch(function () { _listo = true; });
   } catch (_) { _listo = true; }
 
+  var _usado = false;
   window.OCApagado = function (id) {
+    _usado = true;
     return _apagados.indexOf(id) !== -1;
   };
   window.OCApagadoListo = function () {
     return _listo;
   };
+
+  // AUTOCURACION (JFC 2026-08-20, bug A2/G5): el kill-switch se cargaba pero
+  // nada de la app lo consultaba nunca -- si algun dia se pone algo en
+  // version.json.apagar, no pasaria nada porque nadie pregunta. Avisa fuerte
+  // en consola si tras 5s de carga OCApagado() nunca se llamo, en vez de
+  // fallar en silencio como hoy.
+  setTimeout(function () {
+    if (!_usado) {
+      try { console.warn("[feature-gate] OCApagado() nunca se llamo en los primeros 5s -- el kill-switch esta montado pero ninguna feature lo consulta todavia."); } catch (_) {}
+    }
+  }, 5000);
 })();
