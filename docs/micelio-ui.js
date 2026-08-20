@@ -178,6 +178,26 @@
     var yo = M.yo();
 
     cont.innerHTML =
+      /* INVENTARIO DISTINTO (portado de friendly-123, 2026-08-19).
+         Antes este panel solo miraba el RELOJ: si un dispositivo habia latido
+         hace poco decia "al dia", aunque estuviera mostrando otro inventario.
+         Ahora se compara la huella del catalogo. */
+      (function () {
+        try {
+          var _d = M.desalineados ? M.desalineados() : [];
+          if (!_d.length) return "";
+          return '<div style="margin:0 0 12px;padding:11px 13px;background:#FFF6F2;border-left:4px solid #E86040;border-radius:0 8px 8px 0;">'
+            + '<p style="font-size:15px;font-weight:700;line-height:1.5;margin:0 0 4px;color:#0F1923;">'
+            + (_d.length === 1 ? "1 dispositivo esta mostrando otro inventario" : _d.length + " dispositivos estan mostrando otro inventario")
+            + "</p>"
+            + '<p style="font-size:14px;line-height:1.5;margin:0;color:#2C3E50;">'
+            + "Estan conectados, pero no tienen los mismos productos y perchas que este dispositivo: "
+            + _d.map(function (x) { return esc(comoSeLlama(x)) + " (" + esc(x.huella) + ")"; }).join(", ")
+            + ". Este dispositivo es " + esc(M.miHuella ? M.miHuella() : "?") + "."
+            + "</p></div>";
+        } catch (_) { return ""; }
+      })() +
+
       '<p style="font-size:14px;line-height:1.55;margin:0 0 12px;color:#2C3E50;">' +
       (ciegos
         ? "Hay " + ciegos + (ciegos === 1 ? " dispositivo que lleva" : " dispositivos que llevan") +
@@ -185,6 +205,11 @@
         : "Todos los dispositivos del equipo están hablando entre sí.") +
       "</p>" +
       '<div>' + eq.map(filaEquipo).join("") + "</div>" +
+      /* La huella propia, siempre a la vista: es lo que dos duenos comparan
+         por telefono para saber si estan viendo lo mismo. */
+      '<p style="font-size:14px;line-height:1.5;margin:10px 0 0;color:#2C3E50;">' +
+      "Huella del inventario de este dispositivo: <strong style=\"font-family:var(--font-mono,monospace);color:#0F1923;\">" +
+      esc(M.miHuella ? (M.miHuella() || "?") : "?") + "</strong>. Dos dispositivos con los mismos productos y perchas tienen la misma huella.</p>" +
 
       /* --- el apodo --- */
       '<div style="margin-top:16px;">' +

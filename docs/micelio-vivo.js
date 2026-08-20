@@ -161,6 +161,7 @@
         id: id,
         soyYo: id === yoId,
         apodo: e.apodo || "",
+        huella: e.huella || "",
         rol: e.rol || "",
         visto: visto,
         silencioMs: silencio,
@@ -196,6 +197,7 @@
     m[payload.id] = {
       apodo: String(payload.apodo || "").slice(0, 28),
       rol: String(payload.rol || "").slice(0, 12),
+      huella: String(payload.huella || "").slice(0, 12),
       visto: Date.now(),
     };
     escribir(K_EQUIPO, m);
@@ -209,6 +211,27 @@
   }
 
   /* -------------------------------------------------------------- latir --- */
+  /* HUELLA DEL CATALOGO (portado de friendly-123, 2026-08-19).
+     Este panel decia "al dia" mirando SOLO EL RELOJ: cuando llego el ultimo
+     latido. Nunca comparaba un dato, asi que dos dispositivos con inventarios
+     distintos salian los dos como sincronizados. Ahora se compara la huella.
+     Un dispositivo que no manda huella (version vieja de la app) NO cuenta
+     como discrepancia: no se sabe, y afirmar sin saber es el error que esto
+     viene a corregir. */
+  function miHuella() {
+    try {
+      var h = window.OCSync && window.OCSync.huella ? window.OCSync.huella() : null;
+      return h && h.corta ? h.corta : "";
+    } catch (_) { return ""; }
+  }
+  function desalineados() {
+    try {
+      var mia = miHuella();
+      if (!mia) return [];
+      return equipo().filter(function (x) { return x.huella && x.huella !== mia; });
+    } catch (_) { return []; }
+  }
+
   function latir() {
     try {
       /* El canal es OCSyncControl, no OCSync: ese ultimo solo expone
@@ -216,9 +239,10 @@
       var canal = window.OCSyncControl;
       if (!canal || !canal.emitirLatido) return;
       var m = yo();
-      canal.emitirLatido({ id: m.id, apodo: m.apodo, rol: rolActual() });
+      var hu = miHuella();
+      canal.emitirLatido({ id: m.id, apodo: m.apodo, rol: rolActual(), huella: hu });
       /* Mi propio latido no vuelve a mí por el relay, así que me anoto solo. */
-      anotar({ id: m.id, apodo: m.apodo, rol: rolActual() });
+      anotar({ id: m.id, apodo: m.apodo, rol: rolActual(), huella: hu });
     } catch (_) {}
   }
 
@@ -321,6 +345,7 @@
     etiquetas: ETIQUETAS, miEstado: miEstado, marcarConectado: marcarConectado,
     pedirPermisoAviso: pedirPermisoAviso, pedirPersistencia: pedirPersistencia,
     arrancar: arrancar, TIPO_LATIDO: TIPO_LATIDO,
+    miHuella: miHuella, desalineados: desalineados,
     /* El tablero arma su lista con los latidos que descifra, sin storage. */
     desdeLatidos: function (mapa) {
       var u = umbrales(), ahora = Date.now(), out = [];
