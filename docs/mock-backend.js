@@ -96,7 +96,70 @@ function guardarEstadoLocal(){
 }
 /* Aviso naranja, no rojo: todo esta guardado, pero conviene respaldar. */
 function avisoEspacioJusto(){try{if(document.getElementById("oc-espacio-justo"))return;const d=document.createElement("div");d.id="oc-espacio-justo";d.setAttribute("role","status");d.style.cssText="position:fixed;top:0;left:0;right:0;z-index:10001;background:#B8760A;padding:10px 16px;text-align:center;cursor:pointer;";d.innerHTML='<span style="color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:14px;font-weight:700;">Todo se guard&oacute;. El almacenamiento r&aacute;pido del navegador se llen&oacute; y ahora se est&aacute; usando el grande de este dispositivo &mdash; no se perdi&oacute; nada. Exporta un respaldo en AVANZADO cuando puedas.</span>';d.addEventListener("click",()=>d.remove());(document.body||document.documentElement).appendChild(d)}catch(_){}}
-function avisarBufferRecuperado(){try{if(document.getElementById("oc-buffer-recuperado-aviso"))return;const d=document.createElement("div");d.id="oc-buffer-recuperado-aviso";d.setAttribute("role","status");d.style.cssText="position:fixed;top:0;left:0;right:0;z-index:10001;background:#1A7A4C;padding:10px 16px;text-align:center;cursor:pointer;";d.innerHTML='<span style="color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:14px;font-weight:700;">Se detectó un guardado interrumpido y se recuperó automáticamente desde la copia anterior — no se perdió nada. Si algo no cuadra, exporta un respaldo en AVANZADO.</span>';d.addEventListener("click",()=>d.remove());(document.body||document.documentElement).appendChild(d)}catch(_){}}function cargarEstadoLocal(){
+function avisarBufferRecuperado(){try{if(document.getElementById("oc-buffer-recuperado-aviso"))return;const d=document.createElement("div");d.id="oc-buffer-recuperado-aviso";d.setAttribute("role","status");d.style.cssText="position:fixed;top:0;left:0;right:0;z-index:10001;background:#1A7A4C;padding:10px 16px;text-align:center;cursor:pointer;";d.innerHTML='<span style="color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:14px;font-weight:700;">Se detectó un guardado interrumpido y se recuperó automáticamente desde la copia anterior — no se perdió nada. Si algo no cuadra, exporta un respaldo en AVANZADO.</span>';d.addEventListener("click",()=>d.remove());(document.body||document.documentElement).appendChild(d)}catch(_){}}
+/* A2 -- REPARADOR DE ESTADO (portado de friendly-123, 2026-08-20). Ultimo
+   recurso solo cuando FALLAN LOS DOS buffers A/B: poda lo ilegible y
+   conserva el resto, en vez de descartar el estado entero. Una percha solo
+   se descarta si le falta el id (sin id no hay a que atar sus productos);
+   un nombre ilegible se reemplaza por uno provisional, nunca borra la
+   percha ni sus productos por eso -- leccion medida en friendly-123: la
+   primera version podaba por nombre corrupto y se llevaba 26/61 productos
+   por delante. */
+function repararRespaldo(body) {
+  if (!body || typeof body !== "object") return null;
+  if (!Array.isArray(body.productos) || !Array.isArray(body.ubicaciones)) return null;
+  var podados = { productos: 0, ubicaciones: 0, listas: 0 };
+  var ubicVistas = {}; var ubicRenombradas = 0; var ubicOk = [];
+  body.ubicaciones.forEach(function (u) {
+    var id = u && typeof u === "object" ? String(u.id || "") : "";
+    if (!id || ubicVistas[id] || !esTextoCorto(id, 120)) { podados.ubicaciones++; return; }
+    ubicVistas[id] = true;
+    var copia = Object.assign({}, u);
+    if (!esTextoCorto(String(copia.nombre || ""), 240)) {
+      copia.nombre = "Percha " + (ubicOk.length + 1);
+      ubicRenombradas++;
+    }
+    ubicOk.push(copia);
+  });
+  podados.renombradas = ubicRenombradas;
+  if (!ubicOk.length) return null;
+  var prodVistos = {};
+  var prodOk = body.productos.filter(function (p) {
+    if (!p || typeof p !== "object") { podados.productos++; return false; }
+    var id = String(p.id || "");
+    var numsOk = Number.isFinite(Number(p.precio)) && Number.isFinite(Number(p.costo)) && Number.isFinite(Number(p.stockActual))
+      && Number(p.precio) >= 0 && Number(p.costo) >= 0 && Number(p.stockActual) >= 0;
+    var ubicOkRef = !p.ubicacionId || p.ubicacionId === "todas" || ubicVistas[String(p.ubicacionId)];
+    var ok = !!id && !prodVistos[id] && esTextoCorto(id, 120)
+      && esTextoCorto(String(p.nombre || ""), 240) && numsOk && ubicOkRef;
+    if (ok) prodVistos[id] = true; else podados.productos++;
+    return ok;
+  });
+  var limpio = Object.assign({}, body, { productos: prodOk, ubicaciones: ubicOk });
+  ["ventas", "movimientos", "transferencias", "clientes"].forEach(function (k) {
+    if (limpio[k] && !Array.isArray(limpio[k])) { limpio[k] = []; podados.listas++; }
+  });
+  if (validarRespaldo(limpio)) return null;
+  return { limpio: limpio, podados: podados };
+}
+function avisarEstadoReparado(podados) {
+  try {
+    var d = document.createElement("div");
+    d.setAttribute("role", "status");
+    d.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:10001;background:#B54E0A;padding:10px 16px;text-align:center;cursor:pointer;";
+    var n = (podados.productos || 0) + (podados.ubicaciones || 0);
+    var ren = podados.renombradas || 0;
+    d.innerHTML = '<span style="color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:14px;font-weight:700;">'
+      + "Se recupero tu negocio de una copia danada. " + n + " registro(s) ilegibles quedaron fuera"
+      + (ren ? " y " + ren + " percha(s) perdieron su nombre; renombralas en Perchas" : "")
+      + ". Revisa tu inventario y exporta un respaldo en AVANZADO."
+      + "</span>";
+    d.addEventListener("click", function () { d.remove(); });
+    (document.body || document.documentElement).appendChild(d);
+  } catch (_) {}
+}
+
+function cargarEstadoLocal(){
   try{
     const activo=localStorage.getItem(OC_STATE_PTR);
     const orden=activo?[activo,activo==="A"?"B":"A"]:["A","B"];
@@ -117,6 +180,26 @@ function avisarBufferRecuperado(){try{if(document.getElementById("oc-buffer-recu
       }
       return
     }
+        // A2 (portado de friendly-123, 2026-08-20): ningun buffer A/B valido.
+    // Antes de arrancar en blanco, se intenta reparar el mas fresco podando
+    // lo ilegible.
+    try {
+      var _act = localStorage.getItem(OC_STATE_PTR);
+      var _orden = _act ? [_act, _act === "A" ? "B" : "A"] : ["A", "B"];
+      for (var _oi = 0; _oi < _orden.length; _oi++) {
+        var _l = _orden[_oi];
+        var _raw = localStorage.getItem(claveBuffer(_l));
+        if (_raw == null) continue;
+        var _b; try { _b = JSON.parse(_raw); } catch (_e1) { continue; }
+        var _rep = repararRespaldo(_b);
+        if (!_rep) continue;
+        aplicarRespaldo(_rep.limpio);
+        try { localStorage.setItem(OC_STATE_PTR, _l); } catch (_e2) {}
+        console.warn("[cargarEstadoLocal] estado reparado; registros podados:", _rep.podados);
+        setTimeout(function () { avisarEstadoReparado(_rep.podados); }, 800);
+        return;
+      }
+    } catch (_e3) { /* si el reparador falla, se sigue al camino de siempre */ }
     // Ningun buffer A/B valido: migracion desde la clave de un solo buffer
     // (dispositivos que aun no corrieron esta version) o corrupcion total.
     const raw=localStorage.getItem(OC_STATE_KEY);
