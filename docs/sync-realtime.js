@@ -104,6 +104,12 @@
     { m: "POST",  re: /^\/api\/transferencias$/ },
     { m: "PATCH", re: /^\/api\/transferencias\/[^/]+$/ },
   ];
+  /* Portado de friendly-123, 2026-08-19: pedir/responder el CATALOGO entre
+     dispositivos del mismo equipo. Distinto de la foto: la foto es para el
+     tablero (lectura, incluye ventas y clientes, se olvida al cerrar) y esto
+     es solo lo que DEFINE el catalogo, para poder juntarlos. */
+  const TIPO_CATALOGO_PEDIDO = "__catalogo_pedido__";
+  const TIPO_CATALOGO_TROZO  = "__catalogo_trozo__";
   const TIPO_FOTO_PEDIDA = "__foto_pedida__";
   const TIPO_FOTO_TROZO = "__foto_trozo__";
   const FOTO_FILAS_POR_TROZO = 150;   /* M4: por partes, no un bloque unico */
@@ -312,6 +318,14 @@
         }
         /* El tablero pidio una foto. Solo contestan los dispositivos que
            tienen la app: el tablero nunca responde a otro tablero. */
+        if (op && op.tipo === TIPO_CATALOGO_PEDIDO) { responderCatalogo(op); return; }
+        if (op && op.tipo === TIPO_CATALOGO_TROZO) {
+          /* Solo lo escucha quien lo pidio. NO se aplica nada aqui: se junta y
+             se avisa, y una persona decide en pantalla. */
+          if (op.para && op.para !== deviceId()) return;
+          try { window.dispatchEvent(new CustomEvent("oc-catalogo-trozo", { detail: op })); } catch (_) {}
+          return;
+        }
         if (op && op.tipo === TIPO_FOTO_PEDIDA) {
           responderFoto(op);
           return;
@@ -446,6 +460,44 @@
       out.push({ tabla: nombre, i: i, total: total, filas: arr.slice(i * FOTO_FILAS_POR_TROZO, (i + 1) * FOTO_FILAS_POR_TROZO) });
     }
     return out;
+  }
+
+  function _amgRolActual() {
+    try { return (window.OCAuth && window.OCAuth.rolActual) ? window.OCAuth.rolActual() : ""; } catch (_) { return ""; }
+  }
+
+  /* Pide el catalogo a los companeros. Efimero: si no contesta nadie, no pasa
+     nada y se puede volver a pedir. */
+  async function pedirCatalogo() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+    const op = {
+      opId: uuidCorto(), deviceId: deviceId(), tipo: TIPO_CATALOGO_PEDIDO,
+      payload: { rol: _amgRolActual() }, fecha: (new Date()).toISOString(),
+    };
+    try { ws.send(await cifrar(claveActual, op)); return true; } catch (_) { return false; }
+  }
+
+  /* Contesta con MI catalogo, en trozos por lo mismo que la foto: un negocio
+     con miles de productos no puede depender de que un unico mensaje gigante
+     llegue entero. */
+  async function responderCatalogo(pedido) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    if (!window.OCSync || !window.OCSync.catalogoPropio) return;   // un tablero no contesta
+    await new Promise((r) => setTimeout(r, Math.random() * 400));  // jitter, como la foto
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    let cat;
+    try { cat = window.OCSync.catalogoPropio(); } catch (_) { return; }
+    const trozos = [].concat(trocear("ubicaciones", cat.ubicaciones)).concat(trocear("productos", cat.productos));
+    for (let k = 0; k < trozos.length; k++) {
+      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      const op = {
+        opId: uuidCorto(), deviceId: deviceId(), tipo: TIPO_CATALOGO_TROZO,
+        para: pedido.deviceId || null,
+        payload: Object.assign({ rol: _amgRolActual(), huella: cat.huella ? cat.huella.corta : "", k: k, deTotal: trozos.length }, trozos[k]),
+        fecha: (new Date()).toISOString(),
+      };
+      try { ws.send(await cifrar(claveActual, op)); } catch (_) { return; }
+    }
   }
 
   async function responderFoto(pedido) {
@@ -614,7 +666,7 @@
     if (!ws || ws.readyState !== WebSocket.OPEN) return false;
     const op = {
       opId: uuidCorto(), deviceId: deviceId(), tipo: TIPO_LATIDO,
-      payload: { id: quien.id, apodo: quien.apodo || "", rol: quien.rol || "" },
+      payload: { id: quien.id, apodo: quien.apodo || "", rol: quien.rol || "", huella: quien.huella || "" },
       fecha: (new Date()).toISOString(),
     };
     try { ws.send(await cifrar(claveActual, op)); return true; } catch (_) { return false; }
@@ -718,6 +770,7 @@
     // Refuerzo: expone si llevamos varios intentos seguidos sin exito, para
     // que la UI pueda avisar ("revisa el código") en vez de reintentar mudo.
     problemaPersistente() { return intentosSeguidos >= 6; },
+    pedirCatalogo: pedirCatalogo,
     salaActiva() { const s = leerSala(); return s ? s.codigo : null; },
     onEstado(fn) { listenersEstado.push(fn); },
   };

@@ -6390,11 +6390,45 @@ async function promptSeguro(texto, valorDefecto) {
 })();
 
 (function guardiaDobleCaja() {
+  /* CANDADO REAL ENTRE PESTANAS (portado de friendly-123, 2026-08-19).
+     El guard viejo era un apreton de manos por BroadcastChannel: la 2a pestana
+     avisa "hola", la 1a contesta "ocupado". Funciona casi siempre, pero es una
+     carrera: si las dos arrancan en el mismo instante, las dos pueden creerse
+     principales, que es justo el caso a evitar porque aqui las dos se pisan
+     los datos (last-writer-wins).
+
+     navigator.locks es un mutex de verdad, resuelto por el navegador via IPC,
+     sin carrera posible. El BroadcastChannel se queda de RESPALDO para
+     navegadores sin Web Locks (Safari < 15.4): degradar al comportamiento
+     anterior es mejor que quedarse sin guardia. */
+  var _hayLocks = false;
+  try { _hayLocks = !!(navigator.locks && navigator.locks.request); } catch (_) {}
+  if (_hayLocks) {
+    navigator.locks.request("amigable-sesion-unica", { ifAvailable: true }, function (lock) {
+      if (!lock) { try { _pintarDobleAMG(); } catch (_) {} return Promise.resolve(); }
+      /* Se retiene mientras la pestana viva. Al cerrarla el navegador lo suelta
+         solo y la siguiente pasa a ser principal, sin limpiar nada a mano. */
+      return new Promise(function () {});
+    }).catch(function () {});
+  }
+  function _pintarDobleAMG() {
+    if (document.getElementById("oc-doble-tab")) return;
+    const d = document.createElement("div");
+    d.id = "oc-doble-tab";
+    d.style.cssText = "position:fixed;inset:0;z-index:10003;background:#0F1923;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;";
+    d.innerHTML = '<p style="color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:18px;font-weight:700;max-width:440px;">Ya hay una sesion de amigable-123 abierta en otra pestana. Para no pisar los datos, usa una sola a la vez.</p>'
+      + '<button id="oc-doble-usar" style="min-height:48px;padding:12px 22px;border-radius:8px;border:2px solid #5294AC;background:transparent;color:#FFFFFF !important;-webkit-text-fill-color:#FFFFFF !important;font-size:16px;font-weight:700;cursor:pointer;">Usar aqui de todos modos</button>';
+    document.body.appendChild(d);
+    document.getElementById("oc-doble-usar").addEventListener("click", function () { d.remove(); });
+  }
   if (typeof BroadcastChannel === "undefined") return; // navegador viejo: sin guardia, igual que antes
   const canal = new BroadcastChannel("amigable-caja-unica");
   let soyPrincipal = true;
   canal.onmessage = (e) => {
     if (e.data === "hola" && soyPrincipal) canal.postMessage("ocupado");
+    /* Con Web Locks disponible manda el candado: este respaldo no vuelve a
+       opinar y se evita que dos mecanismos peleen por la misma pantalla. */
+    if (_hayLocks) return;
     if (e.data === "ocupado" && !document.getElementById("oc-doble-tab")) {
       soyPrincipal = false;
       const d = document.createElement("div");

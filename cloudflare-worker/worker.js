@@ -87,7 +87,22 @@ async function handleCheckin(req, env) {
   const existente = existenteRaw ? JSON.parse(existenteRaw) : {};
 
   // Determine product
-  const producto = body.producto === "amigable" ? "amigable-123" : "friendly-123";
+  /* QUE APP ES (portado de friendly-123, 2026-08-19). Antes se comparaba
+     body.producto === "amigable", valor que NINGUNA app manda (mandan
+     "amigable-123"). Todo caia al else y quedaba etiquetado como
+     friendly-123, incluidos clientes con licencia AMG-: el campo era ruido y
+     no se podia filtrar por el. Ahora manda el PREFIJO DE LA LICENCIA, que es
+     el unico dato que de verdad dice de que app es. */
+  const _lic = String(body.licenseCode || existente.licenseCode || "").toUpperCase();
+  const _prod = String(body.producto || "").toLowerCase();
+  let producto;
+  if (_lic.startsWith("AMG-")) producto = "amigable-123";
+  else if (_lic.startsWith("F123-")) producto = "friendly-123";
+  else if (_lic.startsWith("C123-")) producto = "consultorio-123";
+  else if (_prod.indexOf("amigable") === 0) producto = "amigable-123";
+  else if (_prod.indexOf("consultorio") === 0) producto = "consultorio-123";
+  else if (_prod.indexOf("friendly") === 0) producto = "friendly-123";
+  else producto = existente.producto || "amigable-123";
 
   // BLOQUEO DE ADMIN (JFC 2026-08-06): si JFC corrigio un campo desde el panel
   // (/editar-correo marca lock[campo]=true), el checkin AUTOMATICO del cliente
@@ -163,7 +178,15 @@ async function handleCheckin(req, env) {
   }
 
   await guardarConHistorial(env, instanceId, registro);
-  return json({ ok: true, estado: registro.estado });
+  /* RESCATE DE LICENCIA (portado de friendly-123, 2026-08-19; ver
+     RESCATE-LICENCIAS.md alla). Devolver el licenseCode que este nodo tiene
+     para esta instancia resuelve tres cosas con un solo mecanismo: confirma el
+     alta normal, deja que un dispositivo que perdio su codigo lo recupere solo
+     en el siguiente login, y permite un rescate MASIVO escribiendo el codigo
+     en la KV de N instancias para que cada una lo adopte sola.
+     Es seguro devolverlo: para llegar aqui hay que traer el instanceId, que es
+     un uuid que solo tiene ese dispositivo. */
+  return json({ ok: true, estado: registro.estado, licenseCode: registro.licenseCode || "" });
 }
 
 /* ─────────────────────────────────────────────────────────────────────
