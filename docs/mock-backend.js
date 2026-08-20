@@ -530,7 +530,130 @@ const OPS_APLICADAS_KEY="amigable_sync_ops_aplicadas";let _opsAplicadas=null;
 function _cargarOpsAplicadas(){if(_opsAplicadas)return _opsAplicadas;try{_opsAplicadas=new Set(JSON.parse(localStorage.getItem(OPS_APLICADAS_KEY)||"[]"))}catch(_){_opsAplicadas=new Set()}return _opsAplicadas}
 function _marcarOpAplicada(opId){const s=_cargarOpsAplicadas();s.add(opId);if(s.size>500){const arr=[...s];s.clear();arr.slice(-500).forEach(x=>s.add(x))}try{localStorage.setItem(OPS_APLICADAS_KEY,JSON.stringify([...s]))}catch(_){}}
 function emitirOpStock(tipo,payload){if(window.OCSyncEmit){try{window.OCSyncEmit(tipo,payload)}catch(_){}}try{var _mp=productos.find(function(x){return x.id===(payload&&payload.productoId)});if(window.AMG&&window.AMG.EventBus)window.AMG.EventBus.emit("inventario_"+tipo+":completado",{payload:payload,resultado:_mp?{productoId:_mp.id,stockActual:_mp.stockActual,sku:_mp.sku}:null})}catch(_){}}
+
+/* ============================================================================
+   HUELLA DEL CATALOGO + MERGE ENTRE DISPOSITIVOS
+   Portado de friendly-123 el 2026-08-19. Ver PLAN-MERGE-Y-HUELLAS-2026-08-19.md
+   en ese repo para el diagnostico completo.
+
+   EL PROBLEMA QUE RESUELVE, y que amigable-123 tiene IGUAL: aplicarOpRemota()
+   solo sabe aplicar deltas de stock sobre productos que YA existen en los dos
+   lados. El catalogo —productos, perchas— nunca viaja. Su propio mensaje de
+   error lo dice ("sincroniza el catalogo primero") y ese paso no existe. Dos
+   dispositivos del mismo negocio pueden estar conectados, hablando, y con
+   inventarios distintos para siempre. Encontrado por JFC en vivo en
+   friendly-123: su PC quedo con "Rack1" y su celular con "001".
+
+   Y el panel del equipo decia "al dia" mirando SOLO EL RELOJ, sin comparar un
+   dato. Decir eso sin haber comparado nada es peor que no decir nada.
+
+   LAS DOS REGLAS DURAS DEL MERGE:
+     1. SUMA, NUNCA BORRA. Lo que existe solo de un lado se conserva.
+     2. NADA SE APLICA SIN QUE UNA PERSONA LO CONFIRME EN PANTALLA.
+   ============================================================================ */
+function _amgHuellaTexto(){
+  var u=ubicaciones.slice().sort(function(a,b){return String(a.id).localeCompare(String(b.id));})
+    .map(function(x){return String(x.id)+"|"+String(x.nombre||"");}).join(";");
+  var p=productos.slice().sort(function(a,b){return String(a.id).localeCompare(String(b.id));})
+    .map(function(x){return String(x.id)+"|"+String(x.nombre||"")+"|"+(Number(x.precio)||0)+"|"+(Number(x.costo)||0);}).join(";");
+  return "U:"+u+"#P:"+p;
+}
+/* FNV-1a de 32 bits. No es criptografico y no pretende serlo: solo hace falta
+   que dos catalogos distintos den huellas distintas, y que sea instantaneo en
+   un telefono viejo con 5000 productos. */
+function _amgFnv1a(txt){
+  var h=0x811c9dc5;
+  for(var i=0;i<txt.length;i++){h^=txt.charCodeAt(i);h=(h+((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24)))>>>0;}
+  return h>>>0;
+}
+/* NO entra el stock a proposito: dos dispositivos del mismo negocio pueden
+   tener stock distinto por un instante y eso es normal, no es estar
+   desincronizado. */
+function huellaCatalogo(){
+  try{
+    var h=_amgFnv1a(_amgHuellaTexto());
+    return {corta:"#"+h.toString(36).toUpperCase().slice(-4).padStart(4,"0"),
+            completa:h.toString(36).toUpperCase(),
+            productos:productos.length, perchas:ubicaciones.length};
+  }catch(_){return null;}
+}
+var _AMG_RANGO={dueno:3,admin:2,empleado:1,contador:1};
+function _amgRango(rol){return _AMG_RANGO[String(rol||"").toLowerCase()]||0;}
+function _amgRolLocal(){try{return (window.OCAuth&&window.OCAuth.rolActual)?window.OCAuth.rolActual():"";}catch(_){return "";}}
+
+function compararCatalogo(remoto,rolRemoto){
+  if(!remoto||!Array.isArray(remoto.ubicaciones)||!Array.isArray(remoto.productos))return null;
+  /* Solo se pisa cuando se conocen LOS DOS roles y el de enfrente es
+     estrictamente mayor. Si el rol local no se puede leer (demo, sesion recien
+     abierta), manda quien tiene el dispositivo en la mano: es quien vive con el
+     dato. Este guard salio de un bug real de la primera version en
+     friendly-123, donde un encargado le pisaba los precios al dueno. */
+  var rl=_amgRango(_amgRolLocal()), rr=_amgRango(rolRemoto);
+  var out={nuevasPerchas:[],nuevosProductos:[],conflictos:[],soloMios:0,ganaElOtro:(rr>0&&rl>0&&rr>rl)};
+  var misU=new Map(ubicaciones.map(function(u){return [String(u.id),u];}));
+  var misP=new Map(productos.map(function(p){return [String(p.id),p];}));
+  remoto.ubicaciones.forEach(function(u){
+    if(!u||!u.id)return;
+    var mia=misU.get(String(u.id));
+    if(!mia){out.nuevasPerchas.push({id:u.id,nombre:u.nombre||""});return;}
+    if(String(mia.nombre||"")!==String(u.nombre||""))out.conflictos.push({que:"percha",id:u.id,mio:mia.nombre,suyo:u.nombre});
+  });
+  remoto.productos.forEach(function(p){
+    if(!p||!p.id)return;
+    var mio=misP.get(String(p.id));
+    if(!mio){out.nuevosProductos.push({id:p.id,nombre:p.nombre||"",precio:Number(p.precio)||0});return;}
+    if(Number(mio.precio)!==Number(p.precio)||String(mio.nombre||"")!==String(p.nombre||""))
+      out.conflictos.push({que:"producto",id:p.id,mio:{nombre:mio.nombre,precio:mio.precio},suyo:{nombre:p.nombre,precio:p.precio}});
+  });
+  var idsRemotos=new Set(remoto.productos.map(function(x){return String(x&&x.id);}));
+  out.soloMios=productos.filter(function(x){return !idsRemotos.has(String(x.id));}).length;
+  return out;
+}
+
+function aplicarCatalogo(remoto,rolRemoto){
+  var dif=compararCatalogo(remoto,rolRemoto);
+  if(!dif)return {ok:false,error:"El catalogo que llego no se puede leer."};
+  var manda=dif.ganaElOtro, agU=0, agP=0, act=0;
+  remoto.ubicaciones.forEach(function(u){
+    if(!u||!u.id)return;
+    var mia=ubicaciones.find(function(x){return String(x.id)===String(u.id);});
+    if(!mia){ubicaciones.push(Object.assign({},u,{activa:u.activa!==false}));agU++;}
+    else if(manda&&String(mia.nombre||"")!==String(u.nombre||"")&&esTextoCorto(String(u.nombre||""),240)){mia.nombre=u.nombre;act++;}
+  });
+  remoto.productos.forEach(function(p){
+    if(!p||!p.id)return;
+    var mio=productos.find(function(x){return String(x.id)===String(p.id);});
+    if(!mio){
+      /* Llega con stock 0 A PROPOSITO. El stock es un hecho fisico de cada
+         percha: copiar el del otro dispositivo inventaria unidades que no
+         estan aqui. Entra el articulo; las unidades las cuenta quien las tiene
+         delante. */
+      productos.push(Object.assign({},p,{stockActual:0}));agP++;
+    }else if(manda){
+      if(esTextoCorto(String(p.nombre||""),240)&&String(mio.nombre)!==String(p.nombre)){mio.nombre=p.nombre;act++;}
+      if(Number.isFinite(Number(p.precio))&&Number(p.precio)>=0&&Number(mio.precio)!==Number(p.precio)){mio.precio=Number(p.precio);act++;}
+    }
+  });
+  ubicaciones.forEach(function(u){if(!(u.id in gastosMensuales))gastosMensuales[u.id]=0;});
+  mov("merge-catalogo",{perchasAgregadas:agU,productosAgregados:agP,actualizados:act,desde:remoto.deviceNombre||"otro dispositivo"});
+  guardarEstadoLocal();
+  return {ok:true,agregadasU:agU,agregadosP:agP,actualizados:act,huella:huellaCatalogo()};
+}
+
 window.OCSync={
+  /* Portado de friendly-123, 2026-08-19. Solo lo que DEFINE el catalogo: ni
+     ventas, ni clientes, ni stock. */
+  huella:huellaCatalogo,
+  compararCatalogo:compararCatalogo,
+  aplicarCatalogo:aplicarCatalogo,
+  catalogoPropio:function(){
+    return {
+      ubicaciones:ubicaciones.map(function(u){return {id:u.id,nombre:u.nombre,tipo:u.tipo,activa:u.activa,sucursalId:u.sucursalId,comisionSocio:u.comisionSocio,metaMensual:u.metaMensual};}),
+      productos:productos.map(function(p){return {id:p.id,nombre:p.nombre,sku:p.sku,barcode:p.barcode,categoria:p.categoria,precio:p.precio,costo:p.costo,ubicacionId:p.ubicacionId,umbralRojo:p.umbralRojo,umbralAmarillo:p.umbralAmarillo,perecible:p.perecible,fechaCaducidad:p.fechaCaducidad};}),
+      huella:huellaCatalogo()
+    };
+  },
+
   // Llamado por sync-realtime.js al recibir un Op de otro dispositivo.
   // Aplica SOLO deltas (nunca valores absolutos) — dos ventas simultaneas
   // de las mismas unidades se SUMAN, nunca se pisan. Si el resultado queda

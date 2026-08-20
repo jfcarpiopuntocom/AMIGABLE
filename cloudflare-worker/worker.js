@@ -87,7 +87,19 @@ async function handleCheckin(req, env) {
   const existente = existenteRaw ? JSON.parse(existenteRaw) : {};
 
   // Determine product
-  const producto = body.producto === "amigable" ? "amigable-123" : "friendly-123";
+  /* QUE APP ES (portado de friendly-123, 2026-08-19). body.producto === "amigable"
+     comparaba contra un valor que NINGUNA app manda (mandan "amigable-123"), asi
+     que todo caia al else. Ahora manda el PREFIJO DE LA LICENCIA. */
+  const _lic = String(body.licenseCode || existente.licenseCode || "").toUpperCase();
+  const _prod = String(body.producto || "").toLowerCase();
+  let producto;
+  if (_lic.startsWith("AMG-")) producto = "amigable-123";
+  else if (_lic.startsWith("F123-")) producto = "friendly-123";
+  else if (_lic.startsWith("C123-")) producto = "consultorio-123";
+  else if (_prod.indexOf("amigable") === 0) producto = "amigable-123";
+  else if (_prod.indexOf("consultorio") === 0) producto = "consultorio-123";
+  else if (_prod.indexOf("friendly") === 0) producto = "friendly-123";
+  else producto = existente.producto || "amigable-123";
 
   // BLOQUEO DE ADMIN (JFC 2026-08-06): si JFC corrigio un campo desde el panel
   // (/editar-correo marca lock[campo]=true), el checkin AUTOMATICO del cliente
@@ -163,7 +175,11 @@ async function handleCheckin(req, env) {
   }
 
   await guardarConHistorial(env, instanceId, registro);
-  return json({ ok: true, estado: registro.estado });
+  /* RESCATE DE LICENCIA (portado de friendly-123). Devolver el licenseCode que
+     este nodo conoce resuelve el alta normal, el rescate individual y el masivo
+     con un solo mecanismo. Seguro: hay que traer el instanceId, que es un uuid
+     que solo tiene ese dispositivo. */
+  return json({ ok: true, estado: registro.estado, licenseCode: registro.licenseCode || "" });
 }
 
 /* ─────────────────────────────────────────────────────────────────────
