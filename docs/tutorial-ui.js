@@ -5,7 +5,7 @@
 // y termina llevando al dueno a crear su primer producto.
 // Se lanza con window.OCTutorial.iniciar() — el boton "Ver el tutorial ahora"
 // de la tarjeta de bienvenida (welcome-ui.js) lo invoca.
-// Con 888 el recorrido pasa sobre el stock de demo; con 789 (tienda real
+// Con 456 el recorrido pasa sobre el stock de demo; con 789 (tienda real
 // recien activada) pasa sobre la tienda vacia — mismos pasos, mismo tour.
 (function () {
   // Cada paso: vista a la que navegar, selector a iluminar (si falta, se

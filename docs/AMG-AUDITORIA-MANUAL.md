@@ -39,7 +39,7 @@ schemaVersion) · puntos de restauración (cada 30 min, máx 7, verificados por
 checksum al restaurar) · Formato D (backup por correo/WhatsApp con slider de
 frecuencia y "assurance" a la semana) · transferencias entre perchas con
 aprobar/rechazar/confirmar recepción · PWA offline · código 789 (apropiar) ·
-888 (demo) · 260 (empleado) · 357 (subclave contable) · nombre de negocio ·
+456 (demo) · 260 (empleado) · 357 (subclave contable) · nombre de negocio ·
 sync en tiempo real E2E (PBKDF2+AES-GCM, presencia, tope 12 dispositivos,
 reconexión con jitter) · unirse por WhatsApp con código normalizado · control
 anti fraude (historial sellado con hash encadenado + señales del día:
@@ -54,7 +54,7 @@ dedup por operación) · instalar opcional.
 | 2 | El manual re-subido decía que el respaldo incluye "perchas" a secas; el código exporta también **sus fotos** (`fotosPerchas`) | Menor (precisión) | **Restaurado** "(incluidas sus fotos)" — el código lo respalda |
 | 3 | **"Lista de reposición por percha"**: el manual la describe como existente (productos en zona de reorden ∩ estrella/vaca BCG, debajo de las fotos). NO existe en `vista-perchas.js` ni en ningún módulo | Alta (promesa incumplida al cliente) | Marcada **"(próximamente)"** en el manual. Alternativas: la construyo (los datos ya existen: umbralRojo/umbralAmarillo + matrizBCG), o se elimina la sección. Tu decisión |
 | 4 | **"Reporte trimestral $100"**: solo existe una mención en un comentario de backup-scheduler.js ("el gate del reporte trimestral"); el botón/checklist no aparece en ningún archivo disponible. Posible que viva en `auth-ui.js` | Media | Marcada **"(próximamente)"**. Si al subir `auth-ui.js` el gate existe, revierte la marca (una palabra) |
-| 5 | `auth-ui.js` ausente en 5 subidas consecutivas | Bloquea verificación de: login/PINes en vivo, gate 789/888, recuperación por correo, wizard de bienvenida disparado por `oc-login` | Documentado; el resto de la cadena (crypto-store, email-recovery, welcome/tutorial/help) sí verificada y coherente entre sí |
+| 5 | `auth-ui.js` ausente en 5 subidas consecutivas | Bloquea verificación de: login/PINes en vivo, gate 789/456, recuperación por correo, wizard de bienvenida disparado por `oc-login` | Documentado; el resto de la cadena (crypto-store, email-recovery, welcome/tutorial/help) sí verificada y coherente entre sí |
 
 ## 4. Observaciones de calidad (sin tocar, para tu radar)
 
