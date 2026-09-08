@@ -1,8 +1,8 @@
 {
-  "version": "1.5.4",
+  "version": "1.5.5",
   "fecha": "2026-09-08",
-  "changelog": "Cortesía y Fiado en el modal de venta (portado de friendly, en la misma línea): Cortesía = venta sin cobro (ingreso 0, el costo sí cuenta); Fiado = se suma a la deuda del cliente. Excluyentes; el fiado necesita cliente.",
+  "changelog": "Bases del sistema de integridad de versión (portadas de friendly): version-manifest.json con SHA-256 de cada archivo del shell, verificación SRI fail-open en el service worker (nunca borra un archivo; lo re-pide y conserva el servido si falla), script gen-manifest.js y guarda de hash real en check-sw.sh. Garantiza que todos vean la versión buena completa, sin dejar a nadie afuera.",
   "requerida": false,
-  "shell": "amigable-shell-v94",
+  "shell": "amigable-shell-v95",
   "apagar": []
 }
