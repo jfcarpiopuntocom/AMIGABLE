@@ -3394,6 +3394,10 @@ async function duplicarComoVariante(id) {
   }
 }
 
+// Ver archivados (portado de friendly, JFC 2026-09-08): alterna el grid entre
+// inventario activo y la lista de archivados (para restaurarlos).
+var _verArchivados = false;
+function toggleVerArchivados(){ _verArchivados = !_verArchivados; cargarInventario(); }
 async function cargarInventario(){
   // El "+" de alta libre es de dueño Y admin (admin es co-dueño); el
   // encargado ni lo ve (dos capas). rolInvAhora se reusa mas abajo para
@@ -3405,21 +3409,26 @@ async function cargarInventario(){
   if (btnAlta) btnAlta.style.display = esDuenoOAdminInv ? "" : "none";
   let url = `${API}/productos?ubicacionId=${ubicacionActual}`;
   if (filtroEstadoActual) url += `&estado=${filtroEstadoActual}`;
+  if (_verArchivados) url += `&soloArchivados=1`;
   const grid = document.getElementById("gridInventario");
+  const _toggleArch = `<div style="grid-column:1/-1;margin:0 0 10px;">
+    <button type="button" onclick="toggleVerArchivados()" style="font-size:13px;font-weight:700;padding:7px 14px;border:2px solid var(--rust,#E86040);border-radius:6px;background:${_verArchivados ? "var(--rust,#E86040)" : "transparent"};color:${_verArchivados ? "#fff" : "var(--rust,#E86040)"};cursor:pointer;">${_verArchivados ? "← Volver al inventario" : "Ver archivados"}</button>
+    ${_verArchivados ? '<span style="margin-left:10px;font-size:13px;font-weight:700;color:var(--ink,#211c14);">Productos y eventos archivados — toca uno y “Desarchivar” para recuperarlo.</span>' : ""}
+  </div>`;
   let productos;
   try {
     const res = await fetch(url);
     productos = await res.json();
   } catch (_) {
-    grid.innerHTML = `<p>No se pudo cargar el inventario. Revisa tu conexion e intenta de nuevo.</p>`;
+    grid.innerHTML = _toggleArch + `<p>No se pudo cargar el inventario. Revisa tu conexion e intenta de nuevo.</p>`;
     return;
   }
   if (!Array.isArray(productos)){
-    grid.innerHTML = `<p>No se pudo leer el inventario (respuesta inesperada del servidor).</p>`;
+    grid.innerHTML = _toggleArch + `<p>No se pudo leer el inventario (respuesta inesperada del servidor).</p>`;
     return;
   }
   if (productos.length === 0){
-    grid.innerHTML = `<p>No hay productos en este filtro.</p>`;
+    grid.innerHTML = _toggleArch + `<p>${_verArchivados ? "No hay productos ni eventos archivados." : "No hay productos en este filtro."}</p>`;
     return;
   }
   const _buscarEl = document.getElementById("invBuscar");
@@ -3432,10 +3441,10 @@ async function cargarInventario(){
     || (p.chip || "").toLowerCase().includes(_q)
     || familiaDe(p.sku).toLowerCase() === _q);
   const esDuenoInv = esDuenoOAdminInv;
-  if (_q && productos.length === 0) { grid.innerHTML = `<p style="font-size:15px;color:var(--ink-soft);">Nada coincide con "${escHtml(_q)}".</p>`; return; }
+  if (_q && productos.length === 0) { grid.innerHTML = _toggleArch + `<p style="font-size:15px;color:var(--ink-soft);">Nada coincide con "${escHtml(_q)}".</p>`; return; }
   productos = ordenarInventario(productos);
   pintarBotonesOrdenInventario();
-  grid.innerHTML = productos.map(p => `
+  grid.innerHTML = _toggleArch + productos.map(p => `
     <div class="caja tag-card ${p.estado} n${calcularNivelBloom(p)}">
       ${p.estrella ? '<span class="estrella-badge">⭐</span>' : ''}
       <div onclick="abrirFichaDesdeInventario('${p.id}')" style="cursor:pointer;">
@@ -4592,6 +4601,27 @@ async function guardarEdicionProducto(id){
 }
 
 // Borrado con RE-confirmacion: primer toque arma 4s; el segundo ejecuta.
+/* ARCHIVAR/DESARCHIVAR producto o evento (portado de friendly, JFC 2026-09-08).
+   Soft y reversible: sale del inventario activo pero NO se borra ni se toca su
+   historial (dashboard/resumen lo siguen viendo); se recupera desde "Ver
+   archivados". Igual de fácil que dar de baja una percha, a nivel de producto. */
+async function archivarProductoUI(id, archivar, btn){
+  if (btn) btn.disabled = true;
+  let res, data;
+  try {
+    res = await fetch(`${API}/productos/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ archivado: !!archivar }) });
+    data = await res.json();
+  } catch (err) {
+    console.error("[archivarProductoUI]", err);
+    if (btn) btn.disabled = false;
+    await ocAlert("No se pudo contactar al servidor. No se cambió nada. Revisa tu conexión e inténtalo de nuevo.");
+    return;
+  }
+  if (!res.ok){ if (btn) btn.disabled = false; await ocAlert((data && data.error) || "No se pudo archivar."); return; }
+  const fr = document.getElementById("fichaResultado");
+  if (fr) fr.innerHTML = `<p style="font-weight:700;">${archivar ? "Archivado. Actívalo desde “Ver archivados” en Inventario para recuperarlo." : "Desarchivado — de vuelta en tu inventario."}</p>`;
+  cargarInventario();
+}
 async function eliminarProductoUI(id, btn){
   /* MISMO CRITERIO QUE LAS PERCHAS (JFC 2026-08-18). "Toca otra vez" no es una
      comprobacion de intencion: es el mismo gesto repetido, y en un telefono con
@@ -4779,6 +4809,7 @@ function pintarFicha(p){
       </div>
       ${esDuenoOAdminFicha ? `<div class="acciones-rapidas" style="margin-top:8px;">
         <button onclick="mostrarFormEditarProducto('${p.id}')">${icoOC("lapiz", "currentColor", 14)} Editar ficha</button>
+        <button style="border-color:var(--rust,#E86040);color:var(--rust,#E86040);" onclick="archivarProductoUI('${p.id}', ${p.archivado ? "false" : "true"}, this)">${p.archivado ? "Desarchivar" : "Archivar"}</button>
         <button style="border-color:var(--rojo);color:var(--rojo);" onclick="eliminarProductoUI('${p.id}', this)">Eliminar</button>
       </div>` : ""}
     </div>
