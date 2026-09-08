@@ -4953,6 +4953,12 @@ async function abrirPanelVentaInfo(id, esTicket){
           <select id="vi-forma-pago" ${inp}><option value="">—</option><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="tarjeta">Tarjeta</option><option value="otro">Otro</option></select></label>
         <label style="flex:1;font-size:14px;">Cantidad pagado${req}<br><input id="vi-monto" type="number" min="0" step="0.01" ${inp}></label>
       </div>
+      <!-- Cortesía / Fiado (portado de friendly, JFC 2026-09-08): en la misma línea, sin estirar. -->
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;">
+        <label style="display:flex;align-items:center;gap:7px;font-size:14px;cursor:pointer;color:var(--ink,#211c14) !important;-webkit-text-fill-color:var(--ink,#211c14) !important;"><input id="vi-cortesia" type="checkbox" style="width:auto;margin:0;">Cortesía (sin cobro)</label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:14px;cursor:pointer;color:var(--ink,#211c14) !important;-webkit-text-fill-color:var(--ink,#211c14) !important;"><input id="vi-fiado" type="checkbox" style="width:auto;margin:0;">Fiado (a cuenta)</label>
+      </div>
+      <p id="vi-cf-hint" style="font-size:12px;font-weight:700;margin:4px 0 0;color:var(--ink,#211c14) !important;-webkit-text-fill-color:var(--ink,#211c14) !important;"></p>
       <label style="display:block;margin-top:10px;font-size:14px;">Nombre de la persona que recibió la plata<br><input id="vi-receptor" type="text" ${inp}></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Notas<br><textarea id="vi-notas" rows="2" ${inp}></textarea></label>
       <div id="vi-msg" style="font-size:14px;margin-top:10px;font-weight:700;"></div>
@@ -4969,6 +4975,15 @@ async function abrirPanelVentaInfo(id, esTicket){
     [...selCli.options].forEach(o => { o.hidden = !!(q && o.value && !o.textContent.toLowerCase().includes(q)); });
   });
   buscar.focus();
+  // Cortesía / Fiado: exclusión mutua + hint (JFC 2026-09-08).
+  { const cc = document.getElementById("vi-cortesia"), ff = document.getElementById("vi-fiado"), hh = document.getElementById("vi-cf-hint");
+    const sinc = () => { if (!hh) return; let t = "";
+      if (cc && cc.checked) { if (ff) ff.checked = false; t = "Cortesía: sin cobro (ingreso $0); el costo sí se contabiliza."; }
+      else if (ff && ff.checked) { const cid = (document.getElementById("vi-cliente") || {}).value || ""; t = cid ? "Fiado: se suma a la deuda del cliente en Clientes." : "Elige un cliente arriba — el fiado necesita cliente."; }
+      hh.textContent = t; };
+    if (cc) cc.addEventListener("change", () => { if (cc.checked && ff) ff.checked = false; sinc(); });
+    if (ff) ff.addEventListener("change", () => { if (ff.checked && cc) cc.checked = false; sinc(); });
+    if (selCli) selCli.addEventListener("change", sinc); }
 }
 function cancelarPanelVentaInfo(){
   const overlay = document.getElementById("oc-ventainfo-overlay");
@@ -4991,7 +5006,15 @@ async function confirmarVentaConInfo(id, esTicket){
     msg.textContent = "Para tickets/eventos hace falta: nombre del evento, fecha, quién paga, y cuánto pagó.";
     return;
   }
+  // Cortesía / Fiado (portado de friendly, JFC 2026-09-08). Excluyentes.
+  const _cortesiaOn = !!(document.getElementById("vi-cortesia") || {}).checked;
+  let _fiadoOn = !!(document.getElementById("vi-fiado") || {}).checked;
+  if (_cortesiaOn) { _fiadoOn = false; info.cortesia = true; }
+  if (_fiadoOn) info.formaPago = "fiado";
   const clienteId = document.getElementById("vi-cliente").value || undefined;
+  if (_fiadoOn && !clienteId){ msg.style.color = "var(--rojo,#a3392a)"; msg.textContent = "El fiado necesita un cliente — elige uno arriba."; return; }
+  const _precioFiado = (_ventaInfoProductoCache && Number(_ventaInfoProductoCache.precio)) || 0;
+  const _nombreFiado = (_ventaInfoProductoCache && _ventaInfoProductoCache.nombre) || "";
   _ventasEnCurso.add(id);
   try {
     let res, data;
@@ -5014,6 +5037,11 @@ async function confirmarVentaConInfo(id, esTicket){
     if (document.getElementById("gridVender")) cargarGridVender();
     if (document.getElementById("cierreDia") && document.getElementById("cierreDia").open) cargarCierreLista();
     if (data.ventaId) mostrarToastAnular(data.ventaId, id);
+    // Fiado → deuda del cliente (JFC 2026-09-08). La venta ya quedó asentada.
+    if (_fiadoOn && clienteId){
+      const _m = +(_precioFiado).toFixed(2);
+      if (_m > 0){ try { await fetch(`${API}/clientes/${clienteId}/fiar`, { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ monto: _m, motivo: `Venta a cuenta: ${_nombreFiado}` }) }); } catch (e) { console.error("[fiado]", e); } }
+    }
   } finally {
     _ventasEnCurso.delete(id);
   }

@@ -1,8 +1,8 @@
 {
-  "version": "1.5.3",
+  "version": "1.5.4",
   "fecha": "2026-09-08",
-  "changelog": "Archivar/desarchivar un producto o evento individual (portado de friendly): sale del inventario activo pero NO del dashboard ni del historial; se recupera desde 'Ver archivados'. Aditivo y reversible.",
+  "changelog": "Cortesía y Fiado en el modal de venta (portado de friendly, en la misma línea): Cortesía = venta sin cobro (ingreso 0, el costo sí cuenta); Fiado = se suma a la deuda del cliente. Excluyentes; el fiado necesita cliente.",
   "requerida": false,
-  "shell": "amigable-shell-v93",
+  "shell": "amigable-shell-v94",
   "apagar": []
 }
