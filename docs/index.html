@@ -303,6 +303,11 @@
      touch-action:manipulation en todo lo clickeable mata el delay de 300ms Y
      el double-tap-zoom en ESE elemento puntual, sin tocar el pinch-zoom global. */
   button, [role="button"], a, input, select, textarea, label,
+  /* GLOBAL a `button`/inputs (JFC 2026-09-09): antes esto listaba clases y
+     [onclick], pero los botones que usan addEventListener (ej. los +/- de
+     cantidad en el modal de venta) se colaban y hacían doble-tap-zoom en iOS.
+     Ahora cubre TODO botón/entrada. Pinch-zoom global intacto. */
+  button, a, input, select, textarea,
   .ir, .vender, .caja, .tag-card, summary, nav button,
   [onclick], [data-vender-tile], [data-percha-evento]{
     touch-action:manipulation;
@@ -1371,6 +1376,10 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M9 9.5c0-1.4 1.3-2.5 3-2.5s3 1.1 3 2.5c0 3-6 1.5-6 4.5 0 1.4 1.3 2.5 3 2.5s3-1.1 3-2.5"></path></svg>
     <span>Comisiones</span>
   </button>
+  <button data-vista="gastos">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v12H3z"></path><path d="M3 11h18M7 15h4"></path></svg>
+    <span>Gastos</span>
+  </button>
   <button data-vista="avanzado">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.5v3.4M12 18.1v3.4M3.6 6l2.4 2.4M18 15.6l2.4 2.4M3.6 18l2.4-2.4M18 8.4l2.4-2.4M2.5 12h3.4M18.1 12h3.4"></path></svg>
     <span>Avanzado</span>
@@ -1788,6 +1797,57 @@
     </details>
     <div id="gestionPromotoras" style="margin-bottom:22px;"></div>
     <div id="listaComisiones"></div>
+  </section>
+
+  <!-- VISTA: GASTOS (portado de friendly, JFC 2026-09-09). El encargado ve SOLO
+       gastos; el dueño/contador ve además ventas del mes y neto (gating en
+       cargarGastos, igual que friendly). Incluye nº de factura del proveedor
+       para control tributario básico. -->
+  <section id="vista-gastos" class="vista">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:2px;">
+      <div style="width:6px;height:38px;border-radius:3px;background:linear-gradient(180deg,#C0392B,#F97316);flex:none;"></div>
+      <div>
+        <h3 class="seccion" style="margin:0;">Gastos</h3>
+        <div style="font-size:11px;font-family:var(--font-mono);color:var(--ink-soft);text-transform:uppercase;letter-spacing:.1em;margin-top:1px;">Lo que sale · bajo control</div>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--ink-soft);margin:8px 0 0;max-width:600px;">Registra lo que gastas y míralo frente a lo que ganas — sin hojas de cálculo, sin sorpresas.</p>
+    <details style="margin:10px 0 12px;font-size:14px;">
+      <summary style="cursor:pointer;font-size:14px;font-family:var(--font-mono);color:var(--azul-medio,#2c4a68);font-weight:700;list-style:none;">¿Cómo funciona? ▸</summary>
+      <div style="margin-top:8px;padding:10px 14px;background:var(--blanco-calido,#fbf5e8);border-radius:8px;border:1px solid var(--azul-suave,#dde5ec);">
+        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">1. Escribe qué fue, el monto y la fecha, elige la categoría y toca "Guardar gasto".</p>
+        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">2. El resumen te muestra los gastos de este mes y el histórico; el dueño ve además las ventas del mes y el neto.</p>
+        <p style="margin:0 0 6px;font-size:14px;color:var(--ink);">3. Los chips de arriba filtran por categoría (arriendo, servicios, nómina…).</p>
+        <p style="margin:0;font-size:14px;color:var(--ink);">4. El encargado ve solo los gastos; el dueño ve la foto completa. El N° de factura del proveedor queda guardado para tu control tributario.</p>
+      </div>
+    </details>
+    <div id="gastosResumen" style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0;"></div>
+    <div id="gastosPorCategoria" style="margin-bottom:14px;"></div>
+    <div class="tag-card" style="text-align:left;padding:14px;">
+      <p style="margin:0 0 8px;font-size:14px;font-weight:700;">Registrar un gasto</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input id="gastoConcepto" type="text" placeholder="¿Qué fue? (ej: arriendo, insumos, transporte)" style="flex:2;min-width:160px;padding:9px;border:2px solid var(--azul-medio);border-radius:4px;font-size:15px;">
+        <select id="gastoCategoria" title="Categoría" style="flex:1;min-width:130px;padding:9px;border:2px solid var(--azul-medio);border-radius:4px;font-size:15px;">
+          <option value="arriendo">Arriendo</option>
+          <option value="servicios">Servicios (luz, agua, internet)</option>
+          <option value="inventario">Inventario / insumos</option>
+          <option value="nomina">Nómina / personal</option>
+          <option value="servicios-prof">Servicios profesionales</option>
+          <option value="marketing">Marketing</option>
+          <option value="transporte">Transporte / envíos</option>
+          <option value="impuestos">Impuestos / tasas</option>
+          <option value="mantenimiento">Mantenimiento / reparaciones</option>
+          <option value="otro" selected>Otro</option>
+        </select>
+        <input id="gastoMonto" type="number" min="0" step="0.01" placeholder="Monto" style="flex:1;min-width:100px;padding:9px;border:2px solid var(--azul-medio);border-radius:4px;font-size:15px;">
+        <input id="gastoFecha" type="date" style="flex:1;min-width:130px;padding:8px;border:2px solid var(--azul-medio);border-radius:4px;font-size:15px;">
+        <!-- JFC 2026-09-09: nº de factura del proveedor externo, para control tributario básico. Opcional. -->
+        <input id="gastoFactura" type="text" placeholder="N° de factura (opcional)" title="Número de factura del proveedor — control tributario básico" style="flex:1;min-width:130px;padding:9px;border:2px solid var(--azul-medio);border-radius:4px;font-size:15px;">
+        <button class="ir" onclick="registrarGasto()" style="font-size:14px;padding:9px 16px;">Guardar gasto</button>
+      </div>
+      <p id="gastoMsg" style="font-size:14px;font-weight:700;margin:8px 0 0;"></p>
+    </div>
+    <div id="listaGastos" style="margin-top:14px;"></div>
   </section>
 
   <!-- VISTA: AVANZADO -->
@@ -2885,9 +2945,138 @@ async function cargarBCG(){
     </div>`;
 }
 
+/* ===== GASTOS (portado de friendly, JFC 2026-09-09) =====
+   Registro de gastos individuales con categoría y nº de factura. El encargado
+   ve SOLO los gastos; el dueño/contador ve además ventas del mes y neto. Todo
+   pasa por el backend (/api/gastos) y persiste como el resto del estado. */
+let _gastosCache = [];
+let _gastoCatFiltro = "";
+function gastoCatLabel(k){
+  const ES = { arriendo:"Arriendo", servicios:"Servicios", inventario:"Inventario / insumos", nomina:"Nómina / personal", "servicios-prof":"Servicios profesionales", marketing:"Marketing", transporte:"Transporte / envíos", impuestos:"Impuestos / tasas", mantenimiento:"Mantenimiento / reparaciones", otro:"Otro" };
+  return ES[k || "otro"] || ES.otro;
+}
+async function cargarGastos(){
+  const cont = document.getElementById("listaGastos");
+  const resumen = document.getElementById("gastosResumen");
+  const fechaEl = document.getElementById("gastoFecha");
+  if (fechaEl && !fechaEl.value) fechaEl.value = new Date().toISOString().slice(0, 10);
+  let data;
+  try { data = await (await fetch(`${API}/gastos`)).json(); }
+  catch (_) { if (cont) cont.innerHTML = '<p style="font-size:14px;color:var(--rojo,#a3392a);">No se pudieron cargar los gastos. Recarga la vista.</p>'; return; }
+  const gastos = (data && data.gastos) || [];
+  // Ingresos del mes (para el neto). El dashboard de amigable puede no exponer
+  // el mes; si no viene un número, se ocultan las tarjetas de ingresos/neto.
+  let ventasMes = null;
+  try {
+    const dash = await (await fetch(`${API}/dashboard?ubicacionId=${ubicacionActual}`)).json();
+    const v = dash && dash.resumenMes && dash.resumenMes.ventas;
+    if (Number.isFinite(Number(v))) ventasMes = Number(v);
+  } catch (_) {}
+  const totalGastos = gastos.reduce((a, g) => a + (Number(g.monto) || 0), 0);
+  const _mesActual = (() => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); })();
+  const gastosMes = gastos.filter((g) => String(g.fecha || "").slice(0, 7) === _mesActual).reduce((a, g) => a + (Number(g.monto) || 0), 0);
+  const tarjeta = (label, valor, color) => `<div style="flex:1;min-width:120px;background:#FFFFFF;border:2px solid var(--linea,#D7E0E8);border-radius:10px;padding:12px 14px;">
+    <div style="font-size:13px;color:var(--ink-soft);">${label}</div>
+    <div style="font-size:20px;font-weight:700;color:${color};">${fmtMoney(valor)}</div></div>`;
+  // Gating por rol: dueño/contador ven ingresos y neto; el encargado ve SOLO gastos.
+  const _rolG = (window.OCAuth && window.OCAuth.rolActual) ? window.OCAuth.rolActual() : "";
+  const _verIngresos = (_rolG === "dueno" || _rolG === "contador") && ventasMes !== null;
+  if (resumen) resumen.innerHTML =
+    tarjeta("Gastos de este mes", gastosMes, "var(--dinero-rojo,#C0392B)") +
+    tarjeta("Gastos (histórico)", totalGastos, "var(--dinero-rojo,#C0392B)") +
+    (_verIngresos ? (() => { const neto = ventasMes - gastosMes; return tarjeta("Ventas de este mes", ventasMes, "var(--dinero-verde-dk,#1a6e3c)") + tarjeta("Neto", neto, neto >= 0 ? "var(--dinero-verde-dk,#1a6e3c)" : "var(--dinero-rojo,#C0392B)"); })() : "");
+  // Resumen del mes por categoría (chips que filtran la lista).
+  const catDelMes = {};
+  gastos.filter((g) => String(g.fecha || "").slice(0, 7) === _mesActual)
+    .forEach((g) => { const k = g.categoria || "otro"; catDelMes[k] = (catDelMes[k] || 0) + (Number(g.monto) || 0); });
+  const catCont = document.getElementById("gastosPorCategoria");
+  if (catCont) {
+    const orden = Object.entries(catDelMes).sort((a, b) => b[1] - a[1]);
+    catCont.innerHTML = orden.length
+      ? `<div style="font-size:13px;color:var(--ink-soft);margin:0 0 6px;">Este mes por categoría</div>
+         <div style="display:flex;gap:6px;flex-wrap:wrap;">
+           ${_gastoCatFiltro ? `<button type="button" data-cat="" class="oc-gasto-chip" style="font-size:13px;padding:4px 10px;border-radius:999px;background:var(--azul-medio,#2c4a68);border:1px solid var(--azul-medio,#2c4a68);color:#fff !important;-webkit-text-fill-color:#fff !important;cursor:pointer;">✕ Todas</button>` : ""}
+           ${orden.map(([k, v]) => { const on = _gastoCatFiltro === k; return `<button type="button" data-cat="${k}" class="oc-gasto-chip" style="font-size:13px;padding:4px 10px;border-radius:999px;cursor:pointer;background:${on ? "#C0392B" : "#FDECEA"};border:1px solid #C0392B;color:${on ? "#fff" : "#8f2036"} !important;-webkit-text-fill-color:${on ? "#fff" : "#8f2036"} !important;">${escHtml(gastoCatLabel(k))} · ${fmtMoney(v)}</button>`; }).join("")}</div>`
+      : "";
+    catCont.querySelectorAll(".oc-gasto-chip").forEach((b) => b.addEventListener("click", () => {
+      const c = b.getAttribute("data-cat");
+      _gastoCatFiltro = (c && c === _gastoCatFiltro) ? "" : c;
+      cargarGastos();
+    }));
+  }
+  if (!gastos.length) { if (cont) cont.innerHTML = '<p style="font-size:14px;color:var(--ink-soft);">Aún no hay gastos registrados. Agrega el primero arriba.</p>'; return; }
+  _gastosCache = gastos;
+  const _puedeEditarGasto = _rolG === "dueno" || _rolG === "contador";
+  const listaGastos = _gastoCatFiltro ? gastos.filter((g) => (g.categoria || "otro") === _gastoCatFiltro) : gastos;
+  if (cont && !listaGastos.length) { cont.innerHTML = `<p style="font-size:14px;color:var(--ink-soft);">No hay gastos en ${escHtml(gastoCatLabel(_gastoCatFiltro))}.</p>`; return; }
+  if (cont) cont.innerHTML = listaGastos.map((g) => `
+    <div class="tag-card" id="gasto-fila-${g.id}" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:8px;">
+      <div style="flex:1;">
+        <strong style="font-size:15px;">${escHtml(g.concepto)}</strong>
+        <div style="font-size:13px;color:var(--ink-soft);"><span style="display:inline-block;padding:1px 8px;border-radius:999px;background:var(--blanco-calido,#fbf5e8);border:1px solid var(--linea,#D7E0E8);font-size:12px;">${escHtml(gastoCatLabel(g.categoria))}</span> · ${new Date(g.fecha).toLocaleDateString()}${g.factura ? " · Factura " + escHtml(g.factura) : ""}${g.usuarioNombre ? " · " + escHtml(g.usuarioNombre) : ""}</div>
+      </div>
+      <strong style="color:var(--dinero-rojo,#C0392B);font-size:16px;">-${fmtMoney(g.monto)}</strong>
+      ${_puedeEditarGasto ? `<button onclick="editarGasto('${g.id}')" title="Editar este gasto" style="font-size:13px;padding:3px 8px;background:#FFF6E5;border:1.5px solid #B8860B;border-radius:6px;color:#7a5510 !important;-webkit-text-fill-color:#7a5510 !important;cursor:pointer;">✎</button>` : ""}
+      ${_puedeEditarGasto ? `<button onclick="anularGasto('${g.id}')" title="Eliminar este gasto" style="font-size:13px;padding:3px 8px;background:#FDECEA;border:1.5px solid #C0392B;border-radius:6px;color:#C0392B !important;-webkit-text-fill-color:#C0392B !important;cursor:pointer;">✕</button>` : ""}
+    </div>`).join("");
+}
+async function registrarGasto(){
+  const conceptoEl = document.getElementById("gastoConcepto");
+  const montoEl = document.getElementById("gastoMonto");
+  const fechaEl = document.getElementById("gastoFecha");
+  const msg = document.getElementById("gastoMsg");
+  const concepto = (conceptoEl.value || "").trim();
+  const monto = Number(montoEl.value);
+  if (!concepto) { msg.style.color = "var(--rojo,#a3392a)"; msg.textContent = "Escribe una descripción para el gasto."; return; }
+  if (!Number.isFinite(monto) || monto <= 0) { msg.style.color = "var(--rojo,#a3392a)"; msg.textContent = "Escribe un monto válido."; return; }
+  const catEl = document.getElementById("gastoCategoria");
+  const categoria = catEl ? catEl.value : "otro";
+  const facturaEl = document.getElementById("gastoFactura");
+  const factura = facturaEl ? (facturaEl.value || "").trim() : "";
+  const res = await fetch(`${API}/gastos`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ concepto, monto, categoria, factura: factura || undefined, fecha: fechaEl.value ? new Date(fechaEl.value).toISOString() : undefined, ubicacionId: ubicacionActual }) });
+  if (!res.ok) { const r = await res.json().catch(() => ({})); msg.style.color = "var(--rojo,#a3392a)"; msg.textContent = r.error || "No se pudo guardar el gasto."; return; }
+  conceptoEl.value = ""; montoEl.value = ""; if (facturaEl) facturaEl.value = "";
+  msg.style.color = "var(--verde,#1a6e3c)"; msg.textContent = "Gasto registrado.";
+  cargarGastos();
+}
+async function anularGasto(id){
+  if (!(await ocConfirm("¿Eliminar este gasto? Queda constancia en el registro de actividad."))) return;
+  await fetch(`${API}/gastos/${id}`, { method: "DELETE" });
+  cargarGastos();
+}
+async function editarGasto(id){
+  const g = (_gastosCache || []).find((x) => x.id === id);
+  const fila = document.getElementById("gasto-fila-" + id);
+  if (!g || !fila) return;
+  const fecha = (g.fecha || "").slice(0, 10);
+  fila.innerHTML = `
+    <div style="flex:1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+      <input id="ge-concepto" value="${escHtml(g.concepto)}" placeholder="Concepto" style="flex:1;min-width:140px;font-size:13px;padding:6px 8px;border:1px solid var(--linea,#D7E0E8);border-radius:6px;">
+      <select id="ge-categoria" style="font-size:13px;padding:6px 8px;border:1px solid var(--linea,#D7E0E8);border-radius:6px;">
+        ${["arriendo","servicios","inventario","nomina","servicios-prof","marketing","transporte","impuestos","mantenimiento","otro"].map((k) => `<option value="${k}"${(g.categoria || "otro") === k ? " selected" : ""}>${escHtml(gastoCatLabel(k))}</option>`).join("")}
+      </select>
+      <input id="ge-monto" type="number" min="0" step="0.01" value="${Number(g.monto) || 0}" style="width:110px;font-size:13px;padding:6px 8px;border:1px solid var(--linea,#D7E0E8);border-radius:6px;">
+      <input id="ge-fecha" type="date" value="${escHtml(fecha)}" style="font-size:13px;padding:6px 8px;border:1px solid var(--linea,#D7E0E8);border-radius:6px;">
+      <input id="ge-factura" value="${escHtml(g.factura || '')}" placeholder="N° de factura" style="width:130px;font-size:13px;padding:6px 8px;border:1px solid var(--linea,#D7E0E8);border-radius:6px;">
+    </div>
+    <button id="ge-guardar" style="font-size:13px;font-weight:700;padding:6px 12px;background:#006B3C;border:1.5px solid #006B3C;border-radius:6px;color:#fff !important;-webkit-text-fill-color:#fff !important;cursor:pointer;">Guardar</button>
+    <button id="ge-cancelar" style="font-size:13px;padding:6px 12px;background:#fff;border:1.5px solid var(--linea,#D7E0E8);border-radius:6px;color:var(--ink) !important;-webkit-text-fill-color:var(--ink) !important;cursor:pointer;">Cancelar</button>`;
+  document.getElementById("ge-cancelar").addEventListener("click", () => cargarGastos());
+  document.getElementById("ge-guardar").addEventListener("click", async () => {
+    const concepto = document.getElementById("ge-concepto").value.trim();
+    const monto = Number(document.getElementById("ge-monto").value);
+    const fechaVal = document.getElementById("ge-fecha").value;
+    const factura = (document.getElementById("ge-factura") || {}).value || "";
+    if (!concepto || !Number.isFinite(monto) || monto <= 0) return;
+    const categoria = (document.getElementById("ge-categoria") || {}).value || "otro";
+    await fetch(`${API}/gastos/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ concepto, monto, categoria, factura, fecha: fechaVal ? new Date(fechaVal).toISOString() : undefined }) });
+    cargarGastos();
+  });
+}
+
 function refrescarVistaActiva(){
   const v = vistaActivaId();
-  const cargadores = { hoy: cargarHoy, inventario: () => { cargarInventario(); cargarBCG(); }, etiquetas: cargarEtiquetas, avanzado: cargarAvanzado, comisiones: cargarComisiones, clientes: cargarClientes, escanear: () => { poblarSelectClientes(); cargarGridVender(); }, perchas: () => window.VPerchas && window.VPerchas.cargar() };
+  const cargadores = { hoy: cargarHoy, inventario: () => { cargarInventario(); cargarBCG(); }, etiquetas: cargarEtiquetas, avanzado: cargarAvanzado, comisiones: cargarComisiones, clientes: cargarClientes, gastos: cargarGastos, escanear: () => { poblarSelectClientes(); cargarGridVender(); }, perchas: () => window.VPerchas && window.VPerchas.cargar() };
   const fn = cargadores[v];
   if (fn) Promise.resolve(fn()).catch(err => console.error(`Error cargando vista "${v}":`, err));
 }
@@ -5423,14 +5612,19 @@ async function renderGestionPromotoras(){
     <h3 class="seccion" style="font-size:15px;margin-top:0;">Comisionistas (asociados/as)</h3>
     <div class="tag-card" style="padding:14px;display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="libre" checked> Nombre libre</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="libre" checked> Promotor/a</label>
         <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="empleado"> Un/a encargado/a</label>
         <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="proveedor"> Un/a proveedor/a o artista</label>
       </div>
+      <!-- JFC 2026-09-09 (portado de friendly): pulldown Y cajita en la MISMA
+           línea (aprovechar el ancho, no estirar hacia abajo). Cada origen
+           (Promoter/encargado/proveedor) llena el pulldown con SU lista; se
+           elige de ahí O se escribe un nombre nuevo en la cajita — 2 formas de
+           lograr lo mismo. Al guardar gana el texto escrito; si no, el del pulldown. -->
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <input id="promNombre" type="text" placeholder="Nombre del/la comisionista" style="flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
-        <select id="promNombreSelect" style="display:none;flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;"></select>
-        <input id="promComision" type="number" min="0" max="100" placeholder="% comisión (ej: 10)" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+        <select id="promNombreSelect" style="flex:2;min-width:150px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;"></select>
+        <input id="promNombre" type="text" placeholder="…o escribe un nombre nuevo" style="flex:2;min-width:150px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+        <input id="promComision" type="number" min="0" max="100" placeholder="% comisión (ej: 10)" style="flex:1;min-width:110px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
       </div>
       <!-- Datos completos del/la comisionista (JFC 2026-07-23 parte 3): antes solo se
            guardaba nombre + %, muy por detrás de lo que ya se pide para clientes.
@@ -5446,7 +5640,7 @@ async function renderGestionPromotoras(){
           <textarea id="promNotas" placeholder="Notas (horarios, acuerdos especiales, etc.)" style="flex:2;min-width:200px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;min-height:40px;font-family:inherit;"></textarea>
         </div>
       </details>
-      <div style="margin-top:10px;"><button class="ir" id="btnAltaPromotora" style="padding:10px 18px;">+ Agregar comisionista</button></div>
+      <div style="margin-top:10px;"><button class="ir" id="btnAltaPromotora" style="padding:10px 18px;">Guardar comisionista</button></div>
       <p style="font-size:14px;color:var(--ink-soft);margin:0;">Un/a encargado/a o un/a proveedor/a también puede ser comisionista a la vez — elegirlo aquí no le quita su otro rol.</p>
     </div>
     <p id="promMsg" style="font-size:14px;font-weight:700;margin:8px 0 0;"></p>
@@ -5475,20 +5669,27 @@ async function renderGestionPromotoras(){
   function poblarSelect(opciones, placeholder){
     selectNombre.innerHTML = `<option value="">${placeholder}</option>` + opciones.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join("");
   }
-  document.querySelectorAll('input[name="promOrigen"]').forEach(r => r.addEventListener("change", (e) => {
-    const v = e.target.value;
-    if (v === "libre"){ inputTexto.style.display = ""; selectNombre.style.display = "none"; }
-    else if (v === "empleado"){
-      inputTexto.style.display = "none"; selectNombre.style.display = "";
+  // JFC 2026-09-09 (portado de friendly): pulldown y cajita SIEMPRE visibles; el
+  // radio solo cambia QUÉ lista el pulldown. Promoter → comisionistas ya
+  // existentes; encargado/a → equipo; proveedor/a → proveedores/artistas en
+  // consignación. La cajita permite escribir uno nuevo.
+  function poblarPorOrigen(v){
+    if (v === "empleado"){
       poblarSelect(encargados.map(u => u.nombre), encargados.length ? "— Elige un/a encargado/a —" : "No hay encargados dados de alta (Avanzado → Equipo)");
-    } else {
-      inputTexto.style.display = "none"; selectNombre.style.display = "";
+    } else if (v === "proveedor"){
       poblarSelect(proveedoresConsig, proveedoresConsig.length ? "— Elige un/a proveedor/a o artista —" : "No hay proveedores en consignación todavía");
+    } else {
+      const nombresProm = (_promotorasVivasCache || []).map(p => p.nombre);
+      poblarSelect(nombresProm, nombresProm.length ? "— Elige un/a comisionista existente —" : "Aún no hay comisionistas — escribe uno nuevo →");
     }
-  }));
+  }
+  document.querySelectorAll('input[name="promOrigen"]').forEach(r => r.addEventListener("change", (e) => poblarPorOrigen(e.target.value)));
+  poblarPorOrigen("libre"); // población inicial (origen por defecto)
   document.getElementById("btnAltaPromotora").addEventListener("click", async () => {
     const origen = document.querySelector('input[name="promOrigen"]:checked').value;
-    const nombre = (origen === "libre" ? inputTexto.value : selectNombre.value).trim();
+    // JFC 2026-09-09 (portado de friendly): gana lo que se ESCRIBIÓ en la cajita;
+    // si está vacía, lo elegido en el pulldown. Así funcionan las 2 formas.
+    const nombre = ((inputTexto.value || "").trim() || (selectNombre.value || "")).trim();
     const comision = document.getElementById("promComision").value;
     const msgEl = document.getElementById("promMsg");
     if (!nombre){ msgEl.textContent = "Ponle un nombre al/a la comisionista."; msgEl.style.color = "var(--rojo,#a3392a)"; return; }
@@ -6520,17 +6721,78 @@ if ("serviceWorker" in navigator) {
   try {
     const r = await fetch("./version.json?ts=" + Date.now(), { cache: "no-store" });
     if (!r.ok) { try { const eb = JSON.parse(localStorage.getItem("oc_errores") || "[]"); eb.push({ fecha: new Date().toISOString(), msg: "version.json " + r.status, src: "version-check" }); localStorage.setItem("oc_errores", JSON.stringify(eb.slice(-20))); } catch (_) {} return; }
-    const v = String(((await r.json()) || {}).version || "");
-    if (!v) return;
+    // BUG RAIZ (portado de friendly, JFC 2026-09-09): antes esto comparaba SOLO
+    // `version` ("1.5.6"), que casi nunca se subia. Cada build sube el `shell`
+    // (amigable-shell-vNN) pero `version` se quedaba igual, asi que este reload
+    // forzado NO se disparaba por un cambio de shell y el dispositivo seguia con
+    // el shell viejo. Ahora la huella incluye AMBOS: si cambia cualquiera, refresca.
+    const _vj = ((await r.json()) || {});
+    const v = String(_vj.version || "") + "|" + String(_vj.shell || "");
+    if (v === "|") return;
     const K = "amg_version_vista";
     const prev = localStorage.getItem(K);
     if (prev === v) return;
+    // ANTI-LOOP ROBUSTO (portado de friendly): si el deploy esta a medias o la red
+    // devuelve algo raro, no queremos un bucle infinito de recargas. Si se recarga
+    // mas de 3 veces en 30s, se para y se deja la app como esta (mejor servir algo
+    // que recargar sin fin).
+    const KI = "amg_version_intento";
+    try {
+      const ahora = Date.now();
+      const it = JSON.parse(localStorage.getItem(KI) || "null");
+      if (it && (ahora - it.ts) < 30000) {
+        if (it.n >= 3) { localStorage.setItem(K, v); return; }
+        it.n += 1; it.ts = ahora; localStorage.setItem(KI, JSON.stringify(it));
+      } else {
+        localStorage.setItem(KI, JSON.stringify({ n: 1, ts: ahora }));
+      }
+    } catch (_) {}
     localStorage.setItem(K, v);
     // Sin excepcion de primera visita: los dispositivos atascados en una
     // version vieja nunca guardaron esta clave — tambien necesitan la purga.
     try { const regs = await navigator.serviceWorker.getRegistrations(); for (const g of regs) { try { await g.update(); } catch (_) {} } } catch (_) {}
     try { const cs = await caches.keys(); for (const c of cs) { try { await caches.delete(c); } catch (_) {} } } catch (_) {}
     location.reload();
+  } catch (_) {}
+})();
+
+/* PISO DE VERSION AUTORITATIVO (portado de friendly, JFC 2026-09-09, mejora #5 de
+   la auditoria de version). El chequeo de arriba compara contra amg_version_vista
+   (un valor LOCAL): solo actua si algo local ya supo de la version nueva. Este
+   ademas consulta version.json —la fuente de verdad del servidor, que el SW nunca
+   cachea— y, si el shell ACTIVO del aparato (la cache amigable-shell-vNN) es
+   distinto al que el servidor publica, fuerza la recarga UNA vez (con la misma
+   guarda anti-loop). Asi un aparato por debajo del piso converge solo a la version
+   nueva sin depender de que un valor local ya la conociera. Fail-open: nunca
+   bloquea, nunca muestra un limite; empuja a todos a la buena, no deja a nadie afuera. */
+(function verificarPisoVersion() {
+  try {
+    if (!("caches" in window)) return;
+    fetch("./version.json?ts=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (vj) {
+        if (!vj || !vj.shell) return;
+        const servidor = String(vj.shell);
+        caches.keys().then(function (nombres) {
+          const activa = (nombres.filter(function (n) { return n.indexOf("amigable-shell-") === 0; }).pop() || "");
+          if (!activa || activa === servidor) return;
+          // misma guarda anti-loop que el forzado de arriba
+          const KI = "amg_version_intento";
+          try {
+            const ahora = Date.now();
+            const it = JSON.parse(localStorage.getItem(KI) || "null");
+            if (it && (ahora - it.ts) < 30000 && it.n >= 3) return;
+            if (it && (ahora - it.ts) < 30000) { it.n += 1; it.ts = ahora; localStorage.setItem(KI, JSON.stringify(it)); }
+            else { localStorage.setItem(KI, JSON.stringify({ n: 1, ts: ahora })); }
+          } catch (_) {}
+          try { console.warn("[version] piso: el SW sirve " + activa + " y el servidor publica " + servidor + " — recargando."); } catch (_) {}
+          try { localStorage.setItem("amg_version_vista", String(vj.version || "") + "|" + servidor); } catch (_) {}
+          navigator.serviceWorker.getRegistrations().then(function (regs) { regs.forEach(function (g) { try { g.update(); } catch (_) {} }); }).catch(function () {});
+          caches.keys().then(function (cs) { return Promise.all(cs.map(function (c) { return caches.delete(c).catch(function () {}); })); })
+            .then(function () { location.reload(); })
+            .catch(function () { location.reload(); });
+        }).catch(function () {});
+      }).catch(function () {});
   } catch (_) {}
 })();
 

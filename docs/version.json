@@ -1,8 +1,8 @@
 {
-  "version": "1.5.4",
-  "fecha": "2026-09-08",
-  "changelog": "Cortesía y Fiado en el modal de venta (portado de friendly, en la misma línea): Cortesía = venta sin cobro (ingreso 0, el costo sí cuenta); Fiado = se suma a la deuda del cliente. Excluyentes; el fiado necesita cliente.",
+  "version": "1.0",
+  "fecha": "2026-09-09",
+  "changelog": "POLÍTICA DE VERSIÓN (JFC 2026-09-09): la versión pública queda fija en v1.0 (así se declara en la página del PIN); de aquí en adelante SOLO sube el entero del shell (amigable-shell-vNN), que es el control de cambios real. No volver a mover 'version' salvo un salto mayor deliberado. — En este build: se afina la tarjeta Ventas del mes/Neto de Gastos; el rótulo del origen del form de comisionista es \u0022Promotor/a\u0022 (español, ambos géneros).",
   "requerida": false,
-  "shell": "amigable-shell-v94",
+  "shell": "amigable-shell-v104",
   "apagar": []
 }
