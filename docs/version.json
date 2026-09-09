@@ -1,8 +1,8 @@
 {
-  "version": "1.5.8",
+  "version": "1.5.9",
   "fecha": "2026-09-09",
-  "changelog": "Control de versión más robusto (portado de friendly): la huella de versión ahora incluye el shell (antes solo miraba 'version', que casi nunca subía, y un cambio de shell no forzaba recarga), con guarda anti-loop; y se agrega el 'piso de versión' autoritativo que compara contra el servidor y hace que un aparato atascado en un shell viejo converja solo a la versión buena. Fail-open: nunca bloquea, no deja a nadie afuera. Incluye también el form Promoter, la licencia últimos-4 en el PIN y las bases de integridad de versión.",
+  "changelog": "Nueva vista Gastos (portada de friendly): registra gastos individuales con categoría (arriendo, servicios, nómina…), fecha y número de factura del proveedor para control tributario básico; chips que filtran por categoría; el encargado ve SOLO los gastos, mientras el dueño/contador ve además ventas del mes y neto. Incluye también el form Promoter, la licencia últimos-4 en el PIN, el control de versión más robusto y las bases de integridad de versión.",
   "requerida": false,
-  "shell": "amigable-shell-v98",
+  "shell": "amigable-shell-v99",
   "apagar": []
 }
