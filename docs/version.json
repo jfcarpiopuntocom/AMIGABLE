@@ -1,8 +1,8 @@
 {
-  "version": "1.5.6",
+  "version": "1.5.7",
   "fecha": "2026-09-09",
-  "changelog": "En la página del PIN ahora se muestran (de forma pasiva, sin tocar nada) los últimos 4 caracteres de la licencia de este dispositivo — pedido de Belén, para que nadie se una a ciegas y se vea a qué negocio se está entrando. Máxima privacidad (solo 4 dígitos) y alta legibilidad. Incluye además las bases del sistema de integridad de versión (version-manifest.json + SRI fail-open + gen-manifest.js + guarda de hash real).",
+  "changelog": "Form de comisionista/Promoter (portado de friendly): 'Nombre libre' se llama ahora 'Promoter'; el pulldown y la cajita para escribir un nombre nuevo van en la MISMA línea (sin estirar el form); cada origen (Promoter/encargado/proveedor) llena el pulldown con su lista; el botón dejó de decir '+ Agregar' y ahora dice 'Guardar comisionista'. Incluye licencia últimos-4 pasiva en el PIN (pedido de Belén) y las bases del sistema de integridad de versión.",
   "requerida": false,
-  "shell": "amigable-shell-v96",
+  "shell": "amigable-shell-v97",
   "apagar": []
 }

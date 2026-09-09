@@ -5423,14 +5423,19 @@ async function renderGestionPromotoras(){
     <h3 class="seccion" style="font-size:15px;margin-top:0;">Comisionistas (asociados/as)</h3>
     <div class="tag-card" style="padding:14px;display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="libre" checked> Nombre libre</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="libre" checked> Promoter</label>
         <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="empleado"> Un/a encargado/a</label>
         <label style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:600;cursor:pointer;"><input type="radio" name="promOrigen" value="proveedor"> Un/a proveedor/a o artista</label>
       </div>
+      <!-- JFC 2026-09-09 (portado de friendly): pulldown Y cajita en la MISMA
+           línea (aprovechar el ancho, no estirar hacia abajo). Cada origen
+           (Promoter/encargado/proveedor) llena el pulldown con SU lista; se
+           elige de ahí O se escribe un nombre nuevo en la cajita — 2 formas de
+           lograr lo mismo. Al guardar gana el texto escrito; si no, el del pulldown. -->
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <input id="promNombre" type="text" placeholder="Nombre del/la comisionista" style="flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
-        <select id="promNombreSelect" style="display:none;flex:2;min-width:160px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;"></select>
-        <input id="promComision" type="number" min="0" max="100" placeholder="% comisión (ej: 10)" style="flex:1;min-width:130px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+        <select id="promNombreSelect" style="flex:2;min-width:150px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;"></select>
+        <input id="promNombre" type="text" placeholder="…o escribe un nombre nuevo" style="flex:2;min-width:150px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
+        <input id="promComision" type="number" min="0" max="100" placeholder="% comisión (ej: 10)" style="flex:1;min-width:110px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;">
       </div>
       <!-- Datos completos del/la comisionista (JFC 2026-07-23 parte 3): antes solo se
            guardaba nombre + %, muy por detrás de lo que ya se pide para clientes.
@@ -5446,7 +5451,7 @@ async function renderGestionPromotoras(){
           <textarea id="promNotas" placeholder="Notas (horarios, acuerdos especiales, etc.)" style="flex:2;min-width:200px;padding:10px;border:2px solid var(--azul-medio);border-radius:4px;min-height:40px;font-family:inherit;"></textarea>
         </div>
       </details>
-      <div style="margin-top:10px;"><button class="ir" id="btnAltaPromotora" style="padding:10px 18px;">+ Agregar comisionista</button></div>
+      <div style="margin-top:10px;"><button class="ir" id="btnAltaPromotora" style="padding:10px 18px;">Guardar comisionista</button></div>
       <p style="font-size:14px;color:var(--ink-soft);margin:0;">Un/a encargado/a o un/a proveedor/a también puede ser comisionista a la vez — elegirlo aquí no le quita su otro rol.</p>
     </div>
     <p id="promMsg" style="font-size:14px;font-weight:700;margin:8px 0 0;"></p>
@@ -5475,20 +5480,27 @@ async function renderGestionPromotoras(){
   function poblarSelect(opciones, placeholder){
     selectNombre.innerHTML = `<option value="">${placeholder}</option>` + opciones.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join("");
   }
-  document.querySelectorAll('input[name="promOrigen"]').forEach(r => r.addEventListener("change", (e) => {
-    const v = e.target.value;
-    if (v === "libre"){ inputTexto.style.display = ""; selectNombre.style.display = "none"; }
-    else if (v === "empleado"){
-      inputTexto.style.display = "none"; selectNombre.style.display = "";
+  // JFC 2026-09-09 (portado de friendly): pulldown y cajita SIEMPRE visibles; el
+  // radio solo cambia QUÉ lista el pulldown. Promoter → comisionistas ya
+  // existentes; encargado/a → equipo; proveedor/a → proveedores/artistas en
+  // consignación. La cajita permite escribir uno nuevo.
+  function poblarPorOrigen(v){
+    if (v === "empleado"){
       poblarSelect(encargados.map(u => u.nombre), encargados.length ? "— Elige un/a encargado/a —" : "No hay encargados dados de alta (Avanzado → Equipo)");
-    } else {
-      inputTexto.style.display = "none"; selectNombre.style.display = "";
+    } else if (v === "proveedor"){
       poblarSelect(proveedoresConsig, proveedoresConsig.length ? "— Elige un/a proveedor/a o artista —" : "No hay proveedores en consignación todavía");
+    } else {
+      const nombresProm = (_promotorasVivasCache || []).map(p => p.nombre);
+      poblarSelect(nombresProm, nombresProm.length ? "— Elige un/a comisionista existente —" : "Aún no hay comisionistas — escribe uno nuevo →");
     }
-  }));
+  }
+  document.querySelectorAll('input[name="promOrigen"]').forEach(r => r.addEventListener("change", (e) => poblarPorOrigen(e.target.value)));
+  poblarPorOrigen("libre"); // población inicial (origen por defecto)
   document.getElementById("btnAltaPromotora").addEventListener("click", async () => {
     const origen = document.querySelector('input[name="promOrigen"]:checked').value;
-    const nombre = (origen === "libre" ? inputTexto.value : selectNombre.value).trim();
+    // JFC 2026-09-09 (portado de friendly): gana lo que se ESCRIBIÓ en la cajita;
+    // si está vacía, lo elegido en el pulldown. Así funcionan las 2 formas.
+    const nombre = ((inputTexto.value || "").trim() || (selectNombre.value || "")).trim();
     const comision = document.getElementById("promComision").value;
     const msgEl = document.getElementById("promMsg");
     if (!nombre){ msgEl.textContent = "Ponle un nombre al/a la comisionista."; msgEl.style.color = "var(--rojo,#a3392a)"; return; }
