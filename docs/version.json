@@ -1,8 +1,8 @@
 {
-  "version": "1.5.9",
+  "version": "1.0",
   "fecha": "2026-09-09",
-  "changelog": "Nueva vista Gastos (portada de friendly): registra gastos individuales con categoría (arriendo, servicios, nómina…), fecha y número de factura del proveedor para control tributario básico; chips que filtran por categoría; el encargado ve SOLO los gastos, mientras el dueño/contador ve además ventas del mes y neto. Incluye también el form Promoter, la licencia últimos-4 en el PIN, el control de versión más robusto y las bases de integridad de versión.",
+  "changelog": "POLÍTICA DE VERSIÓN (JFC 2026-09-09): la versión pública queda fija en v1.0 (así se declara en la página del PIN); de aquí en adelante SOLO sube el entero del shell (amigable-shell-vNN), que es el control de cambios real. No volver a mover 'version' salvo un salto mayor deliberado. — En este build: se afina la tarjeta Ventas del mes/Neto de Gastos (el dashboard ya expone resumenMes.ventas con el mismo filtro de ubicación).",
   "requerida": false,
-  "shell": "amigable-shell-v99",
+  "shell": "amigable-shell-v100",
   "apagar": []
 }
