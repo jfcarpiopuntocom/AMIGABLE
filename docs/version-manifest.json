@@ -1,6 +1,6 @@
 {
-  "version": "1.5.5",
-  "shell": "amigable-shell-v95",
+  "version": "1.5.6",
+  "shell": "amigable-shell-v96",
   "algoritmo": "sha256",
   "files": {
     "./index.html": "sha256-c367c8bc9791c9a1fbc029c22954512032131f9eef61ccc25c43cdf01badd539",
@@ -26,7 +26,7 @@
     "./crypto-store.js": "sha256-116ef8bfeea4e50d64a3e187858f5822ea40961a388d415b83f9cde1643027aa",
     "./email-recovery.js": "sha256-a6e2ef1c8b62173b43f13c9bb871252a47131b106cead56f4603d2c9b0ee618c",
     "./storage-durabilidad.js": "sha256-9eb4e789d01a25bd63f49d6948d6507e045093f8947cf05f2dd1b43f6b6b777d",
-    "./auth-ui.js": "sha256-d4cebf16fa9bef64ce8721d7ab5fbcebe779d0ab2574cef1442365af70693b30",
+    "./auth-ui.js": "sha256-fea1e62c7677a7214110a03f39c72a9f82b0d64039a5b47448e3815e3c0809bc",
     "./backup-scheduler.js": "sha256-1a2e63486d631a75069559f0f0064aedbbfbf54b79cc45f0986ed75932ccbf8e",
     "./avanzado-extra.js": "sha256-5da6819e47b670a53ad57a4f3d58441de0a1bfc7501ef8834a85543d3e63890c",
     "./device-identity.js": "sha256-2b069aacbb111d4893adad42c227749d641b098e79df604a3d7b574142e6c088",

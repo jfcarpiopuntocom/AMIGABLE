@@ -1,8 +1,8 @@
 {
-  "version": "1.5.5",
-  "fecha": "2026-09-08",
-  "changelog": "Bases del sistema de integridad de versión (portadas de friendly): version-manifest.json con SHA-256 de cada archivo del shell, verificación SRI fail-open en el service worker (nunca borra un archivo; lo re-pide y conserva el servido si falla), script gen-manifest.js y guarda de hash real en check-sw.sh. Garantiza que todos vean la versión buena completa, sin dejar a nadie afuera.",
+  "version": "1.5.6",
+  "fecha": "2026-09-09",
+  "changelog": "En la página del PIN ahora se muestran (de forma pasiva, sin tocar nada) los últimos 4 caracteres de la licencia de este dispositivo — pedido de Belén, para que nadie se una a ciegas y se vea a qué negocio se está entrando. Máxima privacidad (solo 4 dígitos) y alta legibilidad. Incluye además las bases del sistema de integridad de versión (version-manifest.json + SRI fail-open + gen-manifest.js + guarda de hash real).",
   "requerida": false,
-  "shell": "amigable-shell-v95",
+  "shell": "amigable-shell-v96",
   "apagar": []
 }
