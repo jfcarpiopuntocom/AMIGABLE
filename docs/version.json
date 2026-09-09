@@ -3,6 +3,6 @@
   "fecha": "2026-09-09",
   "changelog": "POLÍTICA DE VERSIÓN (JFC 2026-09-09): la versión pública queda fija en v1.0 (así se declara en la página del PIN); de aquí en adelante SOLO sube el entero del shell (amigable-shell-vNN), que es el control de cambios real. No volver a mover 'version' salvo un salto mayor deliberado. — En este build: se afina la tarjeta Ventas del mes/Neto de Gastos; el rótulo del origen del form de comisionista es \u0022Promotor/a\u0022 (español, ambos géneros).",
   "requerida": false,
-  "shell": "amigable-shell-v105",
+  "shell": "amigable-shell-v106",
   "apagar": []
 }
