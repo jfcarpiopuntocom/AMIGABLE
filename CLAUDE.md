@@ -157,11 +157,12 @@ consultorio no tiene nada de eso. Ante la duda: **no portar todavía.**
 ## VOCABULARIO (decidido 2026-08-17, aplicado en las tres)
 
 - **encargado/a**, nunca "empleado" — no queremos que parezca control de personal.
-- **asociado/a** en el cuerpo del texto. EXCEPCIÓN (JFC 2026-09-09): en el
-  **form de comisionista**, el origen "libre" se rotula **"Promoter"** (pulldown
-  Y cajita en la misma línea; botón "Guardar comisionista"). Gana esta
-  instrucción reciente sobre el viejo "nunca promotor/a". Cuando la casa retiene
-  %: **casa anfitriona**.
+- Término preferido de JFC (2026-09-09): **"promotor/a"** — en español, cubriendo
+  ambos géneros. En el **form de comisionista** (app en español) el origen "libre"
+  se rotula **"Promotor/a"**; pulldown Y cajita en la misma línea; botón "Guardar
+  comisionista". (En friendly, que es en inglés, es "Promoter".) "asociado/a" y
+  "casa anfitriona" siguen siendo válidos en el resto del texto. NOTA: el viejo
+  "nunca promotor/a" que estaba aquí NO era instrucción de JFC — se eliminó.
 - **Bar y licores son una sola cosa.** No existe el rubro "Licores".
 - El rol interno sigue siendo el string `"empleado"` en PINs, endpoints y estado
   guardado. Sólo cambió el texto visible. Renombrarlo dejaría sin acceso a todo
