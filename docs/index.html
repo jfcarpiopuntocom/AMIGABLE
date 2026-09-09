@@ -2966,11 +2966,18 @@ async function cargarGastos(){
   const gastos = (data && data.gastos) || [];
   // Ingresos del mes (para el neto). El dashboard de amigable puede no exponer
   // el mes; si no viene un número, se ocultan las tarjetas de ingresos/neto.
-  let ventasMes = null;
+  // JFC 2026-09-09 (P2): world best practice — se muestran DOS cifras y no una
+  // sola que engañe. "Ventas (bruto)" es todo lo que pasó por caja; "Neto de la
+  // casa" es lo que la casa REALMENTE retiene (en consignación solo su parte, vía
+  // split.montoNetoDueno; en producto propio, todo). El resultado del mes compara
+  // gastos contra lo retenido, no contra el bruto.
+  let ventasMes = null, retenidoCasa = null;
   try {
     const dash = await (await fetch(`${API}/dashboard?ubicacionId=${ubicacionActual}`)).json();
     const v = dash && dash.resumenMes && dash.resumenMes.ventas;
+    const r = dash && dash.resumenMes && dash.resumenMes.retenidoCasa;
     if (Number.isFinite(Number(v))) ventasMes = Number(v);
+    if (Number.isFinite(Number(r))) retenidoCasa = Number(r);
   } catch (_) {}
   const totalGastos = gastos.reduce((a, g) => a + (Number(g.monto) || 0), 0);
   const _mesActual = (() => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); })();
@@ -2981,10 +2988,22 @@ async function cargarGastos(){
   // Gating por rol: dueño/contador ven ingresos y neto; el encargado ve SOLO gastos.
   const _rolG = (window.OCAuth && window.OCAuth.rolActual) ? window.OCAuth.rolActual() : "";
   const _verIngresos = (_rolG === "dueno" || _rolG === "contador") && ventasMes !== null;
+  // El neto de la casa cae al bruto si el backend no lo trajo (compatibilidad).
+  const _neto = (retenidoCasa !== null ? retenidoCasa : ventasMes);
+  // Solo tiene sentido separar "bruto" de "neto de la casa" cuando difieren (hay
+  // consignación). Si son iguales, se muestra una sola línea de ventas para no
+  // repetir la misma cifra dos veces.
+  const _hayConsignacion = _verIngresos && retenidoCasa !== null && Math.abs(retenidoCasa - ventasMes) >= 0.005;
   if (resumen) resumen.innerHTML =
     tarjeta("Gastos de este mes", gastosMes, "var(--dinero-rojo,#C0392B)") +
     tarjeta("Gastos (histórico)", totalGastos, "var(--dinero-rojo,#C0392B)") +
-    (_verIngresos ? (() => { const neto = ventasMes - gastosMes; return tarjeta("Ventas de este mes", ventasMes, "var(--dinero-verde-dk,#1a6e3c)") + tarjeta("Neto", neto, neto >= 0 ? "var(--dinero-verde-dk,#1a6e3c)" : "var(--dinero-rojo,#C0392B)"); })() : "");
+    (_verIngresos ? (() => {
+      const resultado = _neto - gastosMes;
+      const cVentas = _hayConsignacion
+        ? tarjeta("Ventas del mes (bruto)", ventasMes, "var(--dinero-verde-dk,#1a6e3c)") + tarjeta("Neto de la casa", _neto, "var(--dinero-verde-dk,#1a6e3c)")
+        : tarjeta("Ventas de este mes", ventasMes, "var(--dinero-verde-dk,#1a6e3c)");
+      return cVentas + tarjeta(_hayConsignacion ? "Resultado (neto − gastos)" : "Neto", resultado, resultado >= 0 ? "var(--dinero-verde-dk,#1a6e3c)" : "var(--dinero-rojo,#C0392B)");
+    })() : "");
   // Resumen del mes por categoría (chips que filtran la lista).
   const catDelMes = {};
   gastos.filter((g) => String(g.fecha || "").slice(0, 7) === _mesActual)

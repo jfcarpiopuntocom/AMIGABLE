@@ -1,9 +1,9 @@
 {
   "version": "1.0",
-  "shell": "amigable-shell-v106",
+  "shell": "amigable-shell-v107",
   "algoritmo": "sha256",
   "files": {
-    "./index.html": "sha256-afd8b70c4970f52629de740245ba8c068ae7f356aa93bcfdde5cf0c581bc2708",
+    "./index.html": "sha256-4ae8e4b3eac73c5ba2ab9c3be252b0071d687dbd3cfd0688a9fae04c885b799c",
     "./aislamiento.js": "sha256-724581fcb8bf60a4d9927adf4e8a9e2eb7697781d42aacdfa37d3ae0ce7b14c9",
     "./cartera.js": "sha256-8625fc7b119ea06970f3085880dcc8554a817eb7d6f4f5f1b9fe4e5408ed10a0",
     "./caja-chica.js": "sha256-29257f84e5e56afc4727a691c23e249e887bc61c920bdbace67b328478f7c93c",
@@ -21,7 +21,7 @@
     "./favicon.png": "sha256-b62c4eeef814bfaebdc74fac65010bf082467ebf9d802133ec146999b3a6d317",
     "./pocketbase-client.js": "sha256-ab4095c79740218555e8ab76ebf7087a44385a257e976de200c956e5fa27564a",
     "./estado-idb.js": "sha256-0801f464cd9ff4c8b7ad0d07774d160848ecbdec30920c8a0877b79b7efc78b4",
-    "./mock-backend.js": "sha256-c992fb117e5db1e2911b2915388ff1555469c422877d2d30dc02e53762b00d88",
+    "./mock-backend.js": "sha256-e60464638b9ed71c6821f08816a4858eb64566229a26ebadd6aa6b19d411b515",
     "./red-segura.js": "sha256-76761e97f98d63eb5822c1da1d3b584b748067afdf1bebded9fe7b584e02b30c",
     "./crypto-store.js": "sha256-116ef8bfeea4e50d64a3e187858f5822ea40961a388d415b83f9cde1643027aa",
     "./email-recovery.js": "sha256-a6e2ef1c8b62173b43f13c9bb871252a47131b106cead56f4603d2c9b0ee618c",
