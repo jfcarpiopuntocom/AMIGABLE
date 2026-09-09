@@ -1,9 +1,9 @@
 {
   "version": "1.0",
-  "shell": "amigable-shell-v104",
+  "shell": "amigable-shell-v105",
   "algoritmo": "sha256",
   "files": {
-    "./index.html": "sha256-39e6d4381e867b79f3a97492c335806c00a99aa7caffcb958c8f1d5c68557826",
+    "./index.html": "sha256-afd8b70c4970f52629de740245ba8c068ae7f356aa93bcfdde5cf0c581bc2708",
     "./aislamiento.js": "sha256-724581fcb8bf60a4d9927adf4e8a9e2eb7697781d42aacdfa37d3ae0ce7b14c9",
     "./cartera.js": "sha256-8625fc7b119ea06970f3085880dcc8554a817eb7d6f4f5f1b9fe4e5408ed10a0",
     "./caja-chica.js": "sha256-29257f84e5e56afc4727a691c23e249e887bc61c920bdbace67b328478f7c93c",
