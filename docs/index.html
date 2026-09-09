@@ -303,6 +303,11 @@
      touch-action:manipulation en todo lo clickeable mata el delay de 300ms Y
      el double-tap-zoom en ESE elemento puntual, sin tocar el pinch-zoom global. */
   button, [role="button"], a, input, select, textarea, label,
+  /* GLOBAL a `button`/inputs (JFC 2026-09-09): antes esto listaba clases y
+     [onclick], pero los botones que usan addEventListener (ej. los +/- de
+     cantidad en el modal de venta) se colaban y hacían doble-tap-zoom en iOS.
+     Ahora cubre TODO botón/entrada. Pinch-zoom global intacto. */
+  button, a, input, select, textarea,
   .ir, .vender, .caja, .tag-card, summary, nav button,
   [onclick], [data-vender-tile], [data-percha-evento]{
     touch-action:manipulation;
