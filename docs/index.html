@@ -6532,17 +6532,78 @@ if ("serviceWorker" in navigator) {
   try {
     const r = await fetch("./version.json?ts=" + Date.now(), { cache: "no-store" });
     if (!r.ok) { try { const eb = JSON.parse(localStorage.getItem("oc_errores") || "[]"); eb.push({ fecha: new Date().toISOString(), msg: "version.json " + r.status, src: "version-check" }); localStorage.setItem("oc_errores", JSON.stringify(eb.slice(-20))); } catch (_) {} return; }
-    const v = String(((await r.json()) || {}).version || "");
-    if (!v) return;
+    // BUG RAIZ (portado de friendly, JFC 2026-09-09): antes esto comparaba SOLO
+    // `version` ("1.5.6"), que casi nunca se subia. Cada build sube el `shell`
+    // (amigable-shell-vNN) pero `version` se quedaba igual, asi que este reload
+    // forzado NO se disparaba por un cambio de shell y el dispositivo seguia con
+    // el shell viejo. Ahora la huella incluye AMBOS: si cambia cualquiera, refresca.
+    const _vj = ((await r.json()) || {});
+    const v = String(_vj.version || "") + "|" + String(_vj.shell || "");
+    if (v === "|") return;
     const K = "amg_version_vista";
     const prev = localStorage.getItem(K);
     if (prev === v) return;
+    // ANTI-LOOP ROBUSTO (portado de friendly): si el deploy esta a medias o la red
+    // devuelve algo raro, no queremos un bucle infinito de recargas. Si se recarga
+    // mas de 3 veces en 30s, se para y se deja la app como esta (mejor servir algo
+    // que recargar sin fin).
+    const KI = "amg_version_intento";
+    try {
+      const ahora = Date.now();
+      const it = JSON.parse(localStorage.getItem(KI) || "null");
+      if (it && (ahora - it.ts) < 30000) {
+        if (it.n >= 3) { localStorage.setItem(K, v); return; }
+        it.n += 1; it.ts = ahora; localStorage.setItem(KI, JSON.stringify(it));
+      } else {
+        localStorage.setItem(KI, JSON.stringify({ n: 1, ts: ahora }));
+      }
+    } catch (_) {}
     localStorage.setItem(K, v);
     // Sin excepcion de primera visita: los dispositivos atascados en una
     // version vieja nunca guardaron esta clave — tambien necesitan la purga.
     try { const regs = await navigator.serviceWorker.getRegistrations(); for (const g of regs) { try { await g.update(); } catch (_) {} } } catch (_) {}
     try { const cs = await caches.keys(); for (const c of cs) { try { await caches.delete(c); } catch (_) {} } } catch (_) {}
     location.reload();
+  } catch (_) {}
+})();
+
+/* PISO DE VERSION AUTORITATIVO (portado de friendly, JFC 2026-09-09, mejora #5 de
+   la auditoria de version). El chequeo de arriba compara contra amg_version_vista
+   (un valor LOCAL): solo actua si algo local ya supo de la version nueva. Este
+   ademas consulta version.json —la fuente de verdad del servidor, que el SW nunca
+   cachea— y, si el shell ACTIVO del aparato (la cache amigable-shell-vNN) es
+   distinto al que el servidor publica, fuerza la recarga UNA vez (con la misma
+   guarda anti-loop). Asi un aparato por debajo del piso converge solo a la version
+   nueva sin depender de que un valor local ya la conociera. Fail-open: nunca
+   bloquea, nunca muestra un limite; empuja a todos a la buena, no deja a nadie afuera. */
+(function verificarPisoVersion() {
+  try {
+    if (!("caches" in window)) return;
+    fetch("./version.json?ts=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (vj) {
+        if (!vj || !vj.shell) return;
+        const servidor = String(vj.shell);
+        caches.keys().then(function (nombres) {
+          const activa = (nombres.filter(function (n) { return n.indexOf("amigable-shell-") === 0; }).pop() || "");
+          if (!activa || activa === servidor) return;
+          // misma guarda anti-loop que el forzado de arriba
+          const KI = "amg_version_intento";
+          try {
+            const ahora = Date.now();
+            const it = JSON.parse(localStorage.getItem(KI) || "null");
+            if (it && (ahora - it.ts) < 30000 && it.n >= 3) return;
+            if (it && (ahora - it.ts) < 30000) { it.n += 1; it.ts = ahora; localStorage.setItem(KI, JSON.stringify(it)); }
+            else { localStorage.setItem(KI, JSON.stringify({ n: 1, ts: ahora })); }
+          } catch (_) {}
+          try { console.warn("[version] piso: el SW sirve " + activa + " y el servidor publica " + servidor + " — recargando."); } catch (_) {}
+          try { localStorage.setItem("amg_version_vista", String(vj.version || "") + "|" + servidor); } catch (_) {}
+          navigator.serviceWorker.getRegistrations().then(function (regs) { regs.forEach(function (g) { try { g.update(); } catch (_) {} }); }).catch(function () {});
+          caches.keys().then(function (cs) { return Promise.all(cs.map(function (c) { return caches.delete(c).catch(function () {}); })); })
+            .then(function () { location.reload(); })
+            .catch(function () { location.reload(); });
+        }).catch(function () {});
+      }).catch(function () {});
   } catch (_) {}
 })();
 

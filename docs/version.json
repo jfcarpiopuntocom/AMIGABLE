@@ -1,8 +1,8 @@
 {
-  "version": "1.5.7",
+  "version": "1.5.8",
   "fecha": "2026-09-09",
-  "changelog": "Form de comisionista/Promoter (portado de friendly): 'Nombre libre' se llama ahora 'Promoter'; el pulldown y la cajita para escribir un nombre nuevo van en la MISMA línea (sin estirar el form); cada origen (Promoter/encargado/proveedor) llena el pulldown con su lista; el botón dejó de decir '+ Agregar' y ahora dice 'Guardar comisionista'. Incluye licencia últimos-4 pasiva en el PIN (pedido de Belén) y las bases del sistema de integridad de versión.",
+  "changelog": "Control de versión más robusto (portado de friendly): la huella de versión ahora incluye el shell (antes solo miraba 'version', que casi nunca subía, y un cambio de shell no forzaba recarga), con guarda anti-loop; y se agrega el 'piso de versión' autoritativo que compara contra el servidor y hace que un aparato atascado en un shell viejo converja solo a la versión buena. Fail-open: nunca bloquea, no deja a nadie afuera. Incluye también el form Promoter, la licencia últimos-4 en el PIN y las bases de integridad de versión.",
   "requerida": false,
-  "shell": "amigable-shell-v97",
+  "shell": "amigable-shell-v98",
   "apagar": []
 }
