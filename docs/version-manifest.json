@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "shell": "amigable-shell-v108",
+  "shell": "amigable-shell-v109",
   "algoritmo": "sha256",
   "files": {
     "./index.html": "sha256-efc2d319fc6c01bccd04fbadf312d4d2bf7605bfeec7656d2f99ba7db9d390c9",
@@ -8,7 +8,7 @@
     "./cartera.js": "sha256-5e2929752a60978560ba78d6e5f400c47a1a6292b49967095936c2f699b8f6f5",
     "./caja-chica.js": "sha256-3ae47694fe0448ab94cc3d8131a9b00ced50dc45bb38e271a17b7771a95159f4",
     "./sync-realtime.js": "sha256-861d3014a7b7c808b4ec6c5ce55132940e566ce106fdbbd5a105c1636071b734",
-    "./sync-yjs.js": "sha256-c77c41c44fb059eac79d75e47e140e37b6a9dc50bcd51060587d468bd0dd6ebe",
+    "./sync-yjs.js": "sha256-72c7dbd77293f0c058483333feb481c4c0aa202f3abc60c81b1020addb3b664e",
     "./vendor/yjs-bundle.min.js": "sha256-c43a513bae0acc69020997612f1a0f145f5481b1939320d97ff03330546053bc",
     "./micelio-vivo.js": "sha256-b18bf6c8a2055518d87e5338c1e0272f2baedfeb01aebdb2dea8f1ff9a933bd8",
     "./micelio-ui.js": "sha256-6ad385314e6dd1fe5963f37491279638626545eb188ca39542484cd491274e1e",

@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "fecha": "2026-09-10",
-  "changelog": "Se porta el sync nuevo (CRDT/Yjs) desde friendly-123: sincroniza catalogo, equipo, clientes y las ventas (como eventos que se aplican una sola vez), mas fotos. Apagado por defecto (flag), en paralelo al sync de siempre. Sube shell a amigable-shell-v108.",
+  "changelog": "Arreglo del sync nuevo (portado de friendly-123): faltaba el handshake de puesta al dia, por eso no sincronizaban fotos ni datos a un aparato que se conecta despues. Sube shell a amigable-shell-v109.",
   "requerida": false,
-  "shell": "amigable-shell-v108",
+  "shell": "amigable-shell-v109",
   "apagar": []
 }
