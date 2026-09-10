@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "fecha": "2026-09-10",
-  "changelog": "Arreglo del sync nuevo (portado de friendly-123): faltaba el handshake de puesta al dia, por eso no sincronizaban fotos ni datos a un aparato que se conecta despues. Sube shell a amigable-shell-v109.",
+  "changelog": "El sync nuevo reconecta con backoff (no satura el relay) e incluye el handshake de puesta al dia. Portado de friendly-123. Sube shell a amigable-shell-v110.",
   "requerida": false,
-  "shell": "amigable-shell-v109",
+  "shell": "amigable-shell-v110",
   "apagar": []
 }
