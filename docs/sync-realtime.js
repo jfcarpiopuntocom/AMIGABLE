@@ -704,6 +704,11 @@
       lamport: siguienteLamport(), tipo, payload, fecha: (new Date()).toISOString(),
     };
     registrarEnLog(op); // guardo mi propia op para poder reenviarsela a un par que la haya perdido
+    /* SYNC NUEVO (portado de friendly-123, JFC 2026-09-10): exponemos el op EXACTO
+       (mismo opId/deviceId) para que el puente CRDT (sync-yjs) lo publique como
+       evento durable. Reusar el mismo opId hace seguro tener dos transportes:
+       aplicarOpRemota es idempotente por opId. Sin flag activo nadie escucha. */
+    try { window.dispatchEvent(new CustomEvent("oc-op-local", { detail: op })); } catch (_) {}
     if (ws && ws.readyState === WebSocket.OPEN) {
       cifrar(claveActual, op).then((buf) => { try { ws.send(buf); } catch (_) { encolar(op); } });
     } else {
@@ -714,6 +719,10 @@
 
   // --- API publica para la UI (Avanzado) ---
   window.OCSyncControl = {
+    /* deviceIdActual (portado de friendly-123, JFC 2026-09-10): lo usa el sync
+       nuevo (sync-yjs) para SALTAR sus propios ops al recibirlos por el CRDT
+       (ya se aplicaron al hacer la accion). Sin esto se doblaria la plata. */
+    deviceIdActual: function () { try { return deviceId(); } catch (_) { return ""; } },
     // activar(): usado por el dueño al licenciarse (auto, sin pantalla) y por
     // el panel de Avanzado. unirse() es el mismo mecanismo con nombre claro
     // para el flujo de equipo ("Unirme con el codigo de mi negocio").

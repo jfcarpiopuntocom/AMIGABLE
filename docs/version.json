@@ -1,8 +1,8 @@
 {
   "version": "1.0",
-  "fecha": "2026-09-09",
-  "changelog": "POLÍTICA DE VERSIÓN (JFC 2026-09-09): la versión pública queda fija en v1.0 (así se declara en la página del PIN); de aquí en adelante SOLO sube el entero del shell (amigable-shell-vNN), que es el control de cambios real. No volver a mover 'version' salvo un salto mayor deliberado. — En este build: se afina la tarjeta Ventas del mes/Neto de Gastos; el rótulo del origen del form de comisionista es \u0022Promotor/a\u0022 (español, ambos géneros).",
+  "fecha": "2026-09-10",
+  "changelog": "Se porta el sync nuevo (CRDT/Yjs) desde friendly-123: sincroniza catalogo, equipo, clientes y las ventas (como eventos que se aplican una sola vez), mas fotos. Apagado por defecto (flag), en paralelo al sync de siempre. Sube shell a amigable-shell-v108.",
   "requerida": false,
-  "shell": "amigable-shell-v107",
+  "shell": "amigable-shell-v108",
   "apagar": []
 }

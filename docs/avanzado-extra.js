@@ -112,6 +112,32 @@ function arrancarIntervalo(){if(temporizador)clearInterval(temporizador)}async f
     <p id="oc-sync-msg" style="font-size:13px;margin-top:8px;font-weight:700;"></p>`;
   vista.appendChild(panel);
 
+  /* TOGGLE DEL SYNC NUEVO (portado de friendly-123, JFC 2026-09-10). Al pie del
+     panel de sincronizacion. Prende/apaga el flag OC_YJS_FASE0 (que lee sync-yjs
+     al cargar) y recarga. Autocontenido: define su propio handler, no depende de
+     globales. Corre en paralelo al sync viejo; no cambia nada hasta prenderse. */
+  try {
+    window.pintarSyncNuevoEstado = function () {
+      var on = false; try { on = localStorage.getItem("OC_YJS_FASE0") === "1"; } catch (_) {}
+      var e = document.getElementById("ocSyncNuevoEstado"); var b = document.getElementById("btnSyncNuevo");
+      if (e) e.textContent = on ? "Estado: activo" : "Estado: apagado";
+      if (b) b.textContent = on ? "Apagar sync nuevo" : "Activar sync nuevo (prueba)";
+    };
+    window.toggleSyncNuevo = function () {
+      var on = false; try { on = localStorage.getItem("OC_YJS_FASE0") === "1"; } catch (_) {}
+      try { if (on) localStorage.removeItem("OC_YJS_FASE0"); else localStorage.setItem("OC_YJS_FASE0", "1"); } catch (_) {}
+      window.pintarSyncNuevoEstado(); location.reload();
+    };
+    panel.insertAdjacentHTML("beforeend",
+      '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--azul-suave,#dde5ec);">' +
+      '<h4 style="margin:0 0 6px;font-size:15px;color:#1a1a1a;">Sync nuevo (en prueba)</h4>' +
+      '<p style="font-size:14px;color:#1a1a1a;margin:0 0 8px;">Un sync nuevo entre dispositivos que mantiene a salvo los datos de cada aparato y junta todo sumando, sin perder nada. Actívalo aquí en los dos dispositivos, con el mismo código del negocio, y recarga cada uno.</p>' +
+      '<p id="ocSyncNuevoEstado" style="font-weight:700;color:#1a1a1a;margin:0 0 8px;">Estado: apagado</p>' +
+      '<button class="ir" id="btnSyncNuevo" onclick="toggleSyncNuevo();return false;">Activar sync nuevo (prueba)</button>' +
+      '</div>');
+    window.pintarSyncNuevoEstado();
+  } catch (_) {}
+
   /* Mascara de guiones en el codigo de sincronizacion (JFC 2026-07-28, punto 7).
      El helper vive en auth-ui.js y se expone por window.OCAuth.mascaraLicencia.
      Importa especialmente AQUI: este campo define la SALA de sync, y

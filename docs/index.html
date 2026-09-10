@@ -6703,6 +6703,11 @@ setTimeout(() => {
      engancha a #vista-avanzado, que ese archivo ya monta. -->
 <script src="./geo-ping.js"></script>
 <script src="./sync-realtime.js"></script>
+<!-- SYNC NUEVO (CRDT/Yjs) portado de friendly-123 (JFC 2026-09-10). Va DESPUES de
+     sync-realtime.js (usa OCSyncControl) y de mock-backend.js (usa OCSync). Apagado
+     por defecto: solo actua si localStorage["OC_YJS_FASE0"]==="1". En paralelo al
+     sync viejo, sala de relay propia, no cambia nada hasta prenderse. -->
+<script src="./sync-yjs.js"></script>
 <!-- MICELIO VIVO (2026-08-15): quien esta en el loop y quien anda a ciegas.
      Va DESPUES de sync-realtime.js porque late por su canal (OCSync.emitirLatido).
      Si este archivo no carga, la app vende igual: solo se pierde el aviso. -->
