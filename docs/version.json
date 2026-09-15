@@ -1,8 +1,8 @@
 {
   "version": "1.0",
-  "fecha": "2026-09-10",
-  "changelog": "El sync nuevo reconecta con backoff (no satura el relay) e incluye el handshake de puesta al dia. Portado de friendly-123. Sube shell a amigable-shell-v110.",
+  "fecha": "2026-09-15",
+  "changelog": "Homologacion con friendly-123: la sincronizacion queda ENCENDIDA por defecto (es lo que mantiene las fotos y los datos al dia entre aparatos; se puede apagar en Avanzado). El panel de sync se limpio (fuera botones que aturdian: Resincronizar, Juntar inventario, Cambiar codigo). Los items del menu Avanzado ahora llevan un icono. Y un boton Exportar '(soon)'. Sube shell a amigable-shell-v111.",
   "requerida": false,
-  "shell": "amigable-shell-v110",
+  "shell": "amigable-shell-v111",
   "apagar": []
 }
