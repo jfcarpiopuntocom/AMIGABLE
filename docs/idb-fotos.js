@@ -20,21 +20,91 @@
 (function () {
   const DB_NAME = "amg_fotos";
   const STORE = "perchas";
+  /* B1 (portado de friendly-123, JFC 2026-09-10): almacen direccionado por
+     CONTENIDO. La foto se guarda con clave = SHA-256 de sus bytes (hex). Dedup
+     (una foto una sola vez) y el sync solo mueve el hash como puntero; los bytes
+     viajan aparte. Store "blobs" nuevo; "perchas" (por id) intacto. */
+  const STORE_BLOBS = "blobs";
   const SOPORTADO = "indexedDB" in window;
   let dbPromise = null;
 
   function abrirDB() {
     if (dbPromise) return dbPromise;
     dbPromise = new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, 1);
+      const req = indexedDB.open(DB_NAME, 2); // v2: agrega "blobs" sin tocar "perchas"
       req.onupgradeneeded = () => {
-        if (!req.result.objectStoreNames.contains(STORE)) req.result.createObjectStore(STORE);
+        const db = req.result;
+        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+        if (!db.objectStoreNames.contains(STORE_BLOBS)) db.createObjectStore(STORE_BLOBS);
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
       req.onblocked = () => reject(new Error("IndexedDB bloqueado (otra pestaña con una version vieja abierta)"));
     });
     return dbPromise;
+  }
+
+  // --- Direccionamiento por contenido (SHA-256) ---
+  function _dataUrlABytes(dataUrl) {
+    const i = String(dataUrl).indexOf(",");
+    const b64 = i >= 0 ? dataUrl.slice(i + 1) : dataUrl;
+    const bin = atob(b64);
+    const u = new Uint8Array(bin.length);
+    for (let j = 0; j < bin.length; j++) u[j] = bin.charCodeAt(j);
+    return u;
+  }
+  async function hashDeDataUrl(dataUrl) {
+    const h = await crypto.subtle.digest("SHA-256", _dataUrlABytes(dataUrl));
+    return [].slice.call(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  const claveBlob = (hash) => "amg_fotoblob_" + hash;
+  async function guardarPorHash(hash, dataUrl) {
+    if (!hash) return false;
+    if (!SOPORTADO) { try { localStorage.setItem(claveBlob(hash), dataUrl); return true; } catch (_) { return false; } }
+    try {
+      const db = await abrirDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_BLOBS, "readwrite");
+        tx.objectStore(STORE_BLOBS).put(dataUrl, hash);
+        tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+      });
+      return true;
+    } catch (err) { console.error("[idb-fotos] guardarPorHash:", err); return false; }
+  }
+  async function leerPorHash(hash) {
+    if (!hash) return null;
+    if (!SOPORTADO) { try { return localStorage.getItem(claveBlob(hash)); } catch (_) { return null; } }
+    try {
+      const db = await abrirDB();
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_BLOBS, "readonly");
+        const req = tx.objectStore(STORE_BLOBS).get(hash);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) { console.error("[idb-fotos] leerPorHash:", err); return null; }
+  }
+  async function tieneHash(hash) { return !!(await leerPorHash(hash)); }
+  async function hashesGuardados() {
+    if (!SOPORTADO) {
+      const out = [];
+      try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf("amg_fotoblob_") === 0) out.push(k.slice("amg_fotoblob_".length)); } } catch (_) {}
+      return out;
+    }
+    try {
+      const db = await abrirDB();
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_BLOBS, "readonly");
+        const req = tx.objectStore(STORE_BLOBS).getAllKeys();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    } catch (err) { console.error("[idb-fotos] hashesGuardados:", err); return []; }
+  }
+  async function guardarFotoContenido(dataUrl) {
+    const hash = await hashDeDataUrl(dataUrl);
+    await guardarPorHash(hash, dataUrl);
+    return hash;
   }
 
   // Clave localStorage que usaba el formato viejo (antes de esta migracion) —
@@ -161,7 +231,11 @@
     }
   }
 
-  window.OCFotos = { guardarFoto, leerFoto, leerTodas, borrarFoto, migrarSiHaceFalta, soportado: () => SOPORTADO };
+  window.OCFotos = {
+    guardarFoto, leerFoto, leerTodas, borrarFoto, migrarSiHaceFalta, soportado: () => SOPORTADO,
+    // B1 (content-addressed): guardar/leer por hash + protocolo tengo/quiero.
+    hashDeDataUrl, guardarPorHash, leerPorHash, tieneHash, hashesGuardados, guardarFotoContenido
+  };
 
   // Fix 2026-07-23 (JFC): esta función existía pero nadie la llamaba en todo
   // el proyecto (ni index.html, ni auth-ui.js, ni vista-perchas.js) — las

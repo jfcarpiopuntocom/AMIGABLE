@@ -103,6 +103,33 @@ qué se hizo con cada uno. Sirve para retroceder cuando él quiera.
 
 ---
 
+## POLÍTICA DE VERSIÓN (JFC 2026-09-09) — NO MOVER SIN ORDEN EXPRESA
+
+- La **versión pública queda FIJA en `v1.0`**. En el PIN se muestra
+  **`v1.0 · shell-vNNN`** (badge que lee `version.json`; se dice `shell-`, nunca
+  "build").
+- **De aquí en adelante SOLO sube el ENTERO del shell** (`amigable-shell-vNN`),
+  que es el control de cambios real. No mover `version` salvo un salto mayor que
+  JFC pida. (friendly = v1.0 igual; consultorio = `beta version · shell-vNN`.)
+
+## CHECKLIST DE RELEASE — obligatorio en CADA cambio a un archivo del SHELL
+
+Archivo del SHELL = cualquiera en `const SHELL=[...]` de `docs/sw.js`. Si tocas uno:
+
+1. Sube `const CACHE="amigable-shell-vNN"` en `docs/sw.js` al siguiente entero.
+2. Sube `"shell":"amigable-shell-vNN"` en `docs/version.json` al MISMO número.
+3. `node scripts/gen-manifest.js`  →  4. `bash check-sw.sh` (todo OK)  →  5. commit + push.
+
+Saltarse esto deja a los aparatos con MEZCLA de shell viejo/nuevo. El sistema de
+integridad (version-manifest.json + SRI fail-open en el SW + guarda de hash real
+en check-sw.sh) NO se rompe: hash que no cuadra se re-pide, nunca se borra.
+
+`docs/sw.js` y `docs/mock-backend.js` están **MINIFICADOS**: editar con scripts
+que verifiquen ancla ÚNICA antes de reemplazar, y `node --check` después. Nunca
+`sed` a ciegas en minificado.
+
+---
+
 ## LAS TRES APPS — qué es cada una
 
 | | **amigable-123** | **friendly-123** | **consultorio-123** |
@@ -130,7 +157,12 @@ consultorio no tiene nada de eso. Ante la duda: **no portar todavía.**
 ## VOCABULARIO (decidido 2026-08-17, aplicado en las tres)
 
 - **encargado/a**, nunca "empleado" — no queremos que parezca control de personal.
-- **asociado/a**, nunca "promotor/a". Cuando la casa retiene %: **casa anfitriona**.
+- Término preferido de JFC (2026-09-09): **"promotor/a"** — en español, cubriendo
+  ambos géneros. En el **form de comisionista** (app en español) el origen "libre"
+  se rotula **"Promotor/a"**; pulldown Y cajita en la misma línea; botón "Guardar
+  comisionista". (En friendly, que es en inglés, es "Promoter".) "asociado/a" y
+  "casa anfitriona" siguen siendo válidos en el resto del texto. NOTA: el viejo
+  "nunca promotor/a" que estaba aquí NO era instrucción de JFC — se eliminó.
 - **Bar y licores son una sola cosa.** No existe el rubro "Licores".
 - El rol interno sigue siendo el string `"empleado"` en PINs, endpoints y estado
   guardado. Sólo cambió el texto visible. Renombrarlo dejaría sin acceso a todo
