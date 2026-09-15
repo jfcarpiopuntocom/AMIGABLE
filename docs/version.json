@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "fecha": "2026-09-15",
-  "changelog": "Homologacion con friendly-123: la sincronizacion queda ENCENDIDA por defecto (es lo que mantiene las fotos y los datos al dia entre aparatos; se puede apagar en Avanzado). El panel de sync se limpio (fuera botones que aturdian: Resincronizar, Juntar inventario, Cambiar codigo). Los items del menu Avanzado ahora llevan un icono. Y un boton Exportar '(soon)'. Sube shell a amigable-shell-v111.",
+  "changelog": "Descuento / precio de casa (homologado de friendly-123): un producto puede tener un 2o precio opcional para la gente de la casa (mas bajo) sin partir el stock en dos. En la venta, 'Ajustar precio / descuento' cobra otro precio en esa venta, con un boton que llena el precio de casa de un toque. Un solo stock. Sube shell a amigable-shell-v112.",
   "requerida": false,
-  "shell": "amigable-shell-v111",
+  "shell": "amigable-shell-v112",
   "apagar": []
 }

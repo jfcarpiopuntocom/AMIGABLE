@@ -4402,6 +4402,11 @@ function mostrarFormNuevoProducto(codigoEscaneado){
         <label style="flex:1;font-size:14px;">Costo<br>
           <input id="np-costo" type="number" min="0" step="0.01" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       </div>
+      <!-- PRECIO DE CASA / ARTISTA (JFC/Belén 2026-09-15, homologado de friendly-123):
+           2º precio OPCIONAL más bajo para la gente de la casa, sin partir el stock.
+           En la venta aparece un botón que lo aplica de un toque. Vacío = no hay. -->
+      <label style="display:block;margin-top:10px;font-size:14px;">Precio de casa / artista (opcional)<br>
+        <input id="np-precio-casa" type="number" min="0" step="0.01" placeholder="Precio más bajo para la gente de la casa — vacío si no aplica" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Stock inicial<br>
         <input id="np-stock" type="number" min="0" step="1" value="0" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Proveedor<br>
@@ -4466,7 +4471,7 @@ async function crearProductoNuevo(codigoEscaneado){
   const body = {
     nombre: val("np-nombre"), categoria: val("np-categoria"), barcode: codigoEscaneado || val("np-barcode"),
     chip: el("np-chip") ? val("np-chip").slice(0, 12) : "",
-    precio: val("np-precio"), costo: val("np-costo"), stockInicial: val("np-stock"), proveedor: val("np-proveedor"),
+    precio: val("np-precio"), precioCasa: (scope.querySelector("#np-precio-casa") ? val("np-precio-casa") : ""), costo: val("np-costo"), stockInicial: val("np-stock"), proveedor: val("np-proveedor"),
     ubicacionId: el("np-ubicacion") ? val("np-ubicacion") : (ubicacionActual === "todas" ? "todas" : ubicacionActual),
     tipoProveedor: el("np-tipo-proveedor") ? el("np-tipo-proveedor").value : "compra",
     tipoProducto: el("np-tipo-producto") ? el("np-tipo-producto").value : "normal",
@@ -4513,7 +4518,7 @@ async function crearProductoNuevo(codigoEscaneado){
 //     cualquier otro camino de perdida que no hayamos anticipado. Al reabrir
 //     "Editar" para el mismo producto, si hay un borrador mas nuevo que lo
 //     guardado, se ofrece restaurarlo — nunca se aplica solo, sin avisar.
-const ED_CAMPOS_IDS = ["ed-nombre","ed-precio","ed-costo","ed-proveedor","ed-categoria","ed-barcode","ed-ubicacion","ed-umbral-rojo","ed-umbral-amarillo","ed-tipo-proveedor","ed-comision-pct","ed-tipo-producto"];
+const ED_CAMPOS_IDS = ["ed-nombre","ed-precio","ed-precio-casa","ed-costo","ed-proveedor","ed-categoria","ed-barcode","ed-ubicacion","ed-umbral-rojo","ed-umbral-amarillo","ed-tipo-proveedor","ed-comision-pct","ed-tipo-producto"];
 function capturarValoresFormEdicion(){
   const out = {};
   ED_CAMPOS_IDS.forEach((id) => { const el = document.getElementById(id); if (el) out[id] = el.value; });
@@ -4601,6 +4606,8 @@ async function mostrarFormEditarProducto(id){
         <label style="flex:1;font-size:14px;">Precio venta<br><input id="ed-precio" type="number" min="0" step="0.01" value="${p.precio}" ${inp}></label>
         <label style="flex:1;font-size:14px;">Costo<br><input id="ed-costo" type="number" min="0" step="0.01" value="${p.costo || 0}" ${inp}></label>
       </div>
+      <!-- PRECIO DE CASA / ARTISTA (JFC/Belén 2026-09-15): editable; vaciar borra el precio de casa. -->
+      <label style="display:block;margin-top:10px;font-size:14px;">Precio de casa / artista (opcional)<br><input id="ed-precio-casa" type="number" min="0" step="0.01" value="${p.precioCasa != null ? p.precioCasa : ""}" placeholder="Precio más bajo para la gente de la casa — vacío si no aplica" ${inp}></label>
       <div style="display:flex;gap:10px;margin-top:10px;">
         <label style="flex:1;font-size:14px;">Proveedor<br><input id="ed-proveedor" type="text" value="${q(p.proveedor)}" ${inp}></label>
         <label style="flex:1;font-size:14px;">Tipo relación<br>
@@ -4777,7 +4784,7 @@ async function guardarEdicionProducto(id){
   // campos undefined, asi que omitir = "no tocar ese campo".
   const v = (x) => { const el = document.getElementById(x); return el ? el.value.trim() : undefined; };
   // OJO: el SKU no se toca aqui — solo el barcode si el dueno lo digito.
-  const body = { nombre: v("ed-nombre"), precio: v("ed-precio"), costo: v("ed-costo"), proveedor: v("ed-proveedor"), categoria: v("ed-categoria"), barcode: v("ed-barcode"), ubicacionId: v("ed-ubicacion"), umbralRojo: v("ed-umbral-rojo"), umbralAmarillo: v("ed-umbral-amarillo"), tipoProveedor: v("ed-tipo-proveedor"), comisionProveedorPct: v("ed-comision-pct"), tipoProducto: v("ed-tipo-producto"), chip: v("ed-chip") };
+  const body = { nombre: v("ed-nombre"), precio: v("ed-precio"), precioCasa: v("ed-precio-casa"), costo: v("ed-costo"), proveedor: v("ed-proveedor"), categoria: v("ed-categoria"), barcode: v("ed-barcode"), ubicacionId: v("ed-ubicacion"), umbralRojo: v("ed-umbral-rojo"), umbralAmarillo: v("ed-umbral-amarillo"), tipoProveedor: v("ed-tipo-proveedor"), comisionProveedorPct: v("ed-comision-pct"), tipoProducto: v("ed-tipo-producto"), chip: v("ed-chip") };
   Object.keys(body).forEach(k => { if (body[k] === undefined) delete body[k]; });
   // Caducidad: el checkbox manda. Si se desmarca, la fecha se limpia de verdad
   // en vez de quedar colgada en la ficha diciendo que algo vence cuando no.
@@ -4910,6 +4917,10 @@ async function abrirAltaProducto(){
         <label style="flex:1;font-size:14px;">Costo<br>
           <input id="np-costo" type="number" min="0" step="0.01" ${inp}></label>
       </div>
+      <!-- PRECIO DE CASA / ARTISTA (JFC/Belén 2026-09-15): 2ª copia del alta. IDs
+           np-* duplicados a propósito; se lee por scope.querySelector el activo. -->
+      <label style="display:block;margin-top:10px;font-size:14px;">Precio de casa / artista (opcional)<br>
+        <input id="np-precio-casa" type="number" min="0" step="0.01" placeholder="Precio más bajo para la gente de la casa — vacío si no aplica" ${inp}></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Stock inicial<br>
         <input id="np-stock" type="number" min="0" step="1" value="0" ${inp}></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Proveedor<br>
@@ -5167,6 +5178,22 @@ async function abrirPanelVentaInfo(id, esTicket){
         <label style="display:flex;align-items:center;gap:7px;font-size:14px;cursor:pointer;color:var(--ink,#211c14) !important;-webkit-text-fill-color:var(--ink,#211c14) !important;"><input id="vi-fiado" type="checkbox" style="width:auto;margin:0;">Fiado (a cuenta)</label>
       </div>
       <p id="vi-cf-hint" style="font-size:12px;font-weight:700;margin:4px 0 0;color:var(--ink,#211c14) !important;-webkit-text-fill-color:var(--ink,#211c14) !important;"></p>
+      <!-- DESCUENTO / PRECIO DE ESTA VENTA (JFC/Belén 2026-09-15, homologado de
+           friendly-123). Un solo stock, precio variable por venta. "Ajustar precio"
+           abre una cajita con el precio cobrado en ESTA venta; si el producto tiene
+           precio de casa, un botón lo llena de un toque. Vacío = precio de lista.
+           Cortesía manda: si está marcada, es 0 y esto se ignora. -->
+      <div id="vi-precio-wrap" style="margin-top:10px;">
+        <button type="button" id="vi-precio-toggle" style="background:none;border:none;padding:0;font-size:14px;font-weight:700;color:var(--azul-medio,#2c4a68) !important;-webkit-text-fill-color:var(--azul-medio,#2c4a68) !important;cursor:pointer;text-decoration:underline;">✎ Ajustar precio / descuento</button>
+        <div id="vi-precio-box" style="display:none;margin-top:6px;">
+          <label style="display:block;font-size:14px;">Precio cobrado en esta venta ($)<br>
+            <input id="vi-precio-override" type="number" min="0" step="0.01" placeholder="${Number(p.precio).toFixed(2)}" style="width:100%;padding:8px;margin-top:4px;border:2px solid var(--azul-medio);border-radius:4px;"></label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+            ${p.precioCasa != null ? `<button type="button" id="vi-precio-casa-btn" style="font-size:13px;font-weight:700;padding:8px 12px;border:2px solid var(--azul-medio,#2c4a68);border-radius:6px;background:var(--azul-medio,#2c4a68);color:#fbf5e8 !important;-webkit-text-fill-color:#fbf5e8 !important;cursor:pointer;">Precio de casa ($${Number(p.precioCasa).toFixed(2)})</button>` : ""}
+            <button type="button" id="vi-precio-lista-btn" style="font-size:13px;font-weight:700;padding:8px 12px;border:2px solid var(--azul-medio,#2c4a68);border-radius:6px;background:transparent;color:var(--azul-medio,#2c4a68) !important;-webkit-text-fill-color:var(--azul-medio,#2c4a68) !important;cursor:pointer;">Precio de lista ($${Number(p.precio).toFixed(2)})</button>
+          </div>
+        </div>
+      </div>
       <label style="display:block;margin-top:10px;font-size:14px;">Nombre de la persona que recibió la plata<br><input id="vi-receptor" type="text" ${inp}></label>
       <label style="display:block;margin-top:10px;font-size:14px;">Notas<br><textarea id="vi-notas" rows="2" ${inp}></textarea></label>
       <div id="vi-msg" style="font-size:14px;margin-top:10px;font-weight:700;"></div>
@@ -5192,6 +5219,21 @@ async function abrirPanelVentaInfo(id, esTicket){
     if (cc) cc.addEventListener("change", () => { if (cc.checked && ff) ff.checked = false; sinc(); });
     if (ff) ff.addEventListener("change", () => { if (ff.checked && cc) cc.checked = false; sinc(); });
     if (selCli) selCli.addEventListener("change", sinc); }
+  // DESCUENTO / PRECIO POR VENTA (JFC/Belén 2026-09-15, homologado de friendly-123).
+  { const _pt = document.getElementById("vi-precio-toggle");
+    const _pb = document.getElementById("vi-precio-box");
+    const _pi = document.getElementById("vi-precio-override");
+    if (_pt && _pb && _pi) {
+      _pt.addEventListener("click", () => {
+        const abrir = _pb.style.display === "none";
+        _pb.style.display = abrir ? "block" : "none";
+        if (abrir) { if (!_pi.value) _pi.value = Number(p.precio).toFixed(2); _pi.focus(); _pi.select(); }
+      });
+      const _casaBtn = document.getElementById("vi-precio-casa-btn");
+      if (_casaBtn) _casaBtn.addEventListener("click", () => { _pi.value = Number(p.precioCasa).toFixed(2); _pi.focus(); });
+      const _listaBtn = document.getElementById("vi-precio-lista-btn");
+      if (_listaBtn) _listaBtn.addEventListener("click", () => { _pi.value = Number(p.precio).toFixed(2); _pi.focus(); });
+    } }
 }
 function cancelarPanelVentaInfo(){
   const overlay = document.getElementById("oc-ventainfo-overlay");
@@ -5219,9 +5261,16 @@ async function confirmarVentaConInfo(id, esTicket){
   let _fiadoOn = !!(document.getElementById("vi-fiado") || {}).checked;
   if (_cortesiaOn) { _fiadoOn = false; info.cortesia = true; }
   if (_fiadoOn) info.formaPago = "fiado";
+  /* PRECIO POR VENTA (JFC/Belén 2026-09-15, homologado de friendly-123). Si el
+     cajero puso un monto en "Ajustar precio", ese es el precio cobrado en esta
+     venta. Vacío/ inválido => sin override (precio de lista). Cortesía manda. */
+  const _ovRaw = g("vi-precio-override");
+  const _ovNum = _ovRaw === "" ? NaN : Number(_ovRaw);
+  const _tieneOverride = !_cortesiaOn && Number.isFinite(_ovNum) && _ovNum >= 0;
+  if (_tieneOverride) info.precioOverride = _ovNum;
   const clienteId = document.getElementById("vi-cliente").value || undefined;
   if (_fiadoOn && !clienteId){ msg.style.color = "var(--rojo,#a3392a)"; msg.textContent = "El fiado necesita un cliente — elige uno arriba."; return; }
-  const _precioFiado = (_ventaInfoProductoCache && Number(_ventaInfoProductoCache.precio)) || 0;
+  const _precioFiado = _tieneOverride ? _ovNum : ((_ventaInfoProductoCache && Number(_ventaInfoProductoCache.precio)) || 0);
   const _nombreFiado = (_ventaInfoProductoCache && _ventaInfoProductoCache.nombre) || "";
   _ventasEnCurso.add(id);
   try {
