@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "fecha": "2026-09-15",
-  "changelog": "Descuento / precio de casa (homologado de friendly-123): un producto puede tener un 2o precio opcional para la gente de la casa (mas bajo) sin partir el stock en dos. En la venta, 'Ajustar precio / descuento' cobra otro precio en esa venta, con un boton que llena el precio de casa de un toque. Un solo stock. Sube shell a amigable-shell-v112.",
+  "changelog": "Export (Forma B) por WhatsApp: el boton descarga una copia de tus datos y abre WhatsApp con un mensaje listo para que la mandes adjuntando el archivo. Todo se queda en tu dispositivo. Sube shell a amigable-shell-v113.",
   "requerida": false,
-  "shell": "amigable-shell-v112",
+  "shell": "amigable-shell-v113",
   "apagar": []
 }
