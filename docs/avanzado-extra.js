@@ -1039,8 +1039,19 @@ try{
     "Sincronización remota (opcional)":"⊚",
     "Enviar cambios a mano (sin internet)":"⊞",
     "Dónde estuvo el equipo":"⌖",
+    "En observación":"⊙",
+    "Pérdidas y ganancias (hoy)":"▦",
+    "Soporte técnico":"⌥",
+    "Últimos errores registrados":"⊗",
+    "Política de Privacidad y Manejo de Datos":"§",
     "Primeros Pasos":"➊","First Steps":"➊"
   };
+  /* LOOKUP NORMALIZADO (JFC 2026-09-15): los títulos del riel y las claves de
+     ICONS pueden diferir por normalización Unicode (ó compuesta vs descompuesta)
+     o espacios — por eso "Dónde estuvo el equipo" salía SIN icono aunque su clave
+     existía. Se compara en NFC + trim para que SIEMPRE cuadre. */
+  var ICONS_N = {}; for (var _ik in ICONS) { try { ICONS_N[_ik.normalize("NFC").trim()] = ICONS[_ik]; } catch (_) { ICONS_N[_ik] = ICONS[_ik]; } }
+  function iconoDe(t) { try { return ICONS_N[(t || "").normalize("NFC").trim()] || ""; } catch (_) { return ICONS[t] || ""; } }
   function esComo(t){t=(t||"").trim();return /^¿Cómo funciona/i.test(t)||/^Como funciona/i.test(t)}
   function tituloDe(n){
     if(!n||n.nodeType!==1)return null;
@@ -1081,7 +1092,7 @@ try{
     var id=idDe(n,idx++);hint(n,t);secciones.push({id:id,label:t});
   });
   nav.innerHTML=secciones.map(function(s){
-    var _ic=ICONS[s.label]?('<span aria-hidden="true" style="display:inline-block;width:1.3em;color:var(--azul-medio,#2c4a68);-webkit-text-fill-color:var(--azul-medio,#2c4a68);">'+ICONS[s.label]+'</span>'):"";
+    var _icg=iconoDe(s.label); var _ic=_icg?('<span aria-hidden="true" style="display:inline-block;width:1.3em;color:var(--azul-medio,#2c4a68);-webkit-text-fill-color:var(--azul-medio,#2c4a68);">'+_icg+'</span>'):"";
     return '<button type="button" data-riel-go="'+s.id+'" style="display:block;width:100%;text-align:left;background:none;border:none;border-left:3px solid transparent;padding:9px 8px;margin:0;font-size:13px;font-weight:700;cursor:pointer;line-height:1.3;color:var(--ink-soft,#5d5340) !important;-webkit-text-fill-color:var(--ink-soft,#5d5340) !important;">'+_ic+s.label+"</button>";
   }).join("");
   fila.appendChild(nav);fila.appendChild(contR);vista.appendChild(fila);
@@ -1114,7 +1125,12 @@ try{
         hint(n,t);secciones.push({id:id,label:t});
         var b=document.createElement("button");b.type="button";b.setAttribute("data-riel-go",id);
         b.style.cssText="display:block;width:100%;text-align:left;background:none;border:none;border-left:3px solid transparent;padding:9px 8px;margin:0;font-size:13px;font-weight:700;cursor:pointer;line-height:1.3;color:var(--ink-soft,#5d5340) !important;-webkit-text-fill-color:var(--ink-soft,#5d5340) !important;";
-        b.textContent=t;nav.appendChild(b);
+        /* ICONO también en las secciones agregadas DINÁMICAMENTE por este observer
+           (JFC 2026-09-15): antes solo el build estático ponía icono, así que la
+           sección geo "Dónde estuvo el equipo" (que llega tarde) salía sin icono. */
+        var _icg=iconoDe(t);
+        if(_icg){var _sp=document.createElement("span");_sp.setAttribute("aria-hidden","true");_sp.style.cssText="display:inline-block;width:1.3em;color:var(--azul-medio,#2c4a68);-webkit-text-fill-color:var(--azul-medio,#2c4a68);";_sp.textContent=_icg;b.appendChild(_sp);}
+        b.appendChild(document.createTextNode(t));nav.appendChild(b);
       });
     });
   });
@@ -1139,11 +1155,19 @@ try{
            Y con tope de alto: 18 chips sin limite empujaban el contenido tan
            abajo que parecia que no habia nada. */
         nav.style.cssText="display:flex;flex:0 0 auto;width:100%;box-sizing:border-box;position:static;top:auto;max-height:34vh;overflow-y:auto;-webkit-overflow-scrolling:touch;flex-direction:row;flex-wrap:wrap;gap:6px;align-content:flex-start;border-right:none;border-bottom:2px solid var(--azul-suave,#dde5ec);padding:8px 0;margin:0 0 14px 0;background:var(--blanco-calido,#F8F9FB);";
-        nav.querySelectorAll("[data-riel-go]").forEach(function(b){b.style.width="auto";b.style.flex="0 0 auto";b.style.borderLeft="none";b.style.margin="0";b.style.padding="9px 12px";b.style.whiteSpace="nowrap"});
+        /* CHIPS QUE SIEMPRE CABEN (JFC 2026-09-15): antes nowrap + ancho automático
+           hacía que un rótulo largo ("Política de Privacidad...") se pasara del
+           ancho en teléfonos de 320px. Ahora max-width 100% y el texto envuelve:
+           cabe en cualquier pantalla, sin scroll horizontal. */
+        nav.querySelectorAll("[data-riel-go]").forEach(function(b){b.style.width="auto";b.style.flex="0 1 auto";b.style.maxWidth="100%";b.style.borderLeft="none";b.style.margin="0";b.style.padding="9px 12px";b.style.whiteSpace="normal"});
       }else{
         fila.style.flexDirection="row";
         nav.style.cssText="flex:0 0 148px;width:148px;position:sticky;top:8px;align-self:flex-start;padding:0 10px 0 0;margin:0 14px 0 0;border-right:2px solid var(--azul-suave,#dde5ec);display:flex;flex-direction:column;max-height:calc(100vh - 24px);overflow-y:auto;background:var(--blanco-calido,#F8F9FB);z-index:3;box-sizing:border-box;";
-        nav.querySelectorAll("[data-riel-go]").forEach(function(b){b.style.width="100%";b.style.padding="9px 8px"});
+        /* FIX (JFC 2026-09-15): al volver a ancho, RESETEAR white-space a normal.
+           El branch angosto ponía nowrap en los chips; sin resetear, al rotar
+           móvil->desktop los rótulos largos ("Política de Privacidad...") se salían
+           de la columna de 148px en vez de envolver. Ahora envuelven y CABEN. */
+        nav.querySelectorAll("[data-riel-go]").forEach(function(b){b.style.width="100%";b.style.padding="9px 8px";b.style.whiteSpace="normal"});
       }
     }catch(_){}
   }

@@ -1,9 +1,9 @@
 {
   "version": "1.0",
-  "shell": "amigable-shell-v114",
+  "shell": "amigable-shell-v115",
   "algoritmo": "sha256",
   "files": {
-    "./index.html": "sha256-80fa8a39c5e4f92d1abbf3de193ffe2179e69b1503fc441f68bcbe16e4d4730f",
+    "./index.html": "sha256-535c890bc29dd4f13a2d3288c5a8b509806e55c2ade880ceedea46d9c03ab4c6",
     "./aislamiento.js": "sha256-f88617747d4ea83d1f3e84b9f2d949ec86d341043f12621faa4e338d5930670b",
     "./cartera.js": "sha256-5e2929752a60978560ba78d6e5f400c47a1a6292b49967095936c2f699b8f6f5",
     "./caja-chica.js": "sha256-3ae47694fe0448ab94cc3d8131a9b00ced50dc45bb38e271a17b7771a95159f4",
@@ -30,7 +30,7 @@
     "./storage-durabilidad.js": "sha256-9eb4e789d01a25bd63f49d6948d6507e045093f8947cf05f2dd1b43f6b6b777d",
     "./auth-ui.js": "sha256-bc954d713bc96dd45c2a330a962170e9bb4169567ff473bcd4c3da69fe72d2d4",
     "./backup-scheduler.js": "sha256-0127fc15b48c8104e531ffff907ba108f44334378169daf79410324f4f548113",
-    "./avanzado-extra.js": "sha256-35ca0517e0c50493537a625626778eab133765b5c9e0866e0ee783f4036d31c8",
+    "./avanzado-extra.js": "sha256-ca937c28eb1c2a8002a1dae9c1093a0ac7a6c4d54908effae537787000712e89",
     "./device-identity.js": "sha256-e2a699aa82d417e65f49ff8491d6fba98be64bd0e77809645b016b1df9bb3897",
     "./vendor/ufuzzy.min.js": "sha256-3eef8ba0ad55444c31f0e86f8375f25916515402cf2d4d7b5a2c01b4b67f2e19",
     "./lista-dinamica.js": "sha256-fdc81534fb4498c022449582df1db389ab5efa1ac9f8ec8b191e7173588b3c37",
