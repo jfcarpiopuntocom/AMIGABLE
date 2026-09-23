@@ -7,6 +7,16 @@ kv_namespaces = [
   { binding = "LICENCIAS", id = "df0d18c7aada468c8c03f81793fbf1e9" }
 ]
 
+[[ratelimits]]
+name = "MAESTRO_IP"
+namespace_id = "661219"
+simple = { limit = 30, period = 60 }
+
+[[ratelimits]]
+name = "MAESTRO_INST"
+namespace_id = "661220"
+simple = { limit = 5, period = 60 }
+
 [observability]
 enabled = true
 
