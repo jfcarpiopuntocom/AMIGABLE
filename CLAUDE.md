@@ -198,3 +198,19 @@ Leer código sólo cuando el plan dependa de un detalle que nada de esto contest
 - Español natural. **No usar "vive en"** (calco del inglés, JFC lo detesta).
 - Sin emojis en la UI.
 - Comentarios en el código que expliquen POR QUÉ, con la fecha y el bug real.
+
+## JEV + OMNIROUTE: REPARTO DE TRABAJO (JFC 2026-09-24, regla dura, las 3 apps)
+- Claude razona, depura, lee y escribe código y textos. Jev (TypeSafe, vía Vercel AI
+  Gateway) toma los juicios chicos y repetidos sobre el MISMO estado público:
+  clasificar, rankear, triar, sí/no sobre muchos ítems. El código hace cuentas,
+  fechas, dinero y todo lo determinista.
+- Skill: `~/.claude/skills/jev-jfc` (Claude) y `~/.codex/skills/jev-jfc` (Codex),
+  mismo ejecutor. Clave SOLO en la variable de usuario `AI_GATEWAY_API_KEY`, tope USD 1.
+- Solo se llama si ahorra más contexto del que gasta. Confianza baja o error ->
+  decide Claude o el flujo existente, sin reintentos.
+- JAMÁS mandar a Jev: datos de clientes, PIN, licencias, claves, datos del panel,
+  transcripts completos ni volcados del repo. Jev aconseja, no autoriza: dinero,
+  publicar y borrar siguen con sus guardas y con JFC.
+- Compactación de sesión con Jev: plugin `fast-jev-compaction` instalado en Claude
+  Code. Pendiente de clave TypeSafe y de decisión de JFC, porque manda la
+  conversación a api.typesafe.ai.
