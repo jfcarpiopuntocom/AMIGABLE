@@ -10,14 +10,6 @@ Eso es el sistema Simon. Es la idea central sobre la que está construido todo e
 
 ---
 
-## Qué es
-
-Una PWA sin servidor — progressive web app — que corre completamente en el navegador. Sin servidor que pagar. Sin suscripción mensual. Sin cuenta que crear. Comparte un enlace, ábrelo en cualquier teléfono, y tienes un panel de administración funcionando.
-
-Reemplaza el cuaderno. La pizarra. El ritual de "déjame revisar en la bodega". El WhatsApp al dueño preguntando si algo está por agotarse.
-
----
-
 ## Qué hace
 
 **Inventario con pulso.** Cada producto lleva un estado en vivo — calculado automáticamente desde umbrales que el dueño configura una sola vez. Los colores cambian a medida que se mueve el stock.
@@ -32,7 +24,7 @@ Reemplaza el cuaderno. La pizarra. El ritual de "déjame revisar en la bodega". 
 
 **Historial a prueba de manipulación.** Cada movimiento de stock está encadenado con hash. Si alguien intenta editar el log, se nota.
 
-**Funciona sin internet.** Service worker + almacenamiento local. La app funciona sin conexión y sincroniza al reconectarse.
+**Funciona sin internet.** La app trabaja sin conexión y concilia al reconectarse.
 
 **Bilingüe (ES/EN).** Cambia entre español e inglés. Cada texto, cada etiqueta, cada alerta.
 
@@ -52,8 +44,6 @@ El cuaderno no es pintoresco. Es un riesgo. Se pierde, se moja, no te dice tu ma
 
 Lo estamos reemplazando — no con software empresarial que requiere un consultor, sino con algo que cabe en una pestaña del navegador y se siente como si lo hubiera hecho alguien que en verdad trabajó detrás de un mostrador.
 
-Si eres desarrollador y alguna vez viste a un dueño de negocio pequeño luchando con una herramienta que no fue hecha para él, este es el proyecto que estabas buscando.
-
 ---
 
 ## Precio
@@ -64,63 +54,21 @@ Si eres desarrollador y alguna vez viste a un dueño de negocio pequeño luchand
 
 ---
 
-## Corre local
+## Una palabra sobre la tubería
 
-```bash
-npm install
-cp .env.example .env   # opcional: conectar cuenta de Loyverse real
-npm start
-```
+Nos preguntan "sobre qué corre esto". La respuesta honesta: sobre el aparato, y sobre un puñado de convenciones que costaron tres meses de noches largas.
 
-O sirve el demo estático directamente (sin Node):
+Lo que se ve aquí es el **vestíbulo**. La superficie publicada es una puerta, y una puerta no es una casa. El mobiliario llega por un **cargador** desde un lugar que controla el dueño, se coteja contra un **manifiesto de shell** antes de confiar en él, y se guarda en una **bóveda por origen** que nunca cruza la calle. El libro diario es una **bitácora encadenada por hash**: cada asiento lleva la huella del anterior, así que el pasado no se reescribe en silencio. Los aparatos que se pertenecen conversan por un **relay cifrado** que no guarda nada y no entiende nada. El acceso es **por huella, nunca por llave**: el código compara digestos, y nada en este árbol abre nada.
 
-```bash
-python -m http.server 8736 --directory docs
-```
+Hay una **retícula Simon** (los colores), un **motor de consignación** (las perchas), una **línea de devolución** (retornos después de liquidar: solo se agrega, nunca se edita) y una **compuerta de build** (el candado sabe qué shell lleva puesto). Cada pieza tiene una razón, una fecha y el bug que la hizo necesaria. Esas razones están escritas donde importan, en el idioma de quienes las escribieron, y a propósito no se resumen aquí.
 
-Luego abre `http://localhost:8736`.
-
----
-
-## Arquitectura
-
-La app es un solo archivo HTML con JS vanilla — sin frameworks, sin paso de build necesario para leerla o modificarla. El código fuente completo vive en `docs/`. El backend es un service worker + localStorage, con una capa Node/PocketBase opcional para sincronización multi-dispositivo.
-
-El demo corre completamente offline usando `docs/mock-backend.js` como API en el navegador. La versión de producción apunta a un backend real (`server.js` / PocketBase).
-
-```
-docs/
-├── index.html          — la app completa
-├── i18n.js             — todos los textos, ES + EN
-├── mock-backend.js     — API de demo en el navegador
-├── sw.js               — service worker (soporte offline)
-├── auth-ui.js          — control de acceso por PIN y roles
-├── help-ui.js          — ayuda contextual
-└── vista-perchas.js    — vista de perchas de socios
-```
-
----
-
-## Contribuir
-
-El código es intencionalmente simple — sin framework, sin bundler requerido. Si quieres contribuir, lee `docs/index.html` desde el principio. La arquitectura es lineal y está comentada en todo su recorrido.
-
-Abre un issue antes de abrir un PR. El roadmap es opinado.
-
----
-
-## Roadmap
-
-1. **Multi-tenant real** — hoy el sistema asume un solo negocio. Para vender a N negocios se necesita aislamiento de datos y onboarding self-service.
-2. **Conteo de caja al cierre de turno** — conciliación de efectivo físico vs. sistema con historial por empleado.
-3. **Lista de reposición por proveedor** — un toque genera el WhatsApp listo para enviar a cada proveedor.
-4. **Reportes exportables** — flujo de caja, comparativos por período, Excel/PDF para el contador.
+Si buscas un tutorial, un árbol de módulos o una invitación a bifurcar: esto no es eso. El lector con oficio encontrará la forma de las cosas por su cuenta. A todos los demás les sirve más el demo, que es el producto completo con datos de muestra y sin obligaciones.
 
 ---
 
 ## Datos y privacidad
 
-Ver [PRIVACY.md](./PRIVACY.md) — versión corta: tus datos de negocio nunca salen de tu dispositivo, lo único que rastreamos es tu licencia, y puedes verificarlo tú mismo/a leyendo el código.
+Ver [PRIVACY.md](./PRIVACY.md) — versión corta: tus datos de negocio se quedan contigo, lo único que rastreamos es tu licencia, y esa promesa la puedes verificar tú mismo/a.
 
 ---
 
