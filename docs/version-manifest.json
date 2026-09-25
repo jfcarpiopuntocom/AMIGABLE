@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "shell": "amigable-shell-v118",
+  "shell": "amigable-shell-v119",
   "algoritmo": "sha256",
   "files": {
     "./index.html": "sha256-1d6e1c0e2f67200d02034ae84a978871dcdc3f7a01c3e0efcd2ec0f8d6993aea",
@@ -24,7 +24,7 @@
     "./favicon.png": "sha256-b62c4eeef814bfaebdc74fac65010bf082467ebf9d802133ec146999b3a6d317",
     "./pocketbase-client.js": "sha256-ab4095c79740218555e8ab76ebf7087a44385a257e976de200c956e5fa27564a",
     "./estado-idb.js": "sha256-0beb5e6212f81811eed416f28b642403d317fd6797119e551fdaee89bedb578d",
-    "./mock-backend.js": "sha256-5883c39eb3f04e6fe6b1290d0e4fa98ac7d179d0b3051fe47ceae3bab885c1ed",
+    "./mock-backend.js": "sha256-3206dbda8fd347c0696fa6111fea7ed7fbe157cd320727fcb31cb7e8064ffbf7",
     "./red-segura.js": "sha256-88e2c1d93e77da54bb5d1aa26eebd266f13982afc839cd42ba42b4e7fc90f7d4",
     "./crypto-store.js": "sha256-fe8f1a4d52301dba7358373705b4a6a38b0ddd97269a22646472a3dace5e5a07",
     "./email-recovery.js": "sha256-c01cb866195554d17f6385000ee65269d7b9920a026b2c65db780faa2fcabe83",
