@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "fecha": "2026-09-15",
-  "changelog": "Sync nuevo: el mismo motor que friendly-123 (finanzas, categorías, updates grandes, medición de latencia).",
+  "changelog": "Una venta ya pagada al asociado o asociada ya no se puede anular, ni con anulación supervisada. Pagar una percha solo sella ventas con comisión.",
   "requerida": false,
-  "shell": "amigable-shell-v118",
+  "shell": "amigable-shell-v119",
   "apagar": []
 }
