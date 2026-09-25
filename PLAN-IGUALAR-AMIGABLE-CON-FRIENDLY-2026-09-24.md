@@ -46,3 +46,21 @@ real importado (cero pérdida).
 ## Fuera de este plan
 - consultorio-123: app distinta (sin perchas ni comisiones). Solo recibe los
   arreglos de dinero/stock/balance que le apliquen.
+
+## Fase 0 — mapa medido (2026-09-24, archivos vivos de docs/)
+- Solo en friendly (codigo): artista.js, cargador.js, dashboard.html, estado.html,
+  estado-cifrado.js, ganchos-demo.js, i18n.js, inspector*.js, licencia-prueba.js,
+  panel-licencias.js, save.html, soporte-visual.js, sync-watchdog.js,
+  workshop-brand.js, robots.txt, sitemap.xml, _headers, demo/.
+- Solo en amigable: ahorra.html, licencias.json, integrar-amg.mjs (+ notas).
+- Comunes con mayor brecha (friendly/amigable, bytes): mock-backend 399K/149K,
+  avanzado-extra 226K/156K, auth-ui 128K/101K, sync-realtime 84K/42K,
+  crypto-store 46K/15K, manual.html 191K/21K. Amigable MAS grande en:
+  manual-maestro.html (908K vs 1K), tablero.html (894K vs 1K), checklist.html,
+  manifiesto.html: son contenido propio de amigable y se conservan.
+- CHOQUE DE TIER: licencia-prueba.js (friendly: 30 dias y luego solo lectura)
+  contra Robin Hood (amigable: gratis para siempre con limites). Fase 5 decide
+  (Jev evalua, JFC decide) antes de traer ese archivo.
+- Rutas de mock-backend solo en amigable (se conservan): /api/reportes/tips-financieros,
+  /api/compradores, /api/configuracion/umbrales-dias, /api/clientes/:id/apodo,
+  /api/reservas-eventos.
